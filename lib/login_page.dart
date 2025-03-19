@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'signup.dart'; // Import de la page d'inscription
 
 class LoginPage extends StatelessWidget {
+  const LoginPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -111,7 +113,12 @@ class LoginPage extends StatelessWidget {
                         ),
                         backgroundColor: Colors.lightBlueAccent.shade100,
                       ),
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => HomeScreen()),
+                        );
+                      },
                       child: Text(
                         "SIGN IN",
                         style: TextStyle(color: Colors.white),

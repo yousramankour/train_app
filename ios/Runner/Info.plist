@@ -45,5 +45,14 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+   <string>Nous avons besoin d'accéder à votre caméra pour changer la photo de profil.</string>
+
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Nous avons besoin d'accéder à votre galerie pour sélectionner une photo de profil.</string>
+
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>Nous avons besoin d'accéder à votre galerie pour enregistrer des photos.</string>
+
 </dict>
 </plist>
