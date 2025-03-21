@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'theme_provider.dart'; // Assurez-vous d'avoir ce fichier pour gérer le thème
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -18,9 +20,7 @@ class _ChatScreenState extends State<ChatScreen> {
         _messages.insert(0, {
           "text": _controller.text,
           "isMe": true,
-          "time": DateFormat(
-            'HH:mm',
-          ).format(DateTime.now()), // ✅ Ajout de l'heure
+          "time": DateFormat('HH:mm').format(DateTime.now()),
         });
       });
       _controller.clear();
@@ -29,11 +29,15 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+
     return Scaffold(
-      backgroundColor: Colors.white, // ✅ Fond blanc
+      backgroundColor: isDarkMode ? Colors.black : Colors.white,
       appBar: AppBar(
         title: Text("Chat"),
-        backgroundColor: Color(0xFFACDBF1), // ✅ Couleur de ton projet
+        backgroundColor:
+            isDarkMode ? Colors.blueGrey[900] : const Color(0xFFACDBF1),
         elevation: 0,
       ),
       body: Column(
@@ -47,49 +51,71 @@ class _ChatScreenState extends State<ChatScreen> {
                   message: _messages[index]["text"],
                   isMe: _messages[index]["isMe"],
                   time: _messages[index]["time"],
+                  isDarkMode: isDarkMode,
                 );
               },
             ),
           ),
           Padding(
-            padding: EdgeInsets.all(10.0),
+            padding: const EdgeInsets.all(10.0),
             child: Row(
               children: [
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: isDarkMode ? Colors.grey[800] : Colors.white,
                       borderRadius: BorderRadius.circular(30),
                       boxShadow: [
-                        BoxShadow(color: Colors.black12, blurRadius: 5),
+                        BoxShadow(
+                          color: isDarkMode ? Colors.black26 : Colors.black12,
+                          blurRadius: 5,
+                        ),
                       ],
                     ),
                     child: Row(
                       children: [
-                        SizedBox(width: 10),
+                        const SizedBox(width: 10),
                         Expanded(
                           child: TextField(
                             controller: _controller,
+                            style: TextStyle(
+                              color: isDarkMode ? Colors.white : Colors.black,
+                            ),
                             decoration: InputDecoration(
                               hintText: "Type a message...",
+                              hintStyle: TextStyle(
+                                color:
+                                    isDarkMode
+                                        ? Colors.white70
+                                        : Colors.black54,
+                              ),
                               border: InputBorder.none,
                             ),
                           ),
                         ),
                         IconButton(
-                          icon: Icon(Icons.emoji_emotions, color: Colors.grey),
-                          onPressed: () {}, // ✅ Ajout d’un bouton emoji
+                          icon: Icon(
+                            Icons.emoji_emotions,
+                            color: isDarkMode ? Colors.white70 : Colors.grey,
+                          ),
+                          onPressed: () {},
                         ),
                       ],
                     ),
                   ),
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 CircleAvatar(
-                  backgroundColor: Color(0xFFACDBF1),
+                  backgroundColor:
+                      isDarkMode
+                          ? Colors.blueGrey[700]
+                          : const Color(0xFFACDBF1),
                   radius: 25,
                   child: IconButton(
-                    icon: Icon(Icons.send, color: Colors.white),
+                    icon: Icon(
+                      Icons.send,
+                      color: isDarkMode ? Colors.white : Colors.black,
+                    ),
                     onPressed: _sendMessage,
                   ),
                 ),
@@ -106,12 +132,14 @@ class ChatBubble extends StatelessWidget {
   final String message;
   final bool isMe;
   final String time;
+  final bool isDarkMode;
 
   const ChatBubble({
     super.key,
     required this.message,
     required this.isMe,
     required this.time,
+    required this.isDarkMode,
   });
 
   @override
@@ -119,24 +147,46 @@ class ChatBubble extends StatelessWidget {
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        margin: EdgeInsets.symmetric(vertical: 5, horizontal: 15),
-        padding: EdgeInsets.all(12),
+        margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 15),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isMe ? Color(0xFFACDBF1) : Colors.white,
+          color:
+              isMe
+                  ? (isDarkMode
+                      ? Colors.blueGrey[800]
+                      : const Color(0xFFACDBF1))
+                  : (isDarkMode ? Colors.grey[900] : Colors.white),
           borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(15),
-            topRight: Radius.circular(15),
-            bottomLeft: isMe ? Radius.circular(15) : Radius.zero,
-            bottomRight: isMe ? Radius.zero : Radius.circular(15),
+            topLeft: const Radius.circular(15),
+            topRight: const Radius.circular(15),
+            bottomLeft: isMe ? const Radius.circular(15) : Radius.zero,
+            bottomRight: isMe ? Radius.zero : const Radius.circular(15),
           ),
-          boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 3)],
+          boxShadow: [
+            BoxShadow(
+              color: isDarkMode ? Colors.black26 : Colors.black12,
+              blurRadius: 3,
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text(message, style: TextStyle(fontSize: 16, color: Colors.black)),
-            SizedBox(height: 5),
-            Text(time, style: TextStyle(fontSize: 12, color: Colors.grey[700])),
+            Text(
+              message,
+              style: TextStyle(
+                fontSize: 16,
+                color: isDarkMode ? Colors.white : Colors.black,
+              ),
+            ),
+            const SizedBox(height: 5),
+            Text(
+              time,
+              style: TextStyle(
+                fontSize: 12,
+                color: isDarkMode ? Colors.white70 : Colors.grey[700],
+              ),
+            ),
           ],
         ),
       ),

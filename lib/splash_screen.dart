@@ -10,11 +10,21 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  double _opacity = 0.0; // Définition initiale pour l'effet de fondu
+
   @override
   void initState() {
     super.initState();
-    //Redirige vers la page de connexion après 3 secondes
-    Timer(const Duration(seconds: 3), () {
+
+    // Lancer l'effet de fondu dès l'affichage
+    Future.delayed(Duration(milliseconds: 500), () {
+      setState(() {
+        _opacity = 1.0;
+      });
+    });
+
+    // Attendre 10 secondes avant de passer à SplashScreen2
+    Timer(Duration(seconds: 10), () {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => Splash2()),
@@ -31,64 +41,22 @@ class _SplashScreenState extends State<SplashScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFF81D4FA), // Bleu ciel plus foncé
-              Color(0xFFFFFFFF), // Blanc pur
-            ],
+              Color(0xFF81D4FA),
+              Color(0xFFFFFFFF),
+            ], // Dégradé bleu -> blanc
           ),
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(15),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 5),
-              ),
-              child: const Icon(
-                Icons.search,
-                size: 89, // Réduit la taille
-                color: Colors.white,
-              ),
+        child: Center(
+          child: AnimatedOpacity(
+            duration: Duration(seconds: 3), // Animation de 3s
+            opacity: _opacity, // Applique l'effet de fondu
+            child: Image.asset(
+              'assets/logo.png', // Remplace par ton logo
+              width: 150, // Ajuste la taille
+              height: 150,
             ),
-            const SizedBox(height: 30),
-            const Text(
-              "Search for your train",
-              style: TextStyle(
-                fontSize: 30,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 10),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 40.0),
-              child: Text(
-                "No need to get to the train station to check for your train",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 20, color: Colors.black),
-              ),
-            ),
-            const SizedBox(height: 40),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [buildDot(true), buildDot(false)],
-            ),
-          ],
+          ),
         ),
-      ),
-    );
-  }
-
-  Widget buildDot(bool isActive) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      width: 10,
-      height: 10,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: isActive ? Colors.black : Colors.white,
-        border: Border.all(color: Colors.black),
       ),
     );
   }
