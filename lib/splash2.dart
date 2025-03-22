@@ -1,6 +1,5 @@
+import 'package:appmob/splash3.dart';
 import 'package:flutter/material.dart';
-// ignore: unused_import
-import 'login_page.dart';
 
 class Splash2 extends StatelessWidget {
   @override
@@ -60,7 +59,7 @@ class Splash2 extends StatelessWidget {
               onPressed: () {
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => LoginPage()),
+                  MaterialPageRoute(builder: (context) => Splash3Screen()),
                 );
               },
               style: ElevatedButton.styleFrom(
