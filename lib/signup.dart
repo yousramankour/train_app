@@ -1,131 +1,118 @@
+import 'package:appmob/login_page.dart';
 import 'package:flutter/material.dart';
 
-class SignUpPage extends StatelessWidget {
+class SignUpPage extends StatefulWidget {
+  @override
+  _SignUpPageState createState() => _SignUpPageState();
+}
+
+class _SignUpPageState extends State<SignUpPage> {
+  String? selectedGender;
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController ageController = TextEditingController();
+  final TextEditingController jobController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
-          child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 30.0, vertical: 20),
             child: Column(
-              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top gradient
-                Container(
-                  height: 80,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.blue.shade100, Colors.white],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                    ),
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(20),
-                      bottomRight: Radius.circular(20),
+                Center(
+                  child: Text(
+                    "Create Account",
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
                     ),
                   ),
                 ),
                 SizedBox(height: 20),
-
-                // Title
-                Text(
-                  "Create Account",
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Times New Roman',
-                  ),
+                buildTextField("Name & Surname", nameController),
+                buildTextField(
+                  "Age",
+                  ageController,
+                  keyboardType: TextInputType.number,
+                ),
+                buildDropdownField("Sexe"),
+                buildTextField("Job", jobController),
+                buildTextField(
+                  "Email",
+                  emailController,
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                buildTextField(
+                  "Password",
+                  passwordController,
+                  obscureText: true,
+                ),
+                buildTextField(
+                  "Confirm Password",
+                  confirmPasswordController,
+                  obscureText: true,
                 ),
                 SizedBox(height: 20),
-
-                // Form fields
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 30),
-                  child: Column(
-                    children: [
-                      buildTextField("First Name", Icons.person),
-                      buildTextField("Last Name", Icons.person_outline),
-                      buildTextField("Email", Icons.email),
-                      buildTextField("Password", Icons.lock, obscureText: true),
-                      buildTextField(
-                        "Confirm Password",
-                        Icons.lock,
-                        obscureText: true,
-                      ),
-                      buildTextField(
-                        "Age",
-                        Icons.calendar_today,
-                        keyboardType: TextInputType.number,
-                      ),
-                      buildDropdown("Gender", ["Male", "Female"]),
-                      buildTextField("Job", Icons.work),
-                    ],
-                  ),
-                ),
-
-                SizedBox(height: 20),
-
-                // Sign Up Button (sans padding autour)
-                Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.blue.shade100, Colors.blue.shade300],
-                    ),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(
-                        vertical: 5,
-                        horizontal: 9,
-                      ), // Largeur du bouton
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      backgroundColor: Colors.lightBlueAccent.shade100,
-                    ),
-                    onPressed: () {},
-                    child: Text(
-                      "SIGN UP",
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                    ),
-                  ),
-                ),
-
-                SizedBox(height: 20),
-
-                // Bottom Bar sans padding autour
-                Container(
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: Colors.lightBlueAccent.shade100,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(20),
-                      topRight: Radius.circular(20),
-                    ),
-                  ),
-                  child: Center(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Already have an account?",
-                          style: TextStyle(color: Colors.black),
+                Center(
+                  child: SizedBox(
+                    width: 200,
+                    height: 50,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color.fromARGB(255, 172, 219, 241),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        TextButton(
-                          onPressed: () {},
-                          child: Text(
-                            "SIGN IN",
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                      ),
+                      onPressed: () {},
+                      child: Text(
+                        "SIGN UP",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 20),
+                Divider(),
+                Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Already have an account?",
+                        style: TextStyle(color: Colors.black),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => LoginPage(),
                             ),
+                          );
+                        },
+                        child: Text(
+                          "SIGN IN",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue,
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -138,42 +125,51 @@ class SignUpPage extends StatelessWidget {
 
   Widget buildTextField(
     String label,
-    IconData icon, {
+    TextEditingController controller, {
     bool obscureText = false,
     TextInputType keyboardType = TextInputType.text,
   }) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 5),
-      child: TextField(
-        obscureText: obscureText,
-        keyboardType: keyboardType,
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: Icon(icon, color: Colors.blueAccent),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          filled: true,
-          fillColor: Colors.white,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: TextStyle(color: Colors.black, fontSize: 16)),
+        TextField(
+          controller: controller,
+          obscureText: obscureText,
+          keyboardType: keyboardType,
+          decoration: InputDecoration(
+            border: UnderlineInputBorder(),
+            contentPadding: EdgeInsets.symmetric(vertical: 10),
+          ),
         ),
-      ),
+        SizedBox(height: 15),
+      ],
     );
   }
 
-  Widget buildDropdown(String label, List<String> options) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 5),
-      child: DropdownButtonFormField(
-        decoration: InputDecoration(
-          labelText: label,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          filled: true,
-          fillColor: Colors.white,
+  Widget buildDropdownField(String label) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: TextStyle(color: Colors.black, fontSize: 16)),
+        DropdownButtonFormField<String>(
+          value: selectedGender,
+          items: [
+            DropdownMenuItem(child: Text("Homme"), value: "Homme"),
+            DropdownMenuItem(child: Text("Femme"), value: "Femme"),
+          ],
+          onChanged: (value) {
+            setState(() {
+              selectedGender = value;
+            });
+          },
+          decoration: InputDecoration(
+            border: UnderlineInputBorder(),
+            contentPadding: EdgeInsets.symmetric(vertical: 10),
+          ),
         ),
-        items:
-            options.map((String value) {
-              return DropdownMenuItem(value: value, child: Text(value));
-            }).toList(),
-        onChanged: (value) {},
-      ),
+        SizedBox(height: 15),
+      ],
     );
   }
 }
