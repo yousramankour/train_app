@@ -1,7 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:appmob/chat.dart'; // Assurez-vous que ce fichier existe
+import 'package:appmob/chat.dart';// Assurez-vous que ce fichier existe
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:location/location.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-class HomeScreen extends StatelessWidget {
+
+class HomeScreen extends StatefulWidget{
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  Location _locationController = new Location();
+  static const LatLng _pGooglePlex = LatLng(36.7333, 3.2800); // to display rouiba
+  LatLng? _currentP;
+  bool _gpsEnabled = false;
+  final TextEditingController _startLocationController = TextEditingController();
+  final TextEditingController _destinationController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    checkGPSStatus();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -77,61 +101,188 @@ class HomeScreen extends StatelessWidget {
         ),
       ),
       body: Stack(
-        children: [
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              height: 250,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Color.fromARGB(255, 172, 219, 241),
-                    Color(0xFFFFFFFF),
-                  ],
-                ),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(4),
-                  topRight: Radius.circular(4),
-                ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    const SizedBox(height: 20),
-                    const Text(
-                      "Welcome back !",
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    const Text(
-                      "Where do you want to go",
-                      style: TextStyle(fontSize: 17, color: Colors.black),
-                    ),
-                    const SizedBox(height: 10),
-                    Align(
-                      alignment: Alignment.bottomLeft,
-                      child: Image.asset(
-                        "assets/amico.png",
-                        width: 250,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
+      children: [
+      GoogleMap(
+      initialCameraPosition: CameraPosition(
+        target: _pGooglePlex,
+        zoom: 14,
       ),
+      zoomControlsEnabled: false,
+
+      markers: {
+
+        if (_currentP != null)
+          Marker(
+            markerId: MarkerId("_current_position"),
+            position: _currentP!,
+            icon: BitmapDescriptor.defaultMarker,
+            // infoWindow: const InfoWindow(title: "Gare de rouiba"),
+          ),
+
+
+      },
+    ),
+    Align(
+    alignment: Alignment(1, 0.3),
+    child: ElevatedButton(
+
+    onPressed: requestLocation,
+    style: ElevatedButton.styleFrom(
+    padding: EdgeInsets.all(20),
+    backgroundColor: Colors.white, // Button color
+    shape: CircleBorder()
+    ),
+    child: Icon(
+    Icons.location_searching,
+    size: 25,
+    color: Colors.black,
+    )
+    ),
+    ),
+    DraggableScrollableSheet(
+    initialChildSize: 0.3,
+    minChildSize: 0.05,
+    maxChildSize: 0.7,
+    builder: (BuildContext context,
+    ScrollController scrollController) {
+    return Container(
+    decoration: BoxDecoration(
+    color: Colors.white,
+    borderRadius: BorderRadius.horizontal(
+    left: Radius.circular(30),
+    right: Radius.circular(30)),
+    ),
+
+    child: SingleChildScrollView(
+    controller: scrollController,
+
+    child: Column(
+
+    children: [
+    Container(
+    margin: EdgeInsets.only(top: 8),
+    width: 70,
+    height: 5,
+    decoration: BoxDecoration(
+    color: Colors.grey[400],
+    borderRadius: BorderRadius.circular(10),
+    ),
+    ),
+    SizedBox(height: 20),
+
+    /// Start Location Input
+    TextField(
+    controller: _startLocationController,
+    decoration: InputDecoration(
+    labelText: "Start Location",
+    prefixIcon: Icon(Icons.location_on),
+    border: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(20)),
+    ),
+    ),
+    SizedBox(height: 15),
+
+    /// Destination Input
+    TextField(
+    controller: _destinationController,
+    decoration: InputDecoration(
+    labelText: "Destination",
+    prefixIcon: Icon(Icons.map),
+    border: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(20)),
+    ),
+    ),
+    SizedBox(height: 20),
+
+    /// Submit Button
+    ElevatedButton(
+    style: ElevatedButton.styleFrom(
+    backgroundColor: Colors.blue,
+    // Change button color
+    foregroundColor: Colors.white,
+    // Change text color
+    padding: EdgeInsets.symmetric(
+    horizontal: 30, vertical: 15),
+    // Adjust size
+    shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(
+    12), // Rounded corners
+    ),
+    ),
+    onPressed: () {
+    print("Start: ${_currentP}");
+    print("Destination: ${_destinationController
+        .text}");
+    },
+    child: Text("Find Train"),
+    ),
+    ],
+    )
+    )
     );
+    }
+    )
+    ]
+    ),
+    );
+  }
+
+  Future<void> checkGPSStatus() async {
+    bool serviceEnabled = await _locationController.serviceEnabled();
+    setState(() {
+      _gpsEnabled = serviceEnabled;
+    });
+  }
+
+  Future<void> requestLocation() async {
+    bool serviceEnabled;
+    PermissionStatus permissionGranted;
+
+    // Check if GPS is enabled
+    serviceEnabled = await _locationController.serviceEnabled();
+    if (!serviceEnabled) {
+      serviceEnabled = await _locationController.requestService();
+      if (!serviceEnabled) {
+        print("User refused to enable GPS.");
+        return; // Don't proceed if user refuses
+      }
+    }
+
+    // Check and request permission
+    permissionGranted = await _locationController.hasPermission();
+    if (permissionGranted == PermissionStatus.denied) {
+      permissionGranted = await _locationController.requestPermission();
+      if (permissionGranted != PermissionStatus.granted) {
+        print("Permission denied.");
+        return;
+      }
+    } else if (permissionGranted == PermissionStatus.deniedForever) {
+      print("Permission permanently denied. Redirecting to settings.");
+      openAppSettings();
+      return;
+    }
+
+    // Start getting location updates
+    _locationController.onLocationChanged.listen((
+        LocationData currentLocation) {
+      if (currentLocation.latitude != null &&
+          currentLocation.longitude != null) {
+        setState(() {
+          _currentP =
+              LatLng(currentLocation.latitude!, currentLocation.longitude!);
+          _gpsEnabled = true;
+          print("Updated location: $_currentP");
+        });
+      }
+    });
+  }
+
+}
+void openAppSettings() async {
+  final Uri url = Uri.parse('app-settings:');
+  if (await canLaunchUrl(url)) {
+    await launchUrl(url);
+  } else {
+    print("Could not open app settings.");
   }
 }

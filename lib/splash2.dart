@@ -14,6 +14,7 @@ class Splash2 extends StatelessWidget {
             colors: [
               Color(0xFF81D4FA), // Bleu ciel plus foncé
               Color(0xFFFFFFFF),
+
             ],
           ),
         ),
