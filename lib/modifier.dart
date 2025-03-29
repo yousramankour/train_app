@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ModificationProfilPage extends StatefulWidget {
   @override
@@ -18,27 +19,41 @@ class _ModificationProfilPageState extends State<ModificationProfilPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Modifier le profil"),
+        title: Text(tr("modify_profile")), // 🔥 Texte traduit
         backgroundColor: Colors.blue,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed:
               () => Navigator.pop(context), // 🔙 Retour à la page précédente
         ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.language),
+            onPressed: () {
+              if (context.locale == Locale('fr', 'FR')) {
+                context.setLocale(Locale('en', 'US'));
+              } else if (context.locale == Locale('en', 'US')) {
+                context.setLocale(Locale('ar', 'DZ'));
+              } else {
+                context.setLocale(Locale('fr', 'FR'));
+              }
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: EdgeInsets.all(20),
         child: Column(
           children: [
             // ✅ Champ Nom
-            _buildTextField("Nom", nameController),
+            _buildTextField(tr("name"), nameController),
 
             // ✅ Champ Email
-            _buildTextField("Email", emailController),
+            _buildTextField(tr("email"), emailController),
 
             // ✅ Champ Mot de passe
             _buildTextField(
-              "Nouveau mot de passe",
+              tr("new_password"),
               passwordController,
               isPassword: true,
             ),
@@ -50,7 +65,7 @@ class _ModificationProfilPageState extends State<ModificationProfilPage> {
               onPressed: () {
                 // TODO: Ajouter la logique d'enregistrement
               },
-              child: Text("Enregistrer"),
+              child: Text(tr("save")), // 🔥 Texte traduit
               style: ElevatedButton.styleFrom(
                 padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
                 backgroundColor: Colors.blue,

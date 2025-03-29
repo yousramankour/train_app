@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class SignUpPage extends StatelessWidget {
   const SignUpPage({super.key});
@@ -13,122 +14,85 @@ class SignUpPage extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Top gradient
-                Container(
-                  height: 80,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.blue.shade100, Colors.white],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                    ),
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(20),
-                      bottomRight: Radius.circular(20),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 20),
-
-                // Title
+                // Titre localisé
                 Text(
-                  "Create Account",
-                  style: TextStyle(
+                  tr("create_account"),
+                  style: const TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    fontFamily: 'Times New Roman',
                   ),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-                // Form fields
+                // Formulaire avec les textes localisés
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 30),
+                  padding: const EdgeInsets.symmetric(horizontal: 30),
                   child: Column(
                     children: [
-                      buildTextField("First Name", Icons.person),
-                      buildTextField("Last Name", Icons.person_outline),
-                      buildTextField("Email", Icons.email),
-                      buildTextField("Password", Icons.lock, obscureText: true),
+                      buildTextField(tr("first_name"), Icons.person),
+                      buildTextField(tr("last_name"), Icons.person_outline),
+                      buildTextField(tr("email"), Icons.email),
                       buildTextField(
-                        "Confirm Password",
+                        tr("password"),
                         Icons.lock,
                         obscureText: true,
                       ),
                       buildTextField(
-                        "Age",
+                        tr("confirm_password"),
+                        Icons.lock,
+                        obscureText: true,
+                      ),
+                      buildTextField(
+                        tr("age"),
                         Icons.calendar_today,
                         keyboardType: TextInputType.number,
                       ),
-                      buildDropdown("Gender", ["Male", "Female"]),
-                      buildTextField("Job", Icons.work),
+                      buildDropdown(tr("gender"), ["Male", "Female"]),
+                      buildTextField(tr("job"), Icons.work),
                     ],
                   ),
                 ),
 
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-                // Sign Up Button (sans padding autour)
-                Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.blue.shade100, Colors.blue.shade300],
-                    ),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(
-                        vertical: 5,
-                        horizontal: 9,
-                      ), // Largeur du bouton
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                // Bouton Sign Up
+                ElevatedButton(onPressed: () {}, child: Text(tr("sign_up"))),
+
+                const SizedBox(height: 20),
+
+                // Lien vers la connexion
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(tr("already_have_account")),
+                    TextButton(
+                      onPressed: () {},
+                      child: Text(
+                        tr("sign_in"),
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      backgroundColor: Colors.lightBlueAccent.shade100,
                     ),
-                    onPressed: () {},
-                    child: Text(
-                      "SIGN UP",
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                    ),
-                  ),
+                  ],
                 ),
 
-                SizedBox(height: 20),
-
-                // Bottom Bar sans padding autour
-                Container(
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: Colors.lightBlueAccent.shade100,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(20),
-                      topRight: Radius.circular(20),
+                // Bouton pour changer la langue
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        context.setLocale(const Locale('en'));
+                      },
+                      child: const Text("🇬🇧 English"),
                     ),
-                  ),
-                  child: Center(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Already have an account?",
-                          style: TextStyle(color: Colors.black),
-                        ),
-                        TextButton(
-                          onPressed: () {},
-                          child: Text(
-                            "SIGN IN",
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ],
+                    const SizedBox(width: 10),
+                    ElevatedButton(
+                      onPressed: () {
+                        context.setLocale(const Locale('fr'));
+                      },
+                      child: const Text("🇫🇷 Français"),
                     ),
-                  ),
+                  ],
                 ),
               ],
             ),
@@ -145,7 +109,7 @@ class SignUpPage extends StatelessWidget {
     TextInputType keyboardType = TextInputType.text,
   }) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 5),
+      padding: const EdgeInsets.symmetric(vertical: 5),
       child: TextField(
         obscureText: obscureText,
         keyboardType: keyboardType,
@@ -162,8 +126,8 @@ class SignUpPage extends StatelessWidget {
 
   Widget buildDropdown(String label, List<String> options) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 5),
-      child: DropdownButtonFormField(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: DropdownButtonFormField<String>(
         decoration: InputDecoration(
           labelText: label,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'theme_provider.dart'; // Assurez-vous d'avoir ce fichier pour gérer le thème
+import 'package:easy_localization/easy_localization.dart'; // Import Easy Localization
+import 'theme_provider.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -35,7 +36,7 @@ class _ChatScreenState extends State<ChatScreen> {
     return Scaffold(
       backgroundColor: isDarkMode ? Colors.black : Colors.white,
       appBar: AppBar(
-        title: Text("Chat"),
+        title: Text('chat'.tr()), // Traduction
         backgroundColor:
             isDarkMode ? Colors.blueGrey[900] : const Color(0xFFACDBF1),
         elevation: 0,
@@ -82,7 +83,7 @@ class _ChatScreenState extends State<ChatScreen> {
                               color: isDarkMode ? Colors.white : Colors.black,
                             ),
                             decoration: InputDecoration(
-                              hintText: "Type a message...",
+                              hintText: 'enterMessage'.tr(), // Traduction
                               hintStyle: TextStyle(
                                 color:
                                     isDarkMode
@@ -117,6 +118,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       color: isDarkMode ? Colors.white : Colors.black,
                     ),
                     onPressed: _sendMessage,
+                    tooltip: 'send'.tr(), // Traduction
                   ),
                 ),
               ],

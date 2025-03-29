@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ModifierMDPPage extends StatefulWidget {
   @override
@@ -14,63 +15,44 @@ class _ModifierMDPPageState extends State<ModifierMDPPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          "Modifier le Mot de Passe",
-          style: TextStyle(color: Colors.white),
-        ),
+        title: Text(tr("change_password")),
         backgroundColor: Colors.blue,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.language),
+            onPressed: () {
+              if (context.locale == Locale('fr', 'FR')) {
+                context.setLocale(Locale('en', 'US'));
+              } else if (context.locale == Locale('en', 'US')) {
+                context.setLocale(Locale('ar', 'DZ'));
+              } else {
+                context.setLocale(Locale('fr', 'FR'));
+              }
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "Ancien Mot de Passe :",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: oldPasswordController,
-              obscureText: true,
-              decoration: InputDecoration(
-                hintText: "Entrez votre ancien mot de passe",
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
+            _buildTextField(
+              tr("old_password"),
+              oldPasswordController,
+              tr("enter_old_password"),
             ),
             const SizedBox(height: 20),
-            const Text(
-              "Nouveau Mot de Passe :",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: newPasswordController,
-              obscureText: true,
-              decoration: InputDecoration(
-                hintText: "Entrez votre nouveau mot de passe",
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
+            _buildTextField(
+              tr("new_password"),
+              newPasswordController,
+              tr("enter_new_password"),
             ),
             const SizedBox(height: 20),
-            const Text(
-              "Confirmer le Nouveau Mot de Passe :",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: confirmPasswordController,
-              obscureText: true,
-              decoration: InputDecoration(
-                hintText: "Confirmez votre nouveau mot de passe",
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
+            _buildTextField(
+              tr("confirm_new_password"),
+              confirmPasswordController,
+              tr("confirm_password"),
             ),
             const SizedBox(height: 20),
             ElevatedButton(
@@ -78,7 +60,7 @@ class _ModifierMDPPageState extends State<ModifierMDPPage> {
                 // TODO: Ajouter la logique pour sauvegarder le mot de passe
                 Navigator.pop(context); // Retour à la page précédente
               },
-              child: const Text("Enregistrer"),
+              child: Text(tr("save")),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
                 padding: const EdgeInsets.symmetric(vertical: 14),
@@ -90,6 +72,32 @@ class _ModifierMDPPageState extends State<ModifierMDPPage> {
           ],
         ),
       ),
+    );
+  }
+
+  // ✅ Fonction pour créer un champ de texte réutilisable
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller,
+    String hintText,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 10),
+        TextField(
+          controller: controller,
+          obscureText: true,
+          decoration: InputDecoration(
+            hintText: hintText,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        ),
+      ],
     );
   }
 }

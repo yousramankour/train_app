@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'login_page.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class Splash2 extends StatefulWidget {
   const Splash2({super.key});
@@ -23,12 +24,11 @@ class _Splash2State extends State<Splash2> {
     // 🔹 Démarre un timer pour changer automatiquement de page après 3 secondes
     Timer.periodic(const Duration(seconds: 3), (Timer timer) {
       if (currentIndex < 1) {
-        // Vérifie si on est sur la première page
         currentIndex++;
         _pageController.animateToPage(
           currentIndex,
           duration: const Duration(milliseconds: 500),
-          curve: Curves.easeInOut, // Animation fluide entre les pages
+          curve: Curves.easeInOut,
         );
       } else {
         timer
@@ -41,7 +41,6 @@ class _Splash2State extends State<Splash2> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
-        // Utilisation de Stack pour superposer des éléments
         children: [
           // 🔹 PageView pour afficher plusieurs écrans dans un effet de glissement
           PageView(
@@ -50,32 +49,18 @@ class _Splash2State extends State<Splash2> {
               // Première page du splash screen
               buildSplashPage(
                 icon: Icons.search,
-                title: "Search for your train",
-                subtitle:
-                    "No need to get to the train station to check for your train",
+                title: "search_train".tr(), // Texte traduit
+                subtitle: "search_subtitle".tr(), // Texte traduit
                 isFirst: true,
               ),
               // Deuxième page du splash screen
               buildSplashPage(
                 icon: Icons.access_time,
-                title: "Save Time",
-                subtitle:
-                    "With 9itari, you wouldn't be struggling to catch your train or worry about it",
+                title: "save_time".tr(), // Texte traduit
+                subtitle: "save_time_subtitle".tr(), // Texte traduit
                 isFirst: false,
               ),
             ],
-          ),
-
-          // 🔹 Ajout d'un élément décoratif en bas à gauche
-          Positioned(
-            bottom: 10, // Positionne l'image tout en bas
-            left: 0,
-            child: Image.asset(
-              "assets/amico.png", // Remplace par ton image
-              width: 130, // Ajuste la taille
-              height: 2000,
-              fit: BoxFit.contain,
-            ),
           ),
         ],
       ),
@@ -84,23 +69,25 @@ class _Splash2State extends State<Splash2> {
 
   // 🔹 Widget qui construit chaque page du splash screen
   Widget buildSplashPage({
-    required IconData icon, // Icône affichée
-    required String title, // Titre de la page
-    required String subtitle, // Sous-titre explicatif
-    required bool isFirst, // Booléen pour savoir si c'est la première page
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required bool isFirst,
   }) {
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          // Ajout d'un fond dégradé
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFF81D4FA), Color(0xFFFFFFFF)],
+          colors: [
+            Color.fromARGB(255, 209, 248, 239),
+            Color(0xFF81D4FA),
+            Color(0xFFFFFFFF),
+          ],
         ),
       ),
       child: Column(
-        mainAxisAlignment:
-            MainAxisAlignment.center, // Centre le contenu verticalement
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           // 🔹 Icône entourée d'un cercle blanc
           Container(
@@ -144,7 +131,7 @@ class _Splash2State extends State<Splash2> {
             ],
           ),
 
-          // 🔹 Bouton "GET STARTED" qui s'affiche uniquement sur la deuxième page
+          // 🔹 Bouton "COMMENCER" qui s'affiche uniquement sur la deuxième page
           if (!isFirst) const SizedBox(height: 50),
           if (!isFirst)
             ElevatedButton(
@@ -156,23 +143,18 @@ class _Splash2State extends State<Splash2> {
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(
-                  221,
-                  255,
-                  255,
-                  255,
-                ), // Couleur du bouton
+                backgroundColor: Color.fromARGB(255, 219, 252, 244),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30), // Bords arrondis
+                  borderRadius: BorderRadius.circular(30),
                 ),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 70,
                   vertical: 15,
                 ),
               ),
-              child: const Text(
-                "GET STARTED",
-                style: TextStyle(
+              child: Text(
+                "start".tr(), // Texte traduit
+                style: const TextStyle(
                   fontSize: 16,
                   color: Color.fromARGB(255, 0, 0, 0),
                   fontWeight: FontWeight.bold,
@@ -192,10 +174,7 @@ class _Splash2State extends State<Splash2> {
       height: 10,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color:
-            isActive
-                ? Colors.black
-                : Colors.white, // Dot active = noire, sinon blanche
+        color: isActive ? Colors.black : Colors.white,
         border: Border.all(color: Colors.black),
       ),
     );

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "410285805372",
+    "project_id": "pfeprj-29960",
+    "storage_bucket": "pfeprj-29960.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:410285805372:android:8a24942378f594f2829839",
+        "android_client_info": {
+          "package_name": "com.train.appmob"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAPvKbOKlEcf84rJOD3FdXEgidbLHQ1DuE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

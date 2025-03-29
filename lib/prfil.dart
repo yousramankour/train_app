@@ -3,6 +3,7 @@ import 'package:appmob/modemail.dart';
 import 'package:appmob/modnom.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'dart:io';
 
 class ProfilPage extends StatefulWidget {
@@ -39,11 +40,25 @@ class _ProfilPageState extends State<ProfilPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.blue,
-        title: const Text("Mon Profil", style: TextStyle(color: Colors.white)),
+        title: Text(tr("monProfil")),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: widget.onBack,
         ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.language),
+            onPressed: () {
+              if (context.locale == Locale('fr', 'FR')) {
+                context.setLocale(Locale('en', 'US'));
+              } else if (context.locale == Locale('en', 'US')) {
+                context.setLocale(Locale('ar', 'DZ'));
+              } else {
+                context.setLocale(Locale('fr', 'FR'));
+              }
+            },
+          ),
+        ],
       ),
       body: Center(
         child: Padding(
@@ -66,6 +81,7 @@ class _ProfilPageState extends State<ProfilPage> {
                   IconButton(
                     icon: const Icon(Icons.camera_alt, color: Colors.white),
                     onPressed: _pickImage,
+                    tooltip: tr("pick_image"),
                     style: IconButton.styleFrom(
                       backgroundColor: Colors.blue,
                       shape: const CircleBorder(),
@@ -79,7 +95,7 @@ class _ProfilPageState extends State<ProfilPage> {
               Text(
                 nameController.text,
                 style: const TextStyle(
-                  fontSize: 26, // 🔹 Plus grand
+                  fontSize: 26,
                   fontWeight: FontWeight.bold,
                 ),
                 textAlign: TextAlign.center,
@@ -87,10 +103,7 @@ class _ProfilPageState extends State<ProfilPage> {
               const SizedBox(height: 8),
               Text(
                 emailController.text,
-                style: const TextStyle(
-                  fontSize: 18, // 🔹 Plus grand
-                  color: Colors.grey,
-                ),
+                style: const TextStyle(fontSize: 18, color: Colors.grey),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 40),
@@ -100,9 +113,8 @@ class _ProfilPageState extends State<ProfilPage> {
                 onPressed: () {
                   showModalBottomSheet(
                     context: context,
-                    isScrollControlled:
-                        true, // 🔹 Permet d'utiliser plus d'espace
-                    shape: RoundedRectangleBorder(
+                    isScrollControlled: true,
+                    shape: const RoundedRectangleBorder(
                       borderRadius: BorderRadius.vertical(
                         top: Radius.circular(20),
                       ),
@@ -110,20 +122,19 @@ class _ProfilPageState extends State<ProfilPage> {
                     backgroundColor: Colors.white,
                     builder: (BuildContext context) {
                       return FractionallySizedBox(
-                        heightFactor:
-                            0.5, // 🔹 Utilise 50% de la hauteur de l'écran
+                        heightFactor: 0.5,
                         child: Padding(
                           padding: const EdgeInsets.all(15),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                "Modifier vos informations",
-                                style: TextStyle(
+                              Text(
+                                tr("change_info"),
+                                style: const TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.bold,
-                                  color: Color.fromARGB(255, 0, 0, 0),
+                                  color: Colors.black,
                                 ),
                               ),
                               const SizedBox(height: 25),
@@ -132,7 +143,7 @@ class _ProfilPageState extends State<ProfilPage> {
                                   Icons.person,
                                   color: Colors.blue,
                                 ),
-                                title: const Text("Modifier le Nom"),
+                                title: Text(tr("edit_name")),
                                 onTap: () {
                                   Navigator.pop(context);
                                   Navigator.push(
@@ -148,7 +159,7 @@ class _ProfilPageState extends State<ProfilPage> {
                                   Icons.email,
                                   color: Colors.blue,
                                 ),
-                                title: const Text("Modifier l'Email"),
+                                title: Text(tr("edit_email")),
                                 onTap: () {
                                   Navigator.pop(context);
                                   Navigator.push(
@@ -164,7 +175,7 @@ class _ProfilPageState extends State<ProfilPage> {
                                   Icons.lock,
                                   color: Colors.blue,
                                 ),
-                                title: const Text("Modifier le Mot de Passe"),
+                                title: Text(tr("edit_password")),
                                 onTap: () {
                                   Navigator.pop(context);
                                   Navigator.push(
@@ -182,24 +193,20 @@ class _ProfilPageState extends State<ProfilPage> {
                     },
                   );
                 },
-                icon: const Icon(
-                  Icons.edit,
-                  size: 28,
-                  color: Colors.black,
-                ), // 🔹 Icône plus grande et noire
-                label: const Text(
-                  "Modifier les informations",
-                  style: TextStyle(
-                    fontSize: 20, // 🔹 Texte plus grand
+                icon: const Icon(Icons.edit, size: 28, color: Colors.black),
+                label: Text(
+                  tr("edit_info"),
+                  style: const TextStyle(
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black, // 🔹 Texte en noir
+                    color: Colors.black,
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
                     vertical: 18,
                     horizontal: 24,
-                  ), // 🔹 Plus grand
+                  ),
                   backgroundColor: Colors.blue,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
