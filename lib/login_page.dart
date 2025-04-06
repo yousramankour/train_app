@@ -7,12 +7,14 @@ class LoginPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white, // Fond blanc
+      resizeToAvoidBottomInset:
+          false, // Evite le déplacement des widgets quand le clavier apparaît
       body: SafeArea(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             // Barre de couleur en haut
-            Container(height: 50, color: Color.fromARGB(255, 172, 219, 241)),
+            Container(height: 50, color: Color(0xFF008ECC)),
 
             // Contenu principal
             Padding(
@@ -21,7 +23,9 @@ class LoginPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Logo centré
-                  Center(child: Image.asset('assets/logo9itari.png', height: 80)),
+                  Center(
+                    child: Image.asset('assets/logo9itari.png', height: 80),
+                  ),
 
                   SizedBox(height: 20),
 
@@ -85,7 +89,7 @@ class LoginPage extends StatelessWidget {
                       height: 50, // Hauteur fixe
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Color.fromARGB(255, 172, 219, 241),
+                          backgroundColor: Color(0xFF008ECC),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -117,7 +121,7 @@ class LoginPage extends StatelessWidget {
             // Barre de couleur en bas avec "Sign up"
             Container(
               height: 50,
-              color: Color.fromARGB(255, 172, 219, 241),
+              color: Color(0xFF008ECC),
               child: Center(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,

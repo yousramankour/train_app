@@ -1,0 +1,11 @@
+import 'package:flutter/material.dart';
+
+class StatsScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("Statistiques")),
+      body: Center(child: Text("Page des statistiques")),
+    );
+  }
+}

@@ -1,4 +1,5 @@
-import 'package:appmob/splash3.dart';
+import 'package:appmob/login_page.dart';
+
 import 'package:flutter/material.dart';
 
 class Splash2 extends StatelessWidget {
@@ -13,7 +14,6 @@ class Splash2 extends StatelessWidget {
             colors: [
               Color(0xFF81D4FA), // Bleu ciel plus foncé
               Color(0xFFFFFFFF),
-
             ],
           ),
         ),
@@ -60,7 +60,7 @@ class Splash2 extends StatelessWidget {
               onPressed: () {
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => Splash3Screen()),
+                  MaterialPageRoute(builder: (context) => LoginPage()),
                 );
               },
               style: ElevatedButton.styleFrom(
