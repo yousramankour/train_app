@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class MessageScreen extends StatefulWidget {
+  const MessageScreen({super.key});
+
   @override
   _ChatScreenState createState() => _ChatScreenState();
 }
@@ -105,7 +107,12 @@ class ChatBubble extends StatelessWidget {
   final bool isMe;
   final String time;
 
-  ChatBubble({required this.message, required this.isMe, required this.time});
+  const ChatBubble({
+    super.key,
+    required this.message,
+    required this.isMe,
+    required this.time,
+  });
 
   @override
   Widget build(BuildContext context) {

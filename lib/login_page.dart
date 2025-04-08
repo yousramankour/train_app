@@ -1,38 +1,34 @@
 import 'package:appmob/home.dart';
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'signup.dart'; // Import de la page d'inscription
 
 class LoginPage extends StatelessWidget {
+  const LoginPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white, // Fond blanc
-      resizeToAvoidBottomInset:
-          false, // Evite le déplacement des widgets quand le clavier apparaît
+      resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Barre de couleur en haut
             Container(height: 50, color: Color(0xFF008ECC)),
 
-            // Contenu principal
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 30.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Logo centré
                   Center(
                     child: Image.asset('assets/logo9itari.png', height: 80),
                   ),
-
                   SizedBox(height: 20),
-
-                  // Texte "Sign In"
                   Center(
                     child: Text(
-                      "Sign In",
+                      "sign_in".tr(), // ← traduit
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
@@ -41,37 +37,31 @@ class LoginPage extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: 20),
-
-                  // Champ Email
                   TextField(
                     decoration: InputDecoration(
-                      labelText: "Email",
+                      labelText: "email".tr(), // ← traduit
                       labelStyle: TextStyle(color: Colors.black, fontSize: 16),
                       border: UnderlineInputBorder(),
                       contentPadding: EdgeInsets.symmetric(vertical: 10),
                     ),
                   ),
                   SizedBox(height: 20),
-
-                  // Champ Password
                   TextField(
                     obscureText: true,
                     decoration: InputDecoration(
-                      labelText: "Password",
+                      labelText: "password".tr(), // ← traduit
                       labelStyle: TextStyle(color: Colors.black, fontSize: 16),
                       border: UnderlineInputBorder(),
                       contentPadding: EdgeInsets.symmetric(vertical: 10),
                     ),
                   ),
                   SizedBox(height: 10),
-
-                  // Mot de passe oublié
                   Align(
                     alignment: Alignment.centerLeft,
                     child: TextButton(
                       onPressed: () {},
                       child: Text(
-                        "Forgot Password?",
+                        "forgot_password".tr(), // ← traduit
                         style: TextStyle(
                           color: Colors.black,
                           fontSize: 14,
@@ -81,12 +71,10 @@ class LoginPage extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: 30),
-
-                  // Bouton Sign In (centré, taille moyenne)
                   Center(
                     child: SizedBox(
-                      width: 200, // Largeur moyenne (PAS toute la largeur)
-                      height: 50, // Hauteur fixe
+                      width: 200,
+                      height: 50,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Color(0xFF008ECC),
@@ -94,7 +82,6 @@ class LoginPage extends StatelessWidget {
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-
                         onPressed: () {
                           Navigator.push(
                             context,
@@ -104,7 +91,7 @@ class LoginPage extends StatelessWidget {
                           );
                         },
                         child: Text(
-                          "SIGN IN",
+                          "sign_in".tr(), // ← traduit
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -118,7 +105,6 @@ class LoginPage extends StatelessWidget {
               ),
             ),
 
-            // Barre de couleur en bas avec "Sign up"
             Container(
               height: 50,
               color: Color(0xFF008ECC),
@@ -127,7 +113,7 @@ class LoginPage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "Don’t have an account?",
+                      "no_account".tr(), // ← traduit
                       style: TextStyle(color: Colors.black),
                     ),
                     TextButton(
@@ -138,7 +124,7 @@ class LoginPage extends StatelessWidget {
                         );
                       },
                       child: Text(
-                        "SIGN UP",
+                        "sign_up".tr(), // ← traduit
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Colors.white,

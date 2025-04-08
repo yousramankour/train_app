@@ -1,8 +1,10 @@
 import 'package:appmob/login_page.dart';
-
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart'; // <-- Ajout
 
 class Splash2 extends StatelessWidget {
+  const Splash2({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -11,10 +13,7 @@ class Splash2 extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF81D4FA), // Bleu ciel plus foncé
-              Color(0xFFFFFFFF),
-            ],
+            colors: [Color(0xFF81D4FA), Color(0xFFFFFFFF)],
           ),
         ),
         child: Column(
@@ -28,26 +27,26 @@ class Splash2 extends StatelessWidget {
               ),
               child: const Icon(
                 Icons.access_time,
-                size: 80, // Icône horloge
+                size: 80,
                 color: Colors.white,
               ),
             ),
             const SizedBox(height: 30),
-            const Text(
-              "Save Time ",
-              style: TextStyle(
+            Text(
+              'save_time'.tr(), // <-- localisation
+              style: const TextStyle(
                 fontSize: 30,
                 fontWeight: FontWeight.bold,
                 color: Colors.black87,
               ),
             ),
             const SizedBox(height: 10),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 40.0),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40.0),
               child: Text(
-                "With 9itari, you wouldn't be struggling to catch your train or worry about it",
+                'description_text'.tr(), // <-- localisation
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 20, color: Colors.black54),
+                style: const TextStyle(fontSize: 20, color: Colors.black54),
               ),
             ),
             const SizedBox(height: 30),
@@ -73,9 +72,9 @@ class Splash2 extends StatelessWidget {
                   vertical: 15,
                 ),
               ),
-              child: const Text(
-                "GET STARTED",
-                style: TextStyle(
+              child: Text(
+                'get_started'.tr(), // <-- localisation
+                style: const TextStyle(
                   fontSize: 16,
                   color: Colors.white,
                   fontWeight: FontWeight.bold,

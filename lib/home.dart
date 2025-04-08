@@ -3,6 +3,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 import 'statistique.dart';
 import 'notification.dart';
@@ -17,11 +18,11 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  Location _locationController = Location();
+  final Location _locationController = Location();
   static const LatLng _pGooglePlex = LatLng(36.7333, 3.2800);
   LatLng? _currentP;
   bool _gpsEnabled = false;
-  GoogleMapController? mapController; // Déclaration du contrôleur de carte
+  GoogleMapController? mapController;
 
   @override
   void initState() {
@@ -131,26 +132,30 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _buildBottomButton(LucideIcons.map, "Carte", () {}),
-            _buildBottomButton(LucideIcons.barChart, "Statistique", () {
+            _buildBottomButton(LucideIcons.map, "carte".tr(), () {}),
+            _buildBottomButton(LucideIcons.barChart, "statistique".tr(), () {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => StatsScreen()),
               );
             }),
-            _buildBottomButton(LucideIcons.bell, "Notifications", () {
+            _buildBottomButton(LucideIcons.bell, "notifications".tr(), () {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => NotificationScreen()),
               );
             }),
-            _buildBottomButton(LucideIcons.messageCircle, "Messagerie", () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => MessageScreen()),
-              );
-            }),
-            _buildBottomButton(LucideIcons.user, "Profil", () {
+            _buildBottomButton(
+              LucideIcons.messageCircle,
+              "messagerie".tr(),
+              () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => MessageScreen()),
+                );
+              },
+            ),
+            _buildBottomButton(LucideIcons.user, "profil".tr(), () {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => ProfileScreen()),

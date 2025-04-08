@@ -1,7 +1,10 @@
-import 'package:appmob/login_page.dart';
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart'; // Import pour easy_localization
+import 'login_page.dart';
 
 class SignUpPage extends StatefulWidget {
+  const SignUpPage({super.key});
+
   @override
   _SignUpPageState createState() => _SignUpPageState();
 }
@@ -29,7 +32,7 @@ class _SignUpPageState extends State<SignUpPage> {
               children: [
                 Center(
                   child: Text(
-                    "Create Account",
+                    "create_account".tr(), // Traduction de "Create Account"
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
@@ -38,26 +41,26 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                 ),
                 SizedBox(height: 20),
-                buildTextField("Name & Surname", nameController),
+                buildTextField("name_surname".tr(), nameController),
                 buildTextField(
-                  "Age",
+                  "age".tr(),
                   ageController,
                   keyboardType: TextInputType.number,
                 ),
-                buildDropdownField("Sexe"),
-                buildTextField("Job", jobController),
+                buildDropdownField("sex".tr()),
+                buildTextField("job".tr(), jobController),
                 buildTextField(
-                  "Email",
+                  "email".tr(),
                   emailController,
                   keyboardType: TextInputType.emailAddress,
                 ),
                 buildTextField(
-                  "Password",
+                  "password".tr(),
                   passwordController,
                   obscureText: true,
                 ),
                 buildTextField(
-                  "Confirm Password",
+                  "confirm_password".tr(),
                   confirmPasswordController,
                   obscureText: true,
                 ),
@@ -75,7 +78,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       ),
                       onPressed: () {},
                       child: Text(
-                        "SIGN UP",
+                        "sign_up".tr(), // Traduction de "SIGN UP"
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -92,7 +95,8 @@ class _SignUpPageState extends State<SignUpPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        "Already have an account?",
+                        "already_have_account"
+                            .tr(), // Traduction de "Already have an account?"
                         style: TextStyle(color: Colors.black),
                       ),
                       TextButton(
@@ -105,7 +109,7 @@ class _SignUpPageState extends State<SignUpPage> {
                           );
                         },
                         child: Text(
-                          "SIGN IN",
+                          "sign_in".tr(), // Traduction de "SIGN IN"
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.blue,
@@ -155,8 +159,8 @@ class _SignUpPageState extends State<SignUpPage> {
         DropdownButtonFormField<String>(
           value: selectedGender,
           items: [
-            DropdownMenuItem(child: Text("Homme"), value: "Homme"),
-            DropdownMenuItem(child: Text("Femme"), value: "Femme"),
+            DropdownMenuItem(value: "Homme", child: Text("Homme")),
+            DropdownMenuItem(value: "Femme", child: Text("Femme")),
           ],
           onChanged: (value) {
             setState(() {
