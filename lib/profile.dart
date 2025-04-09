@@ -131,34 +131,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 30),
                 const Divider(),
                 ListTile(
-                  title: Text("dark_mode".tr()), // Traduction du texte
+                  title: Text(
+                    "dark_mode".tr(),
+                  ), // Traduction du texte (EasyLocalization)
                   trailing: Switch(
-                    value: context.watch<ThemeProvider>().isDarkMode,
+                    value:
+                        context
+                            .watch<ThemeProvider>()
+                            .isDarkMode, // Récupère l'état actuel du thème
                     onChanged: (value) {
+                      // Change l'état du thème lorsque l'utilisateur bascule le switch
                       Provider.of<ThemeProvider>(
                         context,
                         listen: false,
                       ).toggleTheme();
                     },
                   ),
-                  onTap: () {
-                    // Alternativement, tu peux aussi utiliser cette action pour changer le thème
-                    Provider.of<ThemeProvider>(
-                      context,
-                      listen: false,
-                    ).toggleTheme();
-                  },
                 ),
 
                 ListTile(
                   leading: const Icon(Icons.language, color: Color(0xFF2196F3)),
-                  title: Text("language".tr()),
+                  title: Text("language".tr()), // Traduction du texte
                   onTap: () {
                     showDialog(
                       context: context,
                       builder:
                           (_) => AlertDialog(
-                            title: Text("language".tr()),
+                            title: Text("language".tr()), // Traduction du titre
                             content: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -210,7 +209,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Expanded(
             flex: 2,
             child: Text(
-              "$label :",
+              "$label :",
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),

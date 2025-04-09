@@ -10,8 +10,8 @@ void main() async {
 
   runApp(
     EasyLocalization(
-      supportedLocales: [Locale('en'), Locale('fr')],
-      path: 'assets/translate',
+      supportedLocales: [Locale('en'), Locale('fr'), Locale('ar')],
+      path: 'assets/translate', // Assurez-vous que le chemin est correct
       fallbackLocale: Locale('en'),
       child: ChangeNotifierProvider(
         create: (context) => ThemeProvider(),

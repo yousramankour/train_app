@@ -1,172 +1,97 @@
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'dart:async';
+import 'package:easy_localization/easy_localization.dart'; // Import EasyLocalization
+import 'splash2.dart'; // Import de la page de connexion
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _SplashScreenState createState() => _SplashScreenState();
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  String? selectedGender;
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController ageController = TextEditingController();
-  final TextEditingController jobController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController =
-      TextEditingController();
+  @override
+  void initState() {
+    super.initState();
+    //Redirige vers la page de connexion après 3 secondes
+    Timer(const Duration(seconds: 5), () {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => Splash2()),
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 30.0, vertical: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Text(
-                    "create_account".tr(), // Traduction de la clé
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 20),
-                buildTextField("name_surname".tr(), nameController),
-                buildTextField(
-                  "age".tr(),
-                  ageController,
-                  keyboardType: TextInputType.number,
-                ),
-                buildDropdownField("Sexe".tr()),
-                buildTextField("job".tr(), jobController),
-                buildTextField(
-                  "email".tr(),
-                  emailController,
-                  keyboardType: TextInputType.emailAddress,
-                ),
-                buildTextField(
-                  "password".tr(),
-                  passwordController,
-                  obscureText: true,
-                ),
-                buildTextField(
-                  "confirm_password".tr(),
-                  confirmPasswordController,
-                  obscureText: true,
-                ),
-                SizedBox(height: 20),
-                Center(
-                  child: SizedBox(
-                    width: 200,
-                    height: 50,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color.fromARGB(255, 172, 219, 241),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      onPressed: () {},
-                      child: Text(
-                        "sign_up".tr(), // Traduction de la clé
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 20),
-                Divider(),
-                Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "already_have_account".tr(), // Traduction de la clé
-                        style: TextStyle(color: Colors.black),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          // Navigation vers la page de connexion
-                        },
-                        child: Text(
-                          "sign_in".tr(), // Traduction de la clé
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF81D4FA), // Bleu ciel plus foncé
+              Color(0xFFFFFFFF), // Blanc pur
+            ],
           ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(15),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 5),
+              ),
+              child: const Icon(
+                Icons.search,
+                size: 89, // Réduit la taille
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 30),
+            Text(
+              'search_train'.tr(), // Utilisation de la traduction
+              style: const TextStyle(
+                fontSize: 30,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40.0),
+              child: Text(
+                'train_info'.tr(), // Utilisation de la traduction
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 20, color: Colors.black),
+              ),
+            ),
+            const SizedBox(height: 40),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [buildDot(true), buildDot(false)],
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget buildTextField(
-    String label,
-    TextEditingController controller, {
-    bool obscureText = false,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: TextStyle(color: Colors.black, fontSize: 16)),
-        TextField(
-          controller: controller,
-          obscureText: obscureText,
-          keyboardType: keyboardType,
-          decoration: InputDecoration(
-            border: UnderlineInputBorder(),
-            contentPadding: EdgeInsets.symmetric(vertical: 10),
-          ),
-        ),
-        SizedBox(height: 15),
-      ],
-    );
-  }
-
-  Widget buildDropdownField(String label) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: TextStyle(color: Colors.black, fontSize: 16)),
-        DropdownButtonFormField<String>(
-          value: selectedGender,
-          items: [
-            DropdownMenuItem(value: "Homme", child: Text("Homme")),
-            DropdownMenuItem(value: "Femme", child: Text("Femme")),
-          ],
-          onChanged: (value) {
-            setState(() {
-              selectedGender = value;
-            });
-          },
-          decoration: InputDecoration(
-            border: UnderlineInputBorder(),
-            contentPadding: EdgeInsets.symmetric(vertical: 10),
-          ),
-        ),
-        SizedBox(height: 15),
-      ],
+  Widget buildDot(bool isActive) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      width: 10,
+      height: 10,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: isActive ? Colors.black : Colors.white,
+        border: Border.all(color: Colors.black),
+      ),
     );
   }
 }

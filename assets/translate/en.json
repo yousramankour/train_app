@@ -38,6 +38,8 @@
   "language": "Language",
   "logout": "Logout",
   "save": "Save",
-  "gender": "Gender"
+  "gender": "Gender",
+  "train_info": "No need to get to the train station to check for your train",
+  "send": "send"
 }
   

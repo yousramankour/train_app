@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:easy_localization/easy_localization.dart'; // Importer easy_localization
 
 class MessageScreen extends StatefulWidget {
   const MessageScreen({super.key});
@@ -32,8 +33,8 @@ class _ChatScreenState extends State<MessageScreen> {
     return Scaffold(
       backgroundColor: Colors.white, // ✅ Fond blanc
       appBar: AppBar(
-        title: Text("Chat"),
-        backgroundColor: Color(0xFFACDBF1), // ✅ Couleur de ton projet
+        title: Text("chat".tr()), // Traduction du titre
+        backgroundColor: Colors.blue, // ✅ Couleur de ton projet
         elevation: 0,
       ),
       body: Column(
@@ -71,7 +72,9 @@ class _ChatScreenState extends State<MessageScreen> {
                           child: TextField(
                             controller: _controller,
                             decoration: InputDecoration(
-                              hintText: "Type a message...",
+                              hintText:
+                                  "type_message"
+                                      .tr(), // Traduction pour le hint
                               border: InputBorder.none,
                             ),
                           ),
@@ -86,7 +89,7 @@ class _ChatScreenState extends State<MessageScreen> {
                 ),
                 SizedBox(width: 10),
                 CircleAvatar(
-                  backgroundColor: Color(0xFFACDBF1),
+                  backgroundColor: Colors.blue,
                   radius: 25,
                   child: IconButton(
                     icon: Icon(Icons.send, color: Colors.white),
@@ -122,7 +125,7 @@ class ChatBubble extends StatelessWidget {
         margin: EdgeInsets.symmetric(vertical: 5, horizontal: 15),
         padding: EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isMe ? Color(0xFFACDBF1) : Colors.white,
+          color: isMe ? Colors.blue : Colors.white,
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(15),
             topRight: Radius.circular(15),
