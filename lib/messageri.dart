@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:easy_localization/easy_localization.dart'; // Importer easy_localization
 
 class MessageScreen extends StatefulWidget {

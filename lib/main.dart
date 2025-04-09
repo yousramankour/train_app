@@ -3,10 +3,12 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart'; // Importer Provider
 import 'splash_screen.dart';
 import 'theme_provider.dart'; // Importer le fichier ThemeProvider
+import 'package:firebase_core/firebase_core.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
+  await Firebase.initializeApp();
 
   runApp(
     EasyLocalization(

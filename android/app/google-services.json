@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "354763314345",
+    "project_id": "prjtrain-18dde",
+    "storage_bucket": "prjtrain-18dde.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:354763314345:android:084b74136578378f7745b8",
+        "android_client_info": {
+          "package_name": "com.example.appmob"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCnrT-7_1gFY4fRpQwV25aLnyGJLt-GknI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

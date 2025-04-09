@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'historique_page.dart';
-import 'apropos_page.dart';
 import 'settings_page.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
@@ -243,7 +241,7 @@ class EditProfilePage extends StatelessWidget {
           ElevatedButton(
             onPressed: null,
             style: ButtonStyle(
-              backgroundColor: MaterialStatePropertyAll(Color(0xFF2196F3)),
+              backgroundColor: WidgetStatePropertyAll(Color(0xFF2196F3)),
             ),
             child: Text("save".tr(), style: TextStyle(color: Colors.white)),
           ),
