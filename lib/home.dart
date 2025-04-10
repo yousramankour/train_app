@@ -4,11 +4,13 @@ import 'package:location/location.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:provider/provider.dart';
 
 import 'statistique.dart';
 import 'notification.dart';
 import 'messageri.dart';
 import 'profile.dart';
+import 'theme_provider.dart'; // Importer le ThemeProvider
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -83,8 +85,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Récupérer l'instance de ThemeProvider pour gérer le mode sombre/clair
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor:
+          themeProvider.themeMode == ThemeMode.light
+              ? Colors.white
+              : Colors.black,
       body: Stack(
         children: [
           GoogleMap(
@@ -117,7 +125,10 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Icon(
                 Icons.location_searching,
                 size: 25,
-                color: Colors.black,
+                color:
+                    themeProvider.themeMode == ThemeMode.light
+                        ? Colors.black
+                        : Colors.white,
               ),
             ),
           ),
@@ -125,7 +136,10 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Color(0xFF008ECC),
+          color:
+              themeProvider.themeMode == ThemeMode.light
+                  ? Color(0xFF008ECC)
+                  : Colors.grey[850],
           borderRadius: BorderRadius.vertical(top: Radius.circular(2)),
         ),
         padding: EdgeInsets.symmetric(vertical: 2),

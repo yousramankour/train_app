@@ -40,7 +40,9 @@
   "save": "Sauvegarder",
   "gender": "Sexe",
   "train_info": "Il n'est pas nécessaire de vous rendre à la gare pour vérifier votre train",
-  "send": "Envoyer"
+  "send": "Envoyer",
+  "historique": "Historique",
+  "a_propos": "A propos"
 
   }
   

@@ -30,10 +30,16 @@ class _ChatScreenState extends State<MessageScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // ✅ Fond blanc
+      backgroundColor:
+          Theme.of(
+            context,
+          ).scaffoldBackgroundColor, // Utiliser la couleur de fond du thème
       appBar: AppBar(
         title: Text("chat".tr()), // Traduction du titre
-        backgroundColor: Colors.blue, // ✅ Couleur de ton projet
+        backgroundColor:
+            Theme.of(context)
+                .appBarTheme
+                .backgroundColor, // Utiliser la couleur de l'AppBar du thème
         elevation: 0,
       ),
       body: Column(
@@ -58,7 +64,10 @@ class _ChatScreenState extends State<MessageScreen> {
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color:
+                          Theme.of(context)
+                              .inputDecorationTheme
+                              .fillColor, // Couleur de fond du champ de texte
                       borderRadius: BorderRadius.circular(30),
                       boxShadow: [
                         BoxShadow(color: Colors.black12, blurRadius: 5),
@@ -88,7 +97,10 @@ class _ChatScreenState extends State<MessageScreen> {
                 ),
                 SizedBox(width: 10),
                 CircleAvatar(
-                  backgroundColor: Colors.blue,
+                  backgroundColor:
+                      Theme.of(
+                        context,
+                      ).primaryColor, // Utiliser la couleur principale du thème
                   radius: 25,
                   child: IconButton(
                     icon: Icon(Icons.send, color: Colors.white),
@@ -124,7 +136,13 @@ class ChatBubble extends StatelessWidget {
         margin: EdgeInsets.symmetric(vertical: 5, horizontal: 15),
         padding: EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isMe ? Colors.blue : Colors.white,
+          color:
+              isMe
+                  ? Theme.of(context)
+                      .primaryColor // Utiliser la couleur principale du thème pour le message de l'utilisateur
+                  : Theme.of(
+                    context,
+                  ).cardColor, // Couleur de la carte pour les messages reçus
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(15),
             topRight: Radius.circular(15),
@@ -136,9 +154,30 @@ class ChatBubble extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text(message, style: TextStyle(fontSize: 16, color: Colors.black)),
+            Text(
+              message,
+              style: TextStyle(
+                fontSize: 16,
+                color:
+                    isMe
+                        ? Colors
+                            .white // Texte en blanc pour les messages envoyés par l'utilisateur
+                        : Colors.black, // Texte en noir pour les messages reçus
+              ),
+            ),
             SizedBox(height: 5),
-            Text(time, style: TextStyle(fontSize: 12, color: Colors.grey[700])),
+            Text(
+              time,
+              style: TextStyle(
+                fontSize: 12,
+                color:
+                    isMe
+                        ? Colors
+                            .white60 // Légèrement transparent pour les messages envoyés par l'utilisateur
+                        : Colors
+                            .black54, // Légèrement transparent pour les messages reçus
+              ),
+            ),
           ],
         ),
       ),
