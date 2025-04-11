@@ -38,11 +38,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Provider.of<ThemeProvider>(context).isDarkMode;
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F7FB),
+      backgroundColor: isDark ? Colors.black : Colors.white,
       appBar: AppBar(
         title: Text("profile".tr()),
-        backgroundColor: const Color(0xFF2196F3),
+        backgroundColor:
+            isDark
+                ? const Color.fromARGB(255, 0, 2, 116)
+                : const Color(0xFF2196F3),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -99,7 +103,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     fit: BoxFit.cover,
                                   )
                                   : null,
-                          color: Colors.grey[300],
+                          color: isDark ? Colors.black : Colors.white,
                         ),
                         child:
                             _image == null
@@ -136,7 +140,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ElevatedButton(
               onPressed: _openEditPage,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2196F3),
+                backgroundColor:
+                    isDark
+                        ? const Color.fromARGB(255, 0, 2, 116)
+                        : const Color(0xFF2196F3),
                 minimumSize: const Size.fromHeight(45),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
@@ -150,9 +157,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 30),
             _buildOption(Icons.language, "language".tr(), _changeLanguage),
             _buildOption(Icons.dark_mode, "dark_mode".tr(), () {
-              Provider.of<ThemeProvider>(context, listen: false).toggleTheme(
-                !Provider.of<ThemeProvider>(context, listen: false).isDarkMode,
-              );
+              Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
             }),
             _buildOption(Icons.history, "historique".tr(), () {
               Navigator.push(
@@ -209,12 +214,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
     VoidCallback onTap, {
     Color? iconColor,
   }) {
+    final isDark = Provider.of<ThemeProvider>(context).isDarkMode;
+
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       margin: const EdgeInsets.symmetric(vertical: 8),
       child: ListTile(
-        leading: Icon(icon, color: iconColor ?? const Color(0xFF2196F3)),
+        leading: Icon(
+          icon,
+          color:
+              iconColor ??
+              (isDark
+                  ? const Color.fromARGB(255, 0, 2, 116)
+                  : const Color(0xFF2196F3)),
+        ),
         title: Text(label),
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
         onTap: onTap,
@@ -227,35 +241,43 @@ class EditProfilePage extends StatelessWidget {
   const EditProfilePage({super.key});
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: Text("edit_info".tr()),
-      backgroundColor: const Color(0xFF2196F3),
-    ),
-    body: Padding(
-      padding: const EdgeInsets.all(20),
-      child: ListView(
-        children: [
-          TextField(decoration: InputDecoration(labelText: 'name'.tr())),
-          TextField(decoration: InputDecoration(labelText: 'email'.tr())),
-          TextField(decoration: InputDecoration(labelText: 'age'.tr())),
-          TextField(decoration: InputDecoration(labelText: 'gender'.tr())),
-          TextField(decoration: InputDecoration(labelText: 'job'.tr())),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: null,
-            style: ButtonStyle(
-              backgroundColor: MaterialStatePropertyAll(
-                const Color(0xFF2196F3),
+  Widget build(BuildContext context) {
+    final isDark = Provider.of<ThemeProvider>(context).isDarkMode;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("edit_info".tr()),
+        backgroundColor:
+            isDark
+                ? const Color.fromARGB(255, 0, 2, 116)
+                : const Color(0xFF2196F3),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: ListView(
+          children: [
+            TextField(decoration: InputDecoration(labelText: 'name'.tr())),
+            TextField(decoration: InputDecoration(labelText: 'email'.tr())),
+            TextField(decoration: InputDecoration(labelText: 'age'.tr())),
+            TextField(decoration: InputDecoration(labelText: 'gender'.tr())),
+            TextField(decoration: InputDecoration(labelText: 'job'.tr())),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: null,
+              style: ButtonStyle(
+                backgroundColor: MaterialStatePropertyAll(
+                  isDark
+                      ? const Color.fromARGB(255, 0, 2, 116)
+                      : const Color(0xFF2196F3),
+                ),
+              ),
+              child: Text(
+                "save".tr(),
+                style: const TextStyle(color: Colors.white),
               ),
             ),
-            child: Text(
-              "save".tr(),
-              style: const TextStyle(color: Colors.white),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }

@@ -1,21 +1,30 @@
 import 'package:appmob/home.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'signup.dart'; // Import de la page d'inscription
+import 'signup.dart';
+import 'theme_provider.dart';
+import 'package:provider/provider.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Provider.of<ThemeProvider>(context).isDarkMode;
     return Scaffold(
-      backgroundColor: Colors.white, // Fond blanc
+      backgroundColor: isDark ? Colors.black : Colors.white,
       resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Container(height: 50, color: Color(0xFF008ECC)),
+            Container(
+              height: 50,
+              color:
+                  isDark
+                      ? const Color.fromARGB(255, 0, 2, 116)
+                      : Color(0xFF008ECC),
+            ),
 
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 30.0),
@@ -32,7 +41,7 @@ class LoginPage extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                        color: isDark ? Colors.white : Colors.black,
                       ),
                     ),
                   ),
@@ -40,7 +49,10 @@ class LoginPage extends StatelessWidget {
                   TextField(
                     decoration: InputDecoration(
                       labelText: "email".tr(), // ← traduit
-                      labelStyle: TextStyle(color: Colors.black, fontSize: 16),
+                      labelStyle: TextStyle(
+                        color: isDark ? Colors.white : Colors.black,
+                        fontSize: 16,
+                      ),
                       border: UnderlineInputBorder(),
                       contentPadding: EdgeInsets.symmetric(vertical: 10),
                     ),
@@ -50,7 +62,10 @@ class LoginPage extends StatelessWidget {
                     obscureText: true,
                     decoration: InputDecoration(
                       labelText: "password".tr(), // ← traduit
-                      labelStyle: TextStyle(color: Colors.black, fontSize: 16),
+                      labelStyle: TextStyle(
+                        color: isDark ? Colors.white : Colors.black,
+                        fontSize: 16,
+                      ),
                       border: UnderlineInputBorder(),
                       contentPadding: EdgeInsets.symmetric(vertical: 10),
                     ),
@@ -77,7 +92,10 @@ class LoginPage extends StatelessWidget {
                       height: 50,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFF008ECC),
+                          backgroundColor:
+                              isDark
+                                  ? const Color.fromARGB(255, 0, 2, 116)
+                                  : Color(0xFF008ECC),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -95,7 +113,7 @@ class LoginPage extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: isDark ? Colors.black : Colors.white,
                           ),
                         ),
                       ),
@@ -107,7 +125,10 @@ class LoginPage extends StatelessWidget {
 
             Container(
               height: 50,
-              color: Color(0xFF008ECC),
+              color:
+                  isDark
+                      ? const Color.fromARGB(255, 0, 2, 116)
+                      : Color(0xFF008ECC),
               child: Center(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -127,7 +148,7 @@ class LoginPage extends StatelessWidget {
                         "sign_up".tr(), // ← traduit
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: isDark ? Colors.white : Colors.black,
                         ),
                       ),
                     ),
