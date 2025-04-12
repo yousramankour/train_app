@@ -43,7 +43,10 @@
   "send": "send",
   "historique": "History",
    "a_propos": "About",
-   "Rechercher une gare...": "Search for a station..."
+   "Rechercher une gare...": "Search for a station...",
+   "man": "man",
+   "woman":"woman"
+
 
 }
   

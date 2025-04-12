@@ -1,7 +1,12 @@
+// Import des pages nécessaires et des packages utilisés
 import 'package:appmob/login_page.dart';
 import 'package:flutter/material.dart';
-import 'package:easy_localization/easy_localization.dart';
+import 'package:easy_localization/easy_localization.dart'; // Pour la traduction
+import 'package:firebase_auth/firebase_auth.dart'; // Pour l'authentification
+import 'package:cloud_firestore/cloud_firestore.dart'; // Pour la base de données Firestore
+import 'home.dart';
 
+// Définition du widget d'inscription
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
 
@@ -10,6 +15,7 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPageState extends State<SignUpPage> {
+  // Variables pour stocker les données saisies par l'utilisateur
   String? selectedGender;
   final TextEditingController nameController = TextEditingController();
   final TextEditingController ageController = TextEditingController();
@@ -19,8 +25,16 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController confirmPasswordController =
       TextEditingController();
 
+  // Instance Firebase
+  final _auth = FirebaseAuth.instance;
+
+  // Variables pour gérer les erreurs et l'état de chargement
+  String errorMessage = '';
+  bool isLoading = false;
+
   @override
   Widget build(BuildContext context) {
+    // Détection du thème (sombre ou clair)
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
@@ -32,6 +46,7 @@ class _SignUpPageState extends State<SignUpPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Titre principal
                 Center(
                   child: Text(
                     "create_account".tr(),
@@ -42,7 +57,8 @@ class _SignUpPageState extends State<SignUpPage> {
                     ),
                   ),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
+                // Champs du formulaire d'inscription
                 buildTextField(
                   "name_surname".tr(),
                   nameController,
@@ -74,36 +90,58 @@ class _SignUpPageState extends State<SignUpPage> {
                   obscureText: true,
                   isDark: isDark,
                 ),
-                SizedBox(height: 20),
-                Center(
-                  child: SizedBox(
-                    width: 200,
-                    height: 50,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            isDark
-                                ? Colors.blueGrey
-                                : Color.fromARGB(255, 172, 219, 241),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      onPressed: () {
-                        // TODO: Ajouter logique de création de compte
-                      },
+
+                // Message d'erreur si présent
+                if (errorMessage.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Center(
                       child: Text(
-                        "sign_up".tr(),
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : Colors.black,
-                        ),
+                        errorMessage,
+                        style: const TextStyle(color: Colors.red),
                       ),
                     ),
                   ),
+
+                const SizedBox(height: 20),
+                // Bouton d'inscription
+                Center(
+                  child:
+                      isLoading
+                          ? const CircularProgressIndicator()
+                          : SizedBox(
+                            width: 200,
+                            height: 50,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    isDark
+                                        ? Colors.blueGrey
+                                        : const Color.fromARGB(
+                                          255,
+                                          172,
+                                          219,
+                                          241,
+                                        ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              onPressed:
+                                  signUp, // Appelle la fonction d'inscription
+                              child: Text(
+                                "sign_up".tr(),
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? Colors.white : Colors.black,
+                                ),
+                              ),
+                            ),
+                          ),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
+                // Ligne de séparation et lien vers la page de connexion
                 Divider(color: isDark ? Colors.grey : Colors.black),
                 Center(
                   child: Row(
@@ -117,16 +155,17 @@ class _SignUpPageState extends State<SignUpPage> {
                       ),
                       TextButton(
                         onPressed: () {
+                          // Redirection vers la page de connexion
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => LoginPage(),
+                              builder: (context) => const LoginPage(),
                             ),
                           );
                         },
                         child: Text(
                           "sign_in".tr(),
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.blue,
                           ),
@@ -143,6 +182,79 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
+  // Fonction d'inscription
+  Future<void> signUp() async {
+    final name = nameController.text.trim();
+    final age = ageController.text.trim();
+    final job = jobController.text.trim();
+    final email = emailController.text.trim();
+    final password = passwordController.text;
+    final confirmPassword = confirmPasswordController.text;
+
+    setState(() {
+      errorMessage = '';
+    });
+
+    // Vérifie que tous les champs sont remplis
+    if (name.isEmpty ||
+        age.isEmpty ||
+        selectedGender == null ||
+        job.isEmpty ||
+        email.isEmpty ||
+        password.isEmpty ||
+        confirmPassword.isEmpty) {
+      setState(() {
+        errorMessage = "Veuillez remplir tous les champs.";
+      });
+      return;
+    }
+
+    // Vérifie que les mots de passe sont identiques
+    if (password != confirmPassword) {
+      setState(() {
+        errorMessage = "Les mots de passe ne correspondent pas.";
+      });
+      return;
+    }
+
+    try {
+      setState(() => isLoading = true);
+
+      // Création de l'utilisateur Firebase
+      final userCredential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      // Enregistrement des données supplémentaires dans Firestore
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userCredential.user!.uid)
+          .set({
+            'name': name,
+            'age': age,
+            'sex': selectedGender,
+            'job': job,
+            'email': email,
+            'createdAt': DateTime.now(),
+          });
+
+      // Redirection vers la page d'accueil après inscription
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+    } on FirebaseAuthException catch (e) {
+      // Gestion des erreurs Firebase
+      setState(() {
+        errorMessage = e.message ?? "Une erreur est survenue.";
+      });
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
+
+  // Widget personnalisé pour les champs de texte
   Widget buildTextField(
     String label,
     TextEditingController controller, {
@@ -166,8 +278,8 @@ class _SignUpPageState extends State<SignUpPage> {
           keyboardType: keyboardType,
           style: TextStyle(color: isDark ? Colors.white : Colors.black),
           decoration: InputDecoration(
-            border: UnderlineInputBorder(),
-            contentPadding: EdgeInsets.symmetric(vertical: 10),
+            border: const UnderlineInputBorder(),
+            contentPadding: const EdgeInsets.symmetric(vertical: 10),
             enabledBorder: UnderlineInputBorder(
               borderSide: BorderSide(
                 color: isDark ? Colors.white70 : Colors.black54,
@@ -175,11 +287,12 @@ class _SignUpPageState extends State<SignUpPage> {
             ),
           ),
         ),
-        SizedBox(height: 15),
+        const SizedBox(height: 15),
       ],
     );
   }
 
+  // Widget personnalisé pour la sélection du sexe (dropdown)
   Widget buildDropdownField(String label, bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -204,8 +317,8 @@ class _SignUpPageState extends State<SignUpPage> {
             });
           },
           decoration: InputDecoration(
-            border: UnderlineInputBorder(),
-            contentPadding: EdgeInsets.symmetric(vertical: 10),
+            border: const UnderlineInputBorder(),
+            contentPadding: const EdgeInsets.symmetric(vertical: 10),
             enabledBorder: UnderlineInputBorder(
               borderSide: BorderSide(
                 color: isDark ? Colors.white70 : Colors.black54,
@@ -214,7 +327,7 @@ class _SignUpPageState extends State<SignUpPage> {
           ),
           style: TextStyle(color: isDark ? Colors.white : Colors.black),
         ),
-        SizedBox(height: 15),
+        const SizedBox(height: 15),
       ],
     );
   }

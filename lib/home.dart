@@ -3,9 +3,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:easy_localization/easy_localization.dart';
-import 'package:provider/provider.dart';
-import 'theme_provider.dart';
+
 import 'statistique.dart';
 import 'notification.dart';
 import 'messageri.dart';
@@ -180,9 +178,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Provider.of<ThemeProvider>(context).isDarkMode;
     return Scaffold(
-      backgroundColor: isDark ? Colors.black : Colors.white,
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
           GoogleMap(
@@ -236,7 +233,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
-                color: isDark ? Colors.black : Colors.white,
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(30),
                 boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4)],
               ),
@@ -244,7 +241,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 onChanged: (value) => _searchText = value,
                 onSubmitted: _handleSearch,
                 decoration: InputDecoration(
-                  hintText: "Rechercher une gare...".tr(),
+                  hintText: 'Rechercher une gare...',
                   border: InputBorder.none,
                   icon: Icon(Icons.search),
                 ),
@@ -255,38 +252,33 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color:
-              isDark ? const Color.fromARGB(255, 2, 2, 2) : Color(0xFF008ECC),
+          color: Color(0xFF008ECC),
           borderRadius: BorderRadius.vertical(top: Radius.circular(2)),
         ),
         padding: EdgeInsets.symmetric(vertical: 2),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _buildBottomButton(LucideIcons.map, "Carte".tr(), () {}),
-            _buildBottomButton(LucideIcons.barChart, "Statistique".tr(), () {
+            _buildBottomButton(LucideIcons.map, "Carte", () {}),
+            _buildBottomButton(LucideIcons.barChart, "Statistique", () {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => StatsScreen()),
               );
             }),
-            _buildBottomButton(LucideIcons.bell, "notifications".tr(), () {
+            _buildBottomButton(LucideIcons.bell, "Notifications", () {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => NotificationScreen()),
               );
             }),
-            _buildBottomButton(
-              LucideIcons.messageCircle,
-              "messagerie".tr(),
-              () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => MessageScreen()),
-                );
-              },
-            ),
-            _buildBottomButton(LucideIcons.user, "profil".tr(), () {
+            _buildBottomButton(LucideIcons.messageCircle, "Messagerie", () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => MessageScreen()),
+              );
+            }),
+            _buildBottomButton(LucideIcons.user, "Profil", () {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => ProfileScreen()),

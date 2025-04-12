@@ -1,154 +1,219 @@
-import 'package:appmob/home.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'signup.dart';
 import 'theme_provider.dart';
 import 'package:provider/provider.dart';
+import 'home.dart';
 
-class LoginPage extends StatelessWidget {
-  const LoginPage({super.key});
+class LoginPage extends StatefulWidget {
+  const LoginPage({Key? key}) : super(key: key);
+
+  @override
+  _LoginPageState createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  // Contrôleurs pour les champs de texte
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+  // Instance de FirebaseAuth pour l'authentification
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  // Variables pour gérer l'état de l'erreur et du chargement
+  String errorMessage = '';
+  bool isLoading = false;
+
+  // Fonction pour gérer la connexion de l'utilisateur
+  Future<void> signIn() async {
+    final email = emailController.text.trim();
+    final password = passwordController.text;
+
+    // Réinitialiser le message d'erreur
+    setState(() {
+      errorMessage = '';
+    });
+
+    // Vérifier si les champs sont vides
+    if (email.isEmpty || password.isEmpty) {
+      setState(() {
+        errorMessage = 'Veuillez remplir tous les champs.';
+      });
+      return;
+    }
+
+    try {
+      setState(() => isLoading = true);
+
+      // Tentative de connexion avec Firebase
+      final userCredential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      // Naviguer vers la page d'accueil en cas de succès
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+    } on FirebaseAuthException catch (e) {
+      // Gérer les erreurs d'authentification
+      setState(() {
+        errorMessage = e.message ?? 'Une erreur est survenue.';
+      });
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Provider.of<ThemeProvider>(context).isDarkMode;
+    // Déterminer le mode sombre ou clair
+    final bool isDark = Provider.of<ThemeProvider>(context).isDarkMode;
+
+    // Définir les couleurs en fonction du thème
+    final backgroundColor = isDark ? Colors.black : Colors.white;
+    final primaryColor =
+        isDark ? const Color.fromARGB(255, 0, 2, 116) : const Color(0xFF008ECC);
+    final textColor = isDark ? Colors.white : Colors.black;
+
     return Scaffold(
-      backgroundColor: isDark ? Colors.black : Colors.white,
+      backgroundColor: backgroundColor,
       resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Container(
-              height: 50,
-              color:
-                  isDark
-                      ? const Color.fromARGB(255, 0, 2, 116)
-                      : Color(0xFF008ECC),
-            ),
-
+            // Barre supérieure
+            Container(height: 50, color: primaryColor),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 30.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Logo de l'application
                   Center(
                     child: Image.asset('assets/logo9itari.png', height: 80),
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
+                  // Titre de la page
                   Center(
                     child: Text(
-                      "sign_in".tr(), // ← traduit
+                      'sign_in'.tr(),
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : Colors.black,
+                        color: textColor,
                       ),
                     ),
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
+                  // Champ pour l'email
                   TextField(
+                    controller: emailController,
                     decoration: InputDecoration(
-                      labelText: "email".tr(), // ← traduit
-                      labelStyle: TextStyle(
-                        color: isDark ? Colors.white : Colors.black,
-                        fontSize: 16,
-                      ),
-                      border: UnderlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(vertical: 10),
+                      labelText: 'email'.tr(),
+                      labelStyle: TextStyle(color: textColor, fontSize: 16),
+                      border: const UnderlineInputBorder(),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 10),
                     ),
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
+                  // Champ pour le mot de passe
                   TextField(
+                    controller: passwordController,
                     obscureText: true,
                     decoration: InputDecoration(
-                      labelText: "password".tr(), // ← traduit
-                      labelStyle: TextStyle(
-                        color: isDark ? Colors.white : Colors.black,
-                        fontSize: 16,
-                      ),
-                      border: UnderlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(vertical: 10),
+                      labelText: 'password'.tr(),
+                      labelStyle: TextStyle(color: textColor, fontSize: 16),
+                      border: const UnderlineInputBorder(),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 10),
                     ),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
+                  // Lien pour le mot de passe oublié
                   Align(
                     alignment: Alignment.centerLeft,
                     child: TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        // Implémentez la logique de mot de passe oublié ici
+                      },
                       child: Text(
-                        "forgot_password".tr(), // ← traduit
+                        'forgot_password'.tr(),
                         style: TextStyle(
-                          color: Colors.black,
+                          color: textColor,
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
                   ),
-                  SizedBox(height: 30),
-                  Center(
-                    child: SizedBox(
-                      width: 200,
-                      height: 50,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              isDark
-                                  ? const Color.fromARGB(255, 0, 2, 116)
-                                  : Color(0xFF008ECC),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => HomeScreen(),
-                            ),
-                          );
-                        },
+                  // Affichage du message d'erreur
+                  if (errorMessage.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Center(
                         child: Text(
-                          "sign_in".tr(), // ← traduit
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.black : Colors.white,
-                          ),
+                          errorMessage,
+                          style: const TextStyle(color: Colors.red),
                         ),
                       ),
                     ),
+                  const SizedBox(height: 30),
+                  // Bouton de connexion
+                  Center(
+                    child:
+                        isLoading
+                            ? const CircularProgressIndicator()
+                            : SizedBox(
+                              width: 200,
+                              height: 50,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: primaryColor,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                onPressed: signIn,
+                                child: Text(
+                                  'sign_in'.tr(),
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark ? Colors.black : Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
                   ),
                 ],
               ),
             ),
-
+            // Barre inférieure avec lien vers l'inscription
             Container(
               height: 50,
-              color:
-                  isDark
-                      ? const Color.fromARGB(255, 0, 2, 116)
-                      : Color(0xFF008ECC),
+              color: primaryColor,
               child: Center(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      "no_account".tr(), // ← traduit
-                      style: TextStyle(color: Colors.black),
-                    ),
+                    Text('no_account'.tr(), style: TextStyle(color: textColor)),
                     TextButton(
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => SignUpPage()),
+                          MaterialPageRoute(
+                            builder: (context) => const SignUpPage(),
+                          ),
                         );
                       },
                       child: Text(
-                        "sign_up".tr(), // ← traduit
+                        'sign_up'.tr(),
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : Colors.black,
+                          color: textColor,
                         ),
                       ),
                     ),

@@ -12,7 +12,7 @@
      "chat": "Discussion",
     "type_message": "Écris un message...",
     "create_account": "Créer un compte",
-  "name_surname": "Nom & Prénom",
+    "name_surname": "Nom & Prénom",
   "age": "Âge",
   "sex": "Sexe",
   "job": "Métier",
@@ -43,7 +43,9 @@
   "send": "Envoyer",
   "historique": "Historique",
   "a_propos": "A propos",
-  "Rechercher une gare...":"Rechercher une gare..."
+  "Rechercher une gare...":"Rechercher une gare...",
+  "man": "homme",
+  "woman":"femme"
 
   }
   
