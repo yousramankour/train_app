@@ -59,20 +59,25 @@ class _EditProfilePageState extends State<EditProfilePage> {
         child: ListView(
           children: [
             TextField(
-                controller: nameController,
-                decoration: const InputDecoration(labelText: 'Nom')),
+              controller: nameController,
+              decoration: const InputDecoration(labelText: 'Nom'),
+            ),
             TextField(
-                controller: emailController,
-                decoration: const InputDecoration(labelText: 'Email')),
+              controller: emailController,
+              decoration: const InputDecoration(labelText: 'Email'),
+            ),
             TextField(
-                controller: ageController,
-                decoration: const InputDecoration(labelText: 'Âge')),
+              controller: ageController,
+              decoration: const InputDecoration(labelText: 'Âge'),
+            ),
             TextField(
-                controller: genderController,
-                decoration: const InputDecoration(labelText: 'Sexe')),
+              controller: genderController,
+              decoration: const InputDecoration(labelText: 'Sexe'),
+            ),
             TextField(
-                controller: jobController,
-                decoration: const InputDecoration(labelText: 'Métier')),
+              controller: jobController,
+              decoration: const InputDecoration(labelText: 'Métier'),
+            ),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
