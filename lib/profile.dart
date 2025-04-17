@@ -1,54 +1,115 @@
+import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
+
+import 'edit_profile.dart';
 import 'historique_page.dart';
 import 'apropos_page.dart';
 import 'theme_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
-
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  File? _image;
+  final firestore = FirebaseFirestore.instance;
+  final storage = FirebaseStorage.instance;
+  User? user;
 
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final XFile? img = await picker.pickImage(source: ImageSource.gallery);
-    if (img != null) setState(() => _image = File(img.path));
+  String nom = '';
+  String email = '';
+  String age = '';
+  String sexe = '';
+  String metier = '';
+  String profileImageUrl = '';
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    user = FirebaseAuth.instance.currentUser;
+    _loadUserProfile();
   }
 
-  Future<void> _takePhoto() async {
-    final picker = ImagePicker();
-    final XFile? img = await picker.pickImage(source: ImageSource.camera);
-    if (img != null) setState(() => _image = File(img.path));
+  Future<void> _loadUserProfile() async {
+    if (user == null) return;
+    try {
+      final doc = await firestore.collection('users').doc(user!.uid).get();
+      final data = doc.data();
+      if (data != null) {
+        setState(() {
+          nom = data['nom'] ?? '';
+          email = data['email'] ?? '';
+          age = data['age']?.toString() ?? '';
+          sexe = data['sexe'] ?? '';
+          metier = data['metier'] ?? '';
+        });
+      }
+
+      try {
+        final url = await storage.ref('profile_pictures/${user!.uid}.jpg').getDownloadURL();
+        setState(() {
+          profileImageUrl = url;
+        });
+      } catch (_) {
+        setState(() {
+          profileImageUrl = '';
+        });
+      }
+    } catch (e) {
+      debugPrint("Erreur chargement profil: $e");
+    }
+
+    setState(() {
+      isLoading = false;
+    });
   }
 
-  void _openEditPage() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const EditProfilePage()),
-    );
+  Future<void> _pickAndUploadImage(ImageSource source) async {
+    if (user == null) return;
+
+    try {
+      final picker = ImagePicker();
+      final image = await picker.pickImage(source: source, imageQuality: 50);
+      if (image != null) {
+        final ref = storage.ref('profile_pictures/${user!.uid}.jpg');
+        await ref.putFile(File(image.path));
+        final url = await ref.getDownloadURL();
+        setState(() {
+          profileImageUrl = url;
+        });
+      }
+    } catch (e) {
+      debugPrint("Erreur upload image: $e");
+    }
+  }
+
+  Future<void> _logout() async {
+    await FirebaseAuth.instance.signOut();
+    // ignore: use_build_context_synchronously
+    Navigator.of(context).popUntil((route) => route.isFirst); // Retour à la première page
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Provider.of<ThemeProvider>(context).isDarkMode;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Scaffold(
-      backgroundColor: isDark ? Colors.black : Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text("profile".tr()),
-        backgroundColor:
-            isDark
-                ? const Color.fromARGB(255, 0, 2, 116)
-                : const Color(0xFF2196F3),
+        backgroundColor: const Color(0xFF2196F3),
       ),
-      body: SingleChildScrollView(
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
@@ -62,33 +123,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Row(
                   children: [
                     GestureDetector(
-                      onTap:
-                          () => showDialog(
-                            context: context,
-                            builder:
-                                (_) => AlertDialog(
-                                  title: Text("change_photo".tr()),
-                                  content: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      TextButton(
-                                        onPressed: () {
-                                          _takePhoto();
-                                          Navigator.pop(context);
-                                        },
-                                        child: Text("take_photo".tr()),
-                                      ),
-                                      TextButton(
-                                        onPressed: () {
-                                          _pickImage();
-                                          Navigator.pop(context);
-                                        },
-                                        child: Text("choose_gallery".tr()),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                      onTap: () => showDialog(
+                        context: context,
+                        builder: (_) => AlertDialog(
+                          title: Text("change_photo".tr()),
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              TextButton(
+                                onPressed: () {
+                                  _pickAndUploadImage(ImageSource.camera);
+                                  Navigator.pop(context);
+                                },
+                                child: Text("take_photo".tr()),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  _pickAndUploadImage(ImageSource.gallery);
+                                  Navigator.pop(context);
+                                },
+                                child: Text("choose_gallery".tr()),
+                              ),
+                            ],
                           ),
+                        ),
+                      ),
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 400),
                         curve: Curves.easeInOut,
@@ -96,23 +155,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         height: 100,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          image:
-                              _image != null
-                                  ? DecorationImage(
-                                    image: FileImage(_image!),
-                                    fit: BoxFit.cover,
-                                  )
-                                  : null,
-                          color: isDark ? Colors.black : Colors.white,
+                          image: profileImageUrl.isNotEmpty
+                              ? DecorationImage(
+                            image: NetworkImage(profileImageUrl),
+                            fit: BoxFit.cover,
+                          )
+                              : null,
+                          color: Colors.grey[300],
                         ),
-                        child:
-                            _image == null
-                                ? const Icon(
-                                  Icons.camera_alt,
-                                  size: 40,
-                                  color: Color(0xFF2196F3),
-                                )
-                                : null,
+                        child: profileImageUrl.isEmpty
+                            ? CircleAvatar(
+                          radius: 50,
+                          backgroundColor: Colors.blue,
+                          child: Text(
+                            nom.isNotEmpty ? nom[0] : 'U',
+                            style: const TextStyle(fontSize: 40, color: Colors.white),
+                          ),
+                        )
+                            : null,
                       ),
                     ),
                     const SizedBox(width: 20),
@@ -121,13 +181,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "John Doe",
-                            style: Theme.of(context).textTheme.titleMedium,
+                            nom,
+                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 5),
                           Text(
-                            "john.doe@example.com",
-                            style: Theme.of(context).textTheme.bodyMedium,
+                            email,
+                            style: const TextStyle(fontSize: 16, color: Colors.black54),
                           ),
                         ],
                       ),
@@ -138,145 +198,104 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: _openEditPage,
+              onPressed: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const EditProfilePage()),
+                );
+                _loadUserProfile();
+              },
               style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    isDark
-                        ? const Color.fromARGB(255, 0, 2, 116)
-                        : const Color(0xFF2196F3),
+                backgroundColor: const Color(0xFF2196F3),
                 minimumSize: const Size.fromHeight(45),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              child: Text(
-                "edit_info".tr(),
-                style: const TextStyle(color: Colors.white),
-              ),
+              child: Text("edit_info".tr(), style: const TextStyle(color: Colors.white)),
             ),
             const SizedBox(height: 30),
-            _buildOption(Icons.language, "language".tr(), _changeLanguage),
-            _buildOption(Icons.dark_mode, "dark_mode".tr(), () {
-              Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
+
+            _buildOption(Icons.language, "language".tr(), () {
+              showDialog(
+                context: context,
+                builder: (_) => AlertDialog(
+                  title: Text("language".tr()),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextButton(
+                        onPressed: () {
+                          context.setLocale(const Locale('en'));
+                          Navigator.pop(context);
+                        },
+                        child: const Text("English"),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          context.setLocale(const Locale('fr'));
+                          Navigator.pop(context);
+                        },
+                        child: const Text("Français"),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          context.setLocale(const Locale('ar'));
+                          Navigator.pop(context);
+                        },
+                        child: const Text("العربية"),
+                      ),
+                    ],
+                  ),
+                ),
+              );
             }),
-            _buildOption(Icons.history, "historique".tr(), () {
+
+            ListTile(
+              leading: const Icon(Icons.dark_mode, color: Color(0xFF2196F3)),
+              title: Text("dark_mode".tr()),
+              trailing: Switch(
+                value: themeProvider.isDarkMode,
+                onChanged: (value) => themeProvider.toggleTheme(),
+              ),
+            ),
+
+            _buildOption(Icons.history, "history".tr(), () {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const HistoriquePage()),
               );
             }),
-            _buildOption(Icons.info_outline, "a_propos".tr(), () {
+
+            _buildOption(Icons.info_outline, "about".tr(), () {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const AProposPage()),
               );
             }),
+
             const Divider(height: 40),
-            _buildOption(Icons.logout, "logout".tr(), () {
-              // TODO: Ajouter déconnexion Firebase
-            }, iconColor: Colors.red),
+
+            _buildOption(Icons.logout, "logout".tr(), _logout, iconColor: Colors.red),
           ],
         ),
       ),
-    );
-  }
-
-  void _changeLanguage() {
-    showDialog(
-      context: context,
-      builder:
-          (_) => AlertDialog(
-            title: Text("language".tr()),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextButton(
-                  onPressed: () => context.setLocale(const Locale('en')),
-                  child: const Text("English"),
-                ),
-                TextButton(
-                  onPressed: () => context.setLocale(const Locale('fr')),
-                  child: const Text("Français"),
-                ),
-                TextButton(
-                  onPressed: () => context.setLocale(const Locale('ar')),
-                  child: const Text("العربية"),
-                ),
-              ],
-            ),
-          ),
     );
   }
 
   Widget _buildOption(
-    IconData icon,
-    String label,
-    VoidCallback onTap, {
-    Color? iconColor,
-  }) {
-    final isDark = Provider.of<ThemeProvider>(context).isDarkMode;
-
+      IconData icon,
+      String label,
+      VoidCallback onTap, {
+        Color? iconColor,
+      }) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      margin: const EdgeInsets.symmetric(vertical: 8),
       child: ListTile(
-        leading: Icon(
-          icon,
-          color:
-              iconColor ??
-              (isDark
-                  ? const Color.fromARGB(255, 0, 2, 116)
-                  : const Color(0xFF2196F3)),
-        ),
+        leading: Icon(icon, color: iconColor ?? const Color(0xFF2196F3)),
         title: Text(label),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
         onTap: onTap,
-      ),
-    );
-  }
-}
-
-class EditProfilePage extends StatelessWidget {
-  const EditProfilePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Provider.of<ThemeProvider>(context).isDarkMode;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("edit_info".tr()),
-        backgroundColor:
-            isDark
-                ? const Color.fromARGB(255, 0, 2, 116)
-                : const Color(0xFF2196F3),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: ListView(
-          children: [
-            TextField(decoration: InputDecoration(labelText: 'name'.tr())),
-            TextField(decoration: InputDecoration(labelText: 'email'.tr())),
-            TextField(decoration: InputDecoration(labelText: 'age'.tr())),
-            TextField(decoration: InputDecoration(labelText: 'gender'.tr())),
-            TextField(decoration: InputDecoration(labelText: 'job'.tr())),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: null,
-              style: ButtonStyle(
-                backgroundColor: MaterialStatePropertyAll(
-                  isDark
-                      ? const Color.fromARGB(255, 0, 2, 116)
-                      : const Color(0xFF2196F3),
-                ),
-              ),
-              child: Text(
-                "save".tr(),
-                style: const TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

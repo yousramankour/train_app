@@ -12,7 +12,7 @@ final ThemeData lightTheme = ThemeData(
     iconTheme: IconThemeData(color: Colors.white),
   ),
   switchTheme: SwitchThemeData(
-    thumbColor: MaterialStateProperty.all(Color(0xFF2196F3)),
+    thumbColor: WidgetStateProperty.all(Color(0xFF2196F3)),
   ),
   useMaterial3: true,
 );
@@ -29,7 +29,7 @@ final ThemeData darkTheme = ThemeData(
     iconTheme: IconThemeData(color: Colors.white),
   ),
   switchTheme: SwitchThemeData(
-    thumbColor: MaterialStatePropertyAll(Color(0xFF0D47A1)),
+    thumbColor: WidgetStatePropertyAll(Color(0xFF0D47A1)),
   ),
   useMaterial3: true,
 );

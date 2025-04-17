@@ -275,7 +275,7 @@ class _HomeScreenState extends State<HomeScreen> {
             _buildBottomButton(LucideIcons.messageCircle, "Messagerie", () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => MessageScreen()),
+                MaterialPageRoute(builder: (context) => ChatScreen()),
               );
             }),
             _buildBottomButton(LucideIcons.user, "Profil", () {

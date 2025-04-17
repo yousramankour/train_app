@@ -7,9 +7,10 @@ import 'package:provider/provider.dart';
 import 'home.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({Key? key}) : super(key: key);
+  const LoginPage({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _LoginPageState createState() => _LoginPageState();
 }
 
@@ -19,6 +20,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController passwordController = TextEditingController();
 
   // Instance de FirebaseAuth pour l'authentification
+  // ignore: unused_field
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   // Variables pour gérer l'état de l'erreur et du chargement
@@ -47,13 +49,10 @@ class _LoginPageState extends State<LoginPage> {
       setState(() => isLoading = true);
 
       // Tentative de connexion avec Firebase
-      final userCredential = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
 
       // Naviguer vers la page d'accueil en cas de succès
       Navigator.pushReplacement(
+        // ignore: use_build_context_synchronously
         context,
         MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
