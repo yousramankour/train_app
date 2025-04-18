@@ -3,6 +3,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 import 'statistique.dart';
 import 'notification.dart';
@@ -23,6 +24,9 @@ class _HomeScreenState extends State<HomeScreen> {
   String _searchText = '';
   LatLng? _destination;
   List<LatLng> _itineraire = [];
+  final DatabaseReference _trainRef = FirebaseDatabase.instance.ref("trains/train1");
+  LatLng? _trainLocation;
+  late BitmapDescriptor trainIcon;
 
   final List<LatLng> _gares = [
     LatLng(36.7805, 3.0595), // Alger
@@ -70,6 +74,8 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     requestLocation();
+    listenToTrainLocation();
+    _loadCustomMarker();
   }
 
   Future<void> requestLocation() async {
@@ -126,7 +132,25 @@ class _HomeScreenState extends State<HomeScreen> {
       _selectGare(garePosition);
     }
   }
-
+  void listenToTrainLocation() {
+    _trainRef.onValue.listen((event) {
+      final data = event.snapshot.value as Map?;
+      if (data != null && data['latitude'] != null && data['longitude'] != null) {
+        setState(() {
+          _trainLocation = LatLng(
+            double.parse(data['latitude'].toString()),
+            double.parse(data['longitude'].toString()),
+          );
+        });
+      }
+    });
+  }
+  void _loadCustomMarker() async {
+    trainIcon = await BitmapDescriptor.fromAssetImage(
+      ImageConfiguration(size: Size(48, 48)),
+      'assets/train_icon.png',
+    );
+  }
   void _selectGare(LatLng garePosition) {
     setState(() {
       _destination = garePosition;
@@ -197,6 +221,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   markerId: MarkerId("current_position"),
                   position: _currentP!,
                   icon: BitmapDescriptor.defaultMarker,
+                ),
+              if (_trainLocation != null)
+                Marker(
+                  markerId: MarkerId("train_location"),
+                  position: _trainLocation!,
+                  icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+                  infoWindow: InfoWindow(title: "Train Position"),
                 ),
               ..._gares.asMap().entries.map(
                 (entry) => Marker(
@@ -288,6 +319,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+
   }
 
   Widget _buildBottomButton(IconData icon, String label, Function() onPressed) {
