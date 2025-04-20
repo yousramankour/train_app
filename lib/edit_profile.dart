@@ -52,7 +52,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
           'metier': _metierController.text.trim(),
           'sexe': _selectedSexe,
         });
-        // ignore: use_build_context_synchronously
         Navigator.pop(context); // Retour au profil après sauvegarde
       }
     }
@@ -84,9 +83,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 keyboardType: TextInputType.number,
                 validator:
                     (val) =>
-                val == null || int.tryParse(val) == null
-                    ? 'Âge invalide'
-                    : null,
+                        val == null || int.tryParse(val) == null
+                            ? 'Âge invalide'
+                            : null,
               ),
               DropdownButtonFormField<String>(
                 // Sélection du sexe

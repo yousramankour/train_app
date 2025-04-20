@@ -19,7 +19,16 @@ class _ChatScreenState extends State<ChatScreen> {
 
   // Fonction d'envoi de message
   void _sendMessage() async {
-    if (_controller.text.trim().isNotEmpty && _user != null) {
+    if (_controller.text.trim().isEmpty) {
+      return; // Ne pas envoyer de message vide
+    }
+
+    if (_user == null) {
+      print('L\'utilisateur n\'est pas connecté');
+      return; // L'utilisateur n'est pas connecté
+    }
+
+    try {
       await _firestore.collection('chat').add({
         "text": _controller.text,
         "isMe": true,
@@ -29,8 +38,10 @@ class _ChatScreenState extends State<ChatScreen> {
         "timestamp": FieldValue.serverTimestamp(),
         "priority": 1, // Priorité par défaut
       });
-
+      print('Message envoyé avec succès');
       _controller.clear();
+    } catch (error) {
+      print('Erreur lors de l\'envoi du message : $error');
     }
   }
 
@@ -45,6 +56,7 @@ class _ChatScreenState extends State<ChatScreen> {
     bool isMe,
     String docId,
   ) {
+    final senderName = msg['senderName'] ?? 'Utilisateur';
     return GestureDetector(
       onLongPress:
           isMe
@@ -84,7 +96,7 @@ class _ChatScreenState extends State<ChatScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
             child: Text(
-              msg['senderName'],
+              senderName,
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -95,8 +107,13 @@ class _ChatScreenState extends State<ChatScreen> {
           Align(
             alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
             child: Container(
-              margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 5),
+              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+              constraints: BoxConstraints(
+                maxWidth:
+                    MediaQuery.of(context).size.width *
+                    0.4, // Limiter la largeur de la bulle
+              ),
               decoration: BoxDecoration(
                 color: isMe ? Colors.blueAccent : Colors.grey[300],
                 borderRadius: BorderRadius.only(
@@ -174,6 +191,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
                 final messages = snapshot.data!.docs;
 
+                DateTime? lastMessageDate;
+
                 return ListView.builder(
                   reverse: true,
                   itemCount: messages.length,
@@ -181,8 +200,39 @@ class _ChatScreenState extends State<ChatScreen> {
                     final msg = messages[index].data() as Map<String, dynamic>;
                     final isMe = msg['senderId'] == _user?.uid;
                     final docId = messages[index].id;
+                    final messageTime =
+                        (msg['timestamp'] as Timestamp).toDate();
+                    final _ = msg['senderName'] ?? 'Utilisateur';
 
-                    return _buildMessageBubble(msg, isMe, docId);
+                    bool showDateHeader = false;
+
+                    if (lastMessageDate == null ||
+                        !isSameDay(lastMessageDate!, messageTime)) {
+                      showDateHeader = true;
+                      lastMessageDate = messageTime;
+                    }
+
+                    return Column(
+                      children: [
+                        if (showDateHeader)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            child: Center(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                child: Text(
+                                  formatDateHeader(messageTime),
+                                  style: const TextStyle(fontSize: 11),
+                                ),
+                              ),
+                            ),
+                          ),
+                        _buildMessageBubble(msg, isMe, docId),
+                      ],
+                    );
                   },
                 );
               },
@@ -213,15 +263,6 @@ class _ChatScreenState extends State<ChatScreen> {
                               border: InputBorder.none,
                             ),
                           ),
-                        ),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.emoji_emotions,
-                            color: Colors.grey,
-                          ),
-                          onPressed: () {
-                            // Vous pouvez ajouter ici un sélecteur d'emoji
-                          },
                         ),
                       ],
                     ),
@@ -278,7 +319,7 @@ class MessageSearchDelegate extends SearchDelegate {
           _firestore
               .collection('chat')
               .where('text', isGreaterThanOrEqualTo: query)
-              .where('text', isLessThanOrEqualTo: query + '\uf8ff')
+              .where('text', isLessThanOrEqualTo: '$query\uf8ff')
               .snapshots(),
       builder: (ctx, snapshot) {
         if (!snapshot.hasData) {
@@ -304,5 +345,24 @@ class MessageSearchDelegate extends SearchDelegate {
   @override
   Widget buildSuggestions(BuildContext context) {
     return Container();
+  }
+}
+
+bool isSameDay(DateTime a, DateTime b) {
+  return a.year == b.year && a.month == b.month && a.day == b.day;
+}
+
+String formatDateHeader(DateTime date) {
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final yesterday = today.subtract(Duration(days: 1));
+  final msgDate = DateTime(date.year, date.month, date.day);
+
+  if (msgDate == today) {
+    return 'Aujourd\'hui';
+  } else if (msgDate == yesterday) {
+    return 'Hier';
+  } else {
+    return DateFormat('d MMMM yyyy', 'fr_FR').format(date);
   }
 }

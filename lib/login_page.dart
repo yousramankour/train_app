@@ -6,39 +6,31 @@ import 'theme_provider.dart';
 import 'package:provider/provider.dart';
 import 'home.dart';
 import 'forgot_password.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  const LoginPage({Key? key}) : super(key: key);
 
   @override
-  // ignore: library_private_types_in_public_api
   _LoginPageState createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
-  // Contrôleurs pour les champs de texte
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-
-  // Instance de FirebaseAuth pour l'authentification
-  // ignore: unused_field
+  final TextEditingController email1 = TextEditingController();
+  final TextEditingController password1 = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // Variables pour gérer l'état de l'erreur et du chargement
   String errorMessage = '';
   bool isLoading = false;
 
-  // Fonction pour gérer la connexion de l'utilisateur
   Future<void> signIn() async {
-    final email = emailController.text.trim();
-    final password = passwordController.text;
+    final email = email1.text.trim();
+    final password = password1.text;
 
-    // Réinitialiser le message d'erreur
     setState(() {
       errorMessage = '';
     });
 
-    // Vérifier si les champs sont vides
     if (email.isEmpty || password.isEmpty) {
       setState(() {
         errorMessage = 'Veuillez remplir tous les champs.';
@@ -49,16 +41,16 @@ class _LoginPageState extends State<LoginPage> {
     try {
       setState(() => isLoading = true);
 
-      // Tentative de connexion avec Firebase
+      final userCredential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
 
-      // Naviguer vers la page d'accueil en cas de succès
       Navigator.pushReplacement(
-        // ignore: use_build_context_synchronously
         context,
         MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
     } on FirebaseAuthException catch (e) {
-      // Gérer les erreurs d'authentification
       setState(() {
         errorMessage = e.message ?? 'Une erreur est survenue.';
       });
@@ -67,15 +59,44 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  Future<void> signInWithGoogle() async {
+    setState(() => isLoading = true);
+
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) {
+        setState(() => isLoading = false);
+        return;
+      }
+
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      await _auth.signInWithCredential(credential);
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Erreur de connexion Google.';
+      });
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Déterminer le mode sombre ou clair
     final bool isDark = Provider.of<ThemeProvider>(context).isDarkMode;
-
-    // Définir les couleurs en fonction du thème
     final backgroundColor = isDark ? Colors.black : Colors.white;
-    final primaryColor =
-        isDark ? const Color.fromARGB(255, 0, 2, 116) : const Color(0xFF008ECC);
+    final primaryColor = const Color(0xFF008ECC);
     final textColor = isDark ? Colors.white : Colors.black;
 
     return Scaffold(
@@ -85,19 +106,16 @@ class _LoginPageState extends State<LoginPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Barre supérieure
             Container(height: 50, color: primaryColor),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 30.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Logo de l'application
                   Center(
-                    child: Image.asset('assets/logo9itari.png', height: 80),
+                    child: Image.asset('assets/logo9itari.png', height: 20),
                   ),
                   const SizedBox(height: 20),
-                  // Titre de la page
                   Center(
                     child: Text(
                       'sign_in'.tr(),
@@ -109,9 +127,8 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  // Champ pour l'email
                   TextField(
-                    controller: emailController,
+                    controller: email1,
                     decoration: InputDecoration(
                       labelText: 'email'.tr(),
                       labelStyle: TextStyle(color: textColor, fontSize: 16),
@@ -120,9 +137,8 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  // Champ pour le mot de passe
                   TextField(
-                    controller: passwordController,
+                    controller: password1,
                     obscureText: true,
                     decoration: InputDecoration(
                       labelText: 'password'.tr(),
@@ -132,7 +148,6 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  // Lien pour le mot de passe oublié
                   Align(
                     alignment: Alignment.centerLeft,
                     child: TextButton(
@@ -143,7 +158,6 @@ class _LoginPageState extends State<LoginPage> {
                             builder: (context) => const ForgotPasswordPage(),
                           ),
                         );
-                        // Implémentez la logique de mot de passe oublié ici
                       },
                       child: Text(
                         'forgot_password'.tr(),
@@ -155,7 +169,6 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   ),
-                  // Affichage du message d'erreur
                   if (errorMessage.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -167,37 +180,69 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   const SizedBox(height: 30),
-                  // Bouton de connexion
                   Center(
                     child:
                         isLoading
                             ? const CircularProgressIndicator()
-                            : SizedBox(
-                              width: 200,
-                              height: 50,
-                              child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: primaryColor,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
+                            : Column(
+                              children: [
+                                SizedBox(
+                                  width: 200,
+                                  height: 50,
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: primaryColor,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                    ),
+                                    onPressed: signIn,
+                                    child: Text(
+                                      'sign_in'.tr(),
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color:
+                                            isDark
+                                                ? Colors.black
+                                                : Colors.white,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                                onPressed: signIn,
-                                child: Text(
-                                  'sign_in'.tr(),
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: isDark ? Colors.black : Colors.white,
+                                const SizedBox(height: 10),
+                                SizedBox(
+                                  width: 200,
+                                  height: 50,
+                                  child: OutlinedButton.icon(
+                                    style: OutlinedButton.styleFrom(
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      side: BorderSide(color: primaryColor),
+                                    ),
+                                    icon: Image.asset(
+                                      'assets/googlelogo.png',
+                                      height: 15,
+                                      width: 15,
+                                    ),
+                                    label: Text(
+                                      'sign_in_google'.tr(),
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: textColor,
+                                      ),
+                                    ),
+                                    onPressed: signInWithGoogle,
                                   ),
                                 ),
-                              ),
+                              ],
                             ),
                   ),
                 ],
               ),
             ),
-            // Barre inférieure avec lien vers l'inscription
             Container(
               height: 50,
               color: primaryColor,
