@@ -52,6 +52,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           'metier': _metierController.text.trim(),
           'sexe': _selectedSexe,
         });
+        // ignore: use_build_context_synchronously
         Navigator.pop(context); // Retour au profil après sauvegarde
       }
     }

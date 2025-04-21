@@ -7,11 +7,13 @@ import 'package:provider/provider.dart';
 import 'home.dart';
 import 'forgot_password.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({Key? key}) : super(key: key);
+  const LoginPage({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _LoginPageState createState() => _LoginPageState();
 }
 
@@ -41,11 +43,6 @@ class _LoginPageState extends State<LoginPage> {
     try {
       setState(() => isLoading = true);
 
-      final userCredential = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const HomeScreen()),
@@ -60,13 +57,16 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> signInWithGoogle() async {
-    setState(() => isLoading = true);
+    setState(() {
+      isLoading = true;
+      errorMessage = '';
+    });
 
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
       if (googleUser == null) {
         setState(() => isLoading = false);
-        return;
+        return; // L'utilisateur a annulé la connexion
       }
 
       final GoogleSignInAuthentication googleAuth =
@@ -77,12 +77,41 @@ class _LoginPageState extends State<LoginPage> {
         idToken: googleAuth.idToken,
       );
 
-      await _auth.signInWithCredential(credential);
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      final UserCredential userCredential = await _auth.signInWithCredential(
+        credential,
       );
+
+      final User? user = userCredential.user;
+
+      if (user != null) {
+        final DocumentSnapshot userDoc =
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(user.uid)
+                .get();
+
+        // ✅ Si l'utilisateur n'existe pas dans Firestore, on l'ajoute
+        if (!userDoc.exists) {
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .set({
+                'name': user.displayName ?? '',
+                'email': user.email ?? '',
+                'photoUrl': user.photoURL ?? '',
+                'createdAt': DateTime.now(),
+                'isAdmin': false,
+                'signInMethod': 'google',
+              });
+        }
+
+        // ✅ Redirection vers la page d'accueil
+        Navigator.pushReplacement(
+          // ignore: use_build_context_synchronously
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      }
     } catch (e) {
       setState(() {
         errorMessage = 'Erreur de connexion Google.';

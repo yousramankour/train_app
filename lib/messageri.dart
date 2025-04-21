@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -24,7 +25,9 @@ class _ChatScreenState extends State<ChatScreen> {
     }
 
     if (_user == null) {
-      print('L\'utilisateur n\'est pas connecté');
+      if (kDebugMode) {
+        print('L\'utilisateur n\'est pas connecté');
+      }
       return; // L'utilisateur n'est pas connecté
     }
 
@@ -38,10 +41,14 @@ class _ChatScreenState extends State<ChatScreen> {
         "timestamp": FieldValue.serverTimestamp(),
         "priority": 1, // Priorité par défaut
       });
-      print('Message envoyé avec succès');
+      if (kDebugMode) {
+        print('Message envoyé avec succès');
+      }
       _controller.clear();
     } catch (error) {
-      print('Erreur lors de l\'envoi du message : $error');
+      if (kDebugMode) {
+        print('Erreur lors de l\'envoi du message : $error');
+      }
     }
   }
 

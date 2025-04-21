@@ -8,6 +8,7 @@ class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _SignUpPageState createState() => _SignUpPageState();
 }
 
@@ -170,9 +171,10 @@ class _SignUpPageState extends State<SignUpPage> {
     final confirmPassword = confirmPassword1.text;
 
     setState(() {
-      errorMessage = '';
+      errorMessage = ''; // Réinitialise le message d'erreur
     });
 
+    // Vérification si les champs sont remplis
     if (name.isEmpty ||
         age.isEmpty ||
         selectedGender == null ||
@@ -186,6 +188,7 @@ class _SignUpPageState extends State<SignUpPage> {
       return;
     }
 
+    // Vérification que les mots de passe correspondent
     if (password != confirmPassword) {
       setState(() {
         errorMessage = "Les mots de passe ne correspondent pas.";
@@ -194,16 +197,18 @@ class _SignUpPageState extends State<SignUpPage> {
     }
 
     try {
-      setState(() => isLoading = true);
+      setState(() => isLoading = true); // Démarre l'état de chargement
 
+      // Création de l'utilisateur avec l'email et le mot de passe
       final userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      // ⬇️ Envoi de l'email de vérification
+      // Envoi de l'email de vérification
       await userCredential.user!.sendEmailVerification();
 
+      // Sauvegarde des informations de l'utilisateur dans Firestore
       await FirebaseFirestore.instance
           .collection('users')
           .doc(userCredential.user!.uid)
@@ -214,25 +219,35 @@ class _SignUpPageState extends State<SignUpPage> {
             'job': job,
             'email': email,
             'createdAt': DateTime.now(),
+            'isAdmin': false,
           });
 
-      // ⬇️ Message de confirmation
+      // Affichage du message de confirmation
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Un e-mail de vérification a été envoyé."),
         ),
       );
 
+      // Redirection vers la page de connexion après l'inscription
       Navigator.pushReplacement(
+        // ignore: use_build_context_synchronously
         context,
         MaterialPageRoute(builder: (context) => const LoginPage()),
       );
     } on FirebaseAuthException catch (e) {
+      // Gestion des erreurs Firebase
       setState(() {
         errorMessage = e.message ?? "Une erreur est survenue.";
       });
+    } catch (e) {
+      // Gestion des erreurs non liées à Firebase
+      setState(() {
+        errorMessage = "Une erreur inattendue est survenue.";
+      });
     } finally {
-      setState(() => isLoading = false);
+      setState(() => isLoading = false); // Fin de l'état de chargement
     }
   }
 

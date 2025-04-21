@@ -17,11 +17,11 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  Location _locationController = Location();
+  final Location _locationController = Location();
   LatLng? _currentP;
   GoogleMapController? mapController;
+  // ignore: unused_field
   String _searchText = '';
-  LatLng? _destination;
   List<LatLng> _itineraire = [];
 
   final List<LatLng> _gares = [
@@ -129,7 +129,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _selectGare(LatLng garePosition) {
     setState(() {
-      _destination = garePosition;
       if (_currentP != null) {
         _itineraire = [_currentP!, garePosition];
       }

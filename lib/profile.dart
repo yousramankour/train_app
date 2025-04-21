@@ -1,13 +1,13 @@
 import 'dart:io';
+import 'login_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
-
+import 'adminepage.dart';
 import 'edit_profile.dart';
 import 'historique_page.dart';
 import 'apropos_page.dart';
@@ -15,6 +15,7 @@ import 'theme_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
@@ -23,6 +24,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final user = FirebaseAuth.instance.currentUser;
   final firestore = FirebaseFirestore.instance;
   final storage = FirebaseStorage.instance;
+  bool isAdmin = false;
 
   String nom = '';
   String email = '';
@@ -31,6 +33,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String metier = '';
   String profileImageUrl = '';
   bool isLoading = true;
+  final currentUser = FirebaseAuth.instance.currentUser;
+
+  final adminEmails = [
+    'rkoki797@gmail.com',
+    'kiare030@gmail.com',
+    'hadjerachouri004@gmail.com',
+    'mankouryousra@gmail.com',
+    'zhorcherat2004@gmail.com',
+  ];
 
   @override
   void initState() {
@@ -38,7 +49,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _loadUserProfile();
   }
 
-  // Fonction pour charger les informations de profil
   Future<void> _loadUserProfile() async {
     final doc = await firestore.collection('users').doc(user!.uid).get();
     final data = doc.data();
@@ -48,16 +58,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
       age = data['age']?.toString() ?? '';
       sexe = data['sexe'] ?? '';
       metier = data['metier'] ?? '';
+      isAdmin = data['isAdmin'] ?? false;
+      if (currentUser != null && adminEmails.contains(currentUser!.email)) {
+        isAdmin = true;
+      }
     }
 
     try {
-      // Essayer de récupérer l'URL de l'image de profil
       profileImageUrl =
           await storage
               .ref('profile_pictures/${user!.uid}.jpg')
               .getDownloadURL();
     } catch (_) {
-      // Si aucune image n'est trouvée
       profileImageUrl = '';
     }
 
@@ -66,26 +78,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
-  // Fonction pour choisir et télécharger une image depuis la galerie ou la caméra
   Future<void> _pickAndUploadImage(ImageSource source) async {
     final picker = ImagePicker();
     final image = await picker.pickImage(source: source, imageQuality: 50);
     if (image != null) {
       final ref = storage.ref('profile_pictures/${user!.uid}.jpg');
-      await ref.putFile(
-        File(image.path),
-      ); // Télécharger l'image sur Firebase Storage
-      profileImageUrl = await ref.getDownloadURL(); // Obtenir l'URL de l'image
-      setState(
-        () {}, // Recharger l'interface utilisateur pour afficher l'image mise à jour
-      );
+      await ref.putFile(File(image.path));
+      profileImageUrl = await ref.getDownloadURL();
+      setState(() {});
     }
-  }
-
-  // Fonction pour déconnecter l'utilisateur
-  Future<void> _logout() async {
-    await FirebaseAuth.instance.signOut();
-    SystemNavigator.pop(); // Quitter l'application
   }
 
   @override
@@ -95,14 +96,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text("profile".tr()), // Titre de l'écran, traduit
+        title: Text("profile".tr()),
         backgroundColor: const Color(0xFF2196F3),
       ),
       body:
           isLoading
-              ? const Center(
-                child: CircularProgressIndicator(),
-              ) // Si les données sont en cours de chargement
+              ? const Center(child: CircularProgressIndicator())
               : SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -129,8 +128,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                               TextButton(
                                                 onPressed: () {
                                                   _pickAndUploadImage(
-                                                    ImageSource
-                                                        .camera, // Prendre une photo avec la caméra
+                                                    ImageSource.camera,
                                                   );
                                                   Navigator.pop(context);
                                                 },
@@ -139,8 +137,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                               TextButton(
                                                 onPressed: () {
                                                   _pickAndUploadImage(
-                                                    ImageSource
-                                                        .gallery, // Choisir une photo depuis la galerie
+                                                    ImageSource.gallery,
                                                   );
                                                   Navigator.pop(context);
                                                 },
@@ -176,9 +173,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           radius: 50,
                                           backgroundColor: Colors.blue,
                                           child: Text(
-                                            nom.isNotEmpty
-                                                ? nom[0]
-                                                : 'U', // Initiales de l'utilisateur
+                                            nom.isNotEmpty ? nom[0] : '',
                                             style: const TextStyle(
                                               fontSize: 40,
                                               color: Colors.white,
@@ -224,7 +219,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             builder: (_) => const EditProfilePage(),
                           ),
                         );
-                        _loadUserProfile(); // Recharger le profil après modification
+                        _loadUserProfile();
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF2196F3),
@@ -240,7 +235,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: 30),
 
-                    // 🌐 Nouveau bouton langue
+                    // 🌐 Changement de langue
                     _buildOption(Icons.language, "language".tr(), () {
                       showDialog(
                         context: context,
@@ -311,12 +306,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const Divider(height: 40),
 
                     // 🚪 Déconnexion
-                    _buildOption(
-                      Icons.logout,
-                      "logout".tr(),
-                      _logout,
-                      iconColor: Colors.red,
-                    ),
+                    _buildOption(Icons.logout, "logout".tr(), () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const LoginPage()),
+                      );
+                    }, iconColor: Colors.red),
+
+                    // 🛠️ Admin Options
+                    if (isAdmin)
+                      _buildOption(
+                        Icons.admin_panel_settings,
+                        "admin_panel".tr(),
+                        () {
+                          // Naviguer vers la  page d'administration
+                          // Remplacer ceci par l'action spécifique
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const AdminPanelPage(),
+                            ),
+                          );
+                        },
+                      ),
                   ],
                 ),
               ),
