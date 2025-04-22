@@ -1,14 +1,19 @@
+import 'package:appmob/back-end.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:firebase_database/firebase_database.dart';
-
+import 'dart:convert';
+import 'package:flutter/services.dart' show rootBundle;
 import 'statistique.dart';
 import 'notification.dart';
 import 'messageri.dart';
 import 'profile.dart';
+import 'dart:math';
+import 'package:vector_math/vector_math.dart' hide Colors;
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -26,27 +31,33 @@ class _HomeScreenState extends State<HomeScreen> {
   List<LatLng> _itineraire = [];
   final DatabaseReference _trainRef = FirebaseDatabase.instance.ref("trains/train1");
   LatLng? _trainLocation;
+  LatLng? _trainLocationSnapped;
   late BitmapDescriptor trainIcon;
-
+  double _currentZoom = 11.0;
+  final CameraPosition _initialPosition = CameraPosition(
+    target: LatLng(36.7333, 3.2800),
+    zoom: 11,
+  );
+  final _dbServices = DatabaseService();
+  List<LatLng> _trainRoute = [];
   final List<LatLng> _gares = [
-    LatLng(36.7805, 3.0595), // Alger
-    LatLng(36.7679, 3.0618), // Agha
-    LatLng(36.7441, 3.0828), // Les Ateliers
-    LatLng(36.7320, 3.0870), // Hussein Dey
-    LatLng(36.7291, 3.1102), // Khrouba
-    LatLng(36.7215, 3.1230), // El Harrach
-    LatLng(36.7071, 3.1472), // Oued Smar
-    LatLng(36.7120, 3.1800), // Bab Ezzouar
-    LatLng(36.7139, 3.2158), // Dar El Beïda
-    LatLng(36.7395, 3.2823), // Rouiba
-    LatLng(36.7413, 3.3124), // Rouiba industrielle
-    LatLng(36.7514, 3.3408), // Réghaïa industrielle
-    LatLng(36.7530, 3.3600), // Réghaïa
-    LatLng(36.7489, 3.4096), // Boudouaou
-    LatLng(36.7537, 3.4355), // Corso
-    LatLng(36.7533, 3.4742), // Boumerdès
-    LatLng(36.7366, 3.5313), // Tidjelabine
-    LatLng(36.7248, 3.5566), // Thénia
+    LatLng(36.77947718263685, 3.062102318233201), // Alger
+    LatLng(36.76786434370996, 3.0571634472437097), // Agha
+    LatLng(36.75637323481598, 3.0657403320287813), // Les Ateliers
+    LatLng(36.74538839603068, 3.0943597112363648), // Hussein Dey
+    LatLng(36.735711582340954, 3.1181884553515715), // El Harrach
+    LatLng(36.72200348830961, 3.132535151799459), // Oued Smar
+    LatLng(36.703758376754564, 3.171808002822587), // Bab Ezzouar
+    LatLng(36.71454649851863, 3.2106916647344974), // Dar El Beïda
+    LatLng(36.73408228629039, 3.2829753423722536), // Rouiba
+    LatLng(36.73323925631257, 3.301790410930437), // Rouiba industrielle
+    LatLng(36.73383032469597, 3.317588409429959), // Réghaïa industrielle
+    LatLng(36.73561158985109, 3.3405445103102522), // Réghaïa
+    LatLng(36.740279772532034, 3.4128444654637633), // Boudouaou
+    LatLng(36.753723557039876, 3.435430500308115), // Corso
+    LatLng(36.75324360227452, 3.473915470543915), // Boumerdès
+    LatLng(36.7310886744763, 3.500921535370594), // Tidjelabine
+    LatLng(36.725311597872135, 3.5530624990360025),
   ];
 
   final List<String> _nomsGares = [
@@ -54,7 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
     "Agha",
     "Les Ateliers",
     "Hussein Dey",
-    "Khrouba",
+    "Caroubier",
     "El Harrach",
     "Oued Smar",
     "Bab Ezzouar",
@@ -70,12 +81,64 @@ class _HomeScreenState extends State<HomeScreen> {
     "Thénia",
   ];
 
+  double calculateDistance(LatLng point1, LatLng point2) {
+    const double radiusOfEarth = 6371; // Radius of Earth in kilometers
+    double lat1 = point1.latitude;
+    double lon1 = point1.longitude;
+    double lat2 = point2.latitude;
+    double lon2 = point2.longitude;
+
+    lat1 = lat1 * (3.141592653589793 / 180); // Convert degrees to radians
+    lon1 = lon1 * (3.141592653589793 / 180);
+    lat2 = lat2 * (3.141592653589793 / 180);
+    lon2 = lon2 * (3.141592653589793 / 180);
+
+    double dLat = lat2 - lat1;
+    double dLon = lon2 - lon1;
+
+    double a = (sin(dLat / 2) * sin(dLat / 2)) +
+        cos(lat1) * cos(lat2) *
+            (sin(dLon / 2) * sin(dLon / 2));
+    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+
+    double distance = radiusOfEarth * c; // Distance in kilometers
+    return distance;
+  }
+
+  double calculateTimeToStation(LatLng currentLocation, LatLng stationLocation, double speed) {
+    // Calculate the distance in kilometers
+    double distance = calculateDistance(currentLocation, stationLocation);
+    // Time = Distance / Speed (in hours)
+    return distance / speed; // Estimated time in hours
+  }
+
+  // Find the closest station on the route
+  LatLng findClosestStationOnRoute(LatLng currentLocation) {
+    double minDistance = double.infinity;
+    LatLng closestStation = _gares[0];
+
+    // Loop through all the stations to find the closest one
+    for (int i = 0; i < _gares.length; i++) {
+      double distance = calculateDistance(currentLocation, _gares[i]);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestStation = _gares[i];
+      }
+    }
+    return closestStation;
+  }
   @override
   void initState() {
     super.initState();
     requestLocation();
     listenToTrainLocation();
-    _loadCustomMarker();
+    _loadTrainRoute();
+  }
+
+  @override
+  void dispose() {
+    mapController?.dispose();
+    super.dispose();
   }
 
   Future<void> requestLocation() async {
@@ -109,7 +172,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
         if (mapController != null) {
           mapController!.animateCamera(
-            CameraUpdate.newLatLngBounds(_boundsFromLatLngList(_gares), 80),
+            CameraUpdate.newLatLngBounds(_boundsFromLatLngList(_trainRoute), 80),
           );
         }
       }
@@ -136,21 +199,92 @@ class _HomeScreenState extends State<HomeScreen> {
     _trainRef.onValue.listen((event) {
       final data = event.snapshot.value as Map?;
       if (data != null && data['latitude'] != null && data['longitude'] != null) {
+        final LatLng rawLocation = LatLng(
+          double.parse(data['latitude'].toString()),
+          double.parse(data['longitude'].toString()),
+        );
+
+        final double speed = double.parse(data['speed'].toString());
+        // Find the closest point on the route
+        final LatLng snappedLocation = findClosestPointOnPolyline(rawLocation, _trainRoute);
+
         setState(() {
-          _trainLocation = LatLng(
-            double.parse(data['latitude'].toString()),
-            double.parse(data['longitude'].toString()),
-          );
+          _trainLocationSnapped = snappedLocation;
+          _trainLocation=rawLocation;// this is now "on the rail"
         });
+
       }
     });
+
   }
-  void _loadCustomMarker() async {
-    trainIcon = await BitmapDescriptor.fromAssetImage(
-      ImageConfiguration(size: Size(48, 48)),
-      'assets/train_icon.png',
-    );
+  LatLng findClosestPointOnPolyline(LatLng point, List<LatLng> polyline) {
+    Vector2 p = Vector2(point.latitude, point.longitude);
+    double minDistance = double.infinity;
+    LatLng closestPoint = polyline.first;
+
+    for (int i = 0; i < polyline.length - 1; i++) {
+      LatLng start = polyline[i];
+      LatLng end = polyline[i + 1];
+
+      Vector2 a = Vector2(start.latitude, start.longitude);
+      Vector2 b = Vector2(end.latitude, end.longitude);
+
+      Vector2 ap = p - a;
+      Vector2 ab = b - a;
+
+      double t = ap.dot(ab) / ab.length2;
+      t = t.clamp(0.0, 1.0); // keep t within segment
+
+      Vector2 projection = a + ab * t;
+      double distance = (p - projection).length;
+
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestPoint = LatLng(projection.x, projection.y);
+      }
+    }
+
+    return closestPoint;
   }
+
+
+  Future<void> _loadTrainRoute() async {
+    try {
+      final String jsonString = await rootBundle.loadString('assets/train_routes.geojson');
+      final Map<String, dynamic> jsonData = json.decode(jsonString);
+
+      if (jsonData['features'] != null) {
+        List<LatLng> allPoints = [];
+
+        for (var feature in jsonData['features']) {
+          if (feature['geometry'] != null &&
+              feature['geometry']['type'] == 'LineString' &&
+              feature['geometry']['coordinates'] != null) {
+
+            final List<dynamic> coordinates = feature['geometry']['coordinates'];
+            final points = coordinates.map((coord) {
+              return LatLng(coord[1].toDouble(), coord[0].toDouble());
+            }).toList();
+            allPoints.addAll(points.cast<LatLng>());
+          }
+        }
+
+        setState(() {
+          _trainRoute = allPoints;
+        }
+        );
+
+        if (mapController != null && _trainRoute.isNotEmpty) {
+          mapController!.animateCamera(
+            CameraUpdate.newLatLngBounds(_boundsFromLatLngList(_trainRoute), 50),
+          );
+        }
+      }
+    } catch (e) {
+      print('Erreur lors du chargement du fichier GeoJSON: $e');
+    }
+  }
+
   void _selectGare(LatLng garePosition) {
     setState(() {
       _destination = garePosition;
@@ -200,6 +334,35 @@ class _HomeScreenState extends State<HomeScreen> {
     return LatLngBounds(southwest: LatLng(x0, y0), northeast: LatLng(x1, y1));
   }
 
+  void _onMapCreated(GoogleMapController controller) {
+    mapController = controller;
+    if (_trainRoute.isNotEmpty) {
+      _fitMapToBounds();
+    }
+  }
+
+  void _fitMapToBounds() {
+    if (mapController == null || _trainRoute.isEmpty) return;
+
+    final bounds = _boundsFromLatLngList(_trainRoute);
+    mapController!.animateCamera(
+      CameraUpdate.newLatLngBounds(bounds, 50),
+    );
+  }
+
+  void _onCameraMove(CameraPosition position) {
+    _currentZoom = position.zoom;
+  }
+
+  Future<void> _openInGoogleMaps(LatLng destination) async {
+    final String url = 'https://www.google.com/maps/dir/?api=1&destination=${destination.latitude},${destination.longitude}';
+    if (await canLaunchUrl(Uri.parse(url))) {
+      await launchUrl(Uri.parse(url));
+    } else {
+      print('Could not launch $url');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -212,21 +375,34 @@ class _HomeScreenState extends State<HomeScreen> {
               zoom: 13,
             ),
             zoomControlsEnabled: false,
+            mapToolbarEnabled: false,
             onMapCreated: (GoogleMapController controller) {
               mapController = controller;
+              if (_trainRoute.isNotEmpty) {
+                controller.animateCamera(
+                  CameraUpdate.newLatLngBounds(_boundsFromLatLngList(_trainRoute), 50),
+                );
+              }
             },
             markers: {
-              if (_currentP != null)
+             /* if (_currentP != null)
                 Marker(
                   markerId: MarkerId("current_position"),
                   position: _currentP!,
                   icon: BitmapDescriptor.defaultMarker,
-                ),
+                ),*/
               if (_trainLocation != null)
                 Marker(
-                  markerId: MarkerId("train_location"),
+                  markerId: MarkerId("train_location_actual"),
                   position: _trainLocation!,
-                  icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+                  icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+                  infoWindow: InfoWindow(title: "Train Position"),
+                ),
+              if (_trainLocationSnapped != null)
+                Marker(
+                  markerId: MarkerId("train_location_Snapped"),
+                  position: _trainLocationSnapped!,
+                  icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
                   infoWindow: InfoWindow(title: "Train Position"),
                 ),
               ..._gares.asMap().entries.map(
@@ -241,98 +417,202 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             },
-            polylines: {
-              Polyline(
-                polylineId: PolylineId("ligne_gares"),
-                color: Colors.red,
-                width: 4,
-                points: _gares,
-              ),
-              if (_itineraire.isNotEmpty)
-                Polyline(
-                  polylineId: PolylineId("itineraire"),
-                  color: Colors.blue,
-                  width: 4,
-                  points: _itineraire,
-                ),
-            },
-          ),
-          Positioned(
-            top: 40,
-            left: 10,
-            right: 10,
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4)],
-              ),
-              child: TextField(
-                onChanged: (value) => _searchText = value,
-                onSubmitted: _handleSearch,
-                decoration: InputDecoration(
-                  hintText: 'Rechercher une gare...',
-                  border: InputBorder.none,
-                  icon: Icon(Icons.search),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Color(0xFF008ECC),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(2)),
+
+    polylines: {
+    if (_trainRoute.isNotEmpty)
+    Polyline(
+    polylineId: PolylineId("ligne_train"),
+    color: Colors.red,
+    width: 3,
+    points: _trainRoute,
+    ),
+    if (_itineraire.isNotEmpty)
+    Polyline(
+    polylineId: PolylineId("itineraire"),
+    color: Colors.blue,
+    width: 3,
+    points: _itineraire,
+    ),
+    },
+    ),
+    Positioned(top:350,
+        left:20,
+        child: ElevatedButton(onPressed: (){
+         _dbServices.update();
+       },
+            child: Text("Add cordination"),
         ),
-        padding: EdgeInsets.symmetric(vertical: 2),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildBottomButton(LucideIcons.map, "Carte", () {}),
-            _buildBottomButton(LucideIcons.barChart, "Statistique", () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => StatsScreen()),
-              );
-            }),
-            _buildBottomButton(LucideIcons.bell, "Notifications", () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => NotificationScreen()),
-              );
-            }),
-            _buildBottomButton(LucideIcons.messageCircle, "Messagerie", () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => MessageScreen()),
-              );
-            }),
-            _buildBottomButton(LucideIcons.user, "Profil", () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ProfileScreen()),
-              );
-            }),
-          ],
-        ),
-      ),
+    ),
+    Positioned(
+    top: 40,
+    left: 10,
+    right: 10,
+    child: Container(
+    padding: EdgeInsets.symmetric(horizontal: 12),
+    decoration: BoxDecoration(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(30),
+    boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4)],
+    ),
+    child: TextField(
+    onChanged: (value) => _searchText = value,
+    onSubmitted: _handleSearch,
+    decoration: InputDecoration(
+    hintText: 'ابحث عن محطة...',
+    border: InputBorder.none,
+    icon: Icon(Icons.search),
+    ),
+    ),
+    ),
+    ),
+    Positioned(
+    bottom: 80,
+    right: 10,
+    child: Container(
+    padding: EdgeInsets.all(10),
+    decoration: BoxDecoration(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(10),
+    boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4)],
+    ),
+    child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+    if (_destination != null) ...[
+    Text(
+    "Gare sélectionnée: ${_nomsGares[_gares.indexOf(_destination!)]}",
+    style: TextStyle(fontWeight: FontWeight.bold),
+    ),
+    SizedBox(height: 10),
+    Row(
+    children: [
+    ElevatedButton.icon(
+    onPressed: () {
+    if (_currentP != null) {
+    setState(() {
+    _itineraire = [_currentP!, _destination!];
+    });
+    mapController?.animateCamera(
+    CameraUpdate.newLatLngBounds(
+    LatLngBounds(
+    southwest: LatLng(
+    _currentP!.latitude < _destination!.latitude
+    ? _currentP!.latitude
+        : _destination!.latitude,
+    _currentP!.longitude < _destination!.longitude
+    ? _currentP!.longitude
+        : _destination!.longitude,
+    ),
+    northeast: LatLng(
+    _currentP!.latitude > _destination!.latitude
+    ? _currentP!.latitude
+        : _destination!.latitude,
+    _currentP!.longitude > _destination!.longitude
+    ? _currentP!.longitude
+        : _destination!.longitude,
+    ),
+    ),
+    100,
+    ),
     );
+    }
+    },
+    icon: Icon(Icons.map),
+    label: Text("Voir sur la carte"),
+    style: ElevatedButton.styleFrom(
+    backgroundColor: Color(0xFF008ECC),
+    foregroundColor: Colors.white,
+    ),
+    ),
+    SizedBox(width: 10),
+    ElevatedButton.icon(
+    onPressed: () => _openInGoogleMaps(_destination!),
+    icon: Icon(Icons.directions),
+    label: Text("Google Maps"),
+    style: ElevatedButton.styleFrom(
+    backgroundColor: Colors.green,
+    foregroundColor: Colors.white,
+    ),
+    ),
+    ],
+    ),
+    ],
+    ],
+    ),
+    ),
+    ),
+    Positioned(
+    bottom: 80,
+    left: 10,
+    child: FloatingActionButton(
+    onPressed: () {
+    if (_currentP != null && mapController != null) {
+    mapController!.animateCamera(
+    CameraUpdate.newLatLngZoom(
+    _currentP!,
+    15.0,
+    ),
+    );
+    }
+    },
+    backgroundColor: Colors.white,
+    child: Icon(Icons.my_location, color: Color(0xFF008ECC)),
+    ),
+    ),
 
-  }
+    ],
+    ),
+    bottomNavigationBar: Container(
+    decoration: BoxDecoration(
+    color: Color(0xFF008ECC),
+    borderRadius: BorderRadius.vertical(top: Radius.circular(2)),
+    ),
+    padding: EdgeInsets.symmetric(vertical: 2),
+    child: Row(
+    mainAxisAlignment: MainAxisAlignment.spaceAround,
+    children: [
+    _buildBottomButton(LucideIcons.map, "الخريطة", () {}),
+    _buildBottomButton(LucideIcons.barChart, "الإحصائيات", () {
+    Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => const StatsScreen()),
+    );
+    }),
+    _buildBottomButton(LucideIcons.bell, "الإشعارات", () {
+    Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => NotificationScreen()),
+    );
+    }),
+    _buildBottomButton(LucideIcons.messageCircle, "الرسائل", () {
+    Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => MessageScreen()),
+    );
+    }),
+    _buildBottomButton(LucideIcons.user, "الملف الشخصي", () {
+    Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => ProfileScreen()),
+    );
+    }),
+    ],
+    ),
+    ),
+    );
+    }
 
-  Widget _buildBottomButton(IconData icon, String label, Function() onPressed) {
+    Widget _buildBottomButton(IconData icon, String label, Function() onPressed) {
     return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        IconButton(
-          icon: Icon(icon, color: Colors.white, size: 24),
-          onPressed: onPressed,
-        ),
-        SizedBox(height: 2),
-        Text(label, style: TextStyle(color: Colors.white, fontSize: 9)),
-      ],
+    mainAxisSize: MainAxisSize.min,
+    children: [
+    IconButton(
+    icon: Icon(icon, color: Colors.white, size: 24),
+    onPressed: onPressed,
+    ),
+    SizedBox(height: 2),
+    Text(label, style: TextStyle(color: Colors.white, fontSize: 9)),
+    ],
     );
+    }
   }
-}
