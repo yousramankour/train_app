@@ -42,7 +42,7 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       setState(() => isLoading = true);
-
+      await _auth.signInWithEmailAndPassword(email: email, password: password);
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const HomeScreen()),
