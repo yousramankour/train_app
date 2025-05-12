@@ -48,7 +48,7 @@ class _LoginPageState extends State<LoginPage> {
       setState(() => isLoading = true);
 
       // Tentative de connexion avec Firebase
-      final userCredential = await _auth.signInWithEmailAndPassword(
+      final _ = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );

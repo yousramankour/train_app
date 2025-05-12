@@ -17,10 +17,12 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  Location _locationController = Location();
+  final Location _locationController = Location();
   LatLng? _currentP;
   GoogleMapController? mapController;
+  // ignore: unused_field
   String _searchText = '';
+  // ignore: unused_field
   LatLng? _destination;
   List<LatLng> _itineraire = [];
 
@@ -275,7 +277,7 @@ class _HomeScreenState extends State<HomeScreen> {
             _buildBottomButton(LucideIcons.messageCircle, "Messagerie", () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => MessageScreen()),
+                MaterialPageRoute(builder: (context) => ChatScreen()),
               );
             }),
             _buildBottomButton(LucideIcons.user, "Profil", () {
