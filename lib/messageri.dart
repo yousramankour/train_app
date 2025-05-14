@@ -1,8 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'notification_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'etatdeapp.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -32,17 +34,36 @@ class _ChatScreenState extends State<ChatScreen> {
     }
 
     try {
+      // 🔽 Récupérer le nom depuis Firestore
+      final userDoc =
+          await _firestore.collection('users').doc(_user!.uid).get();
+      final senderName = userDoc.data()?['name'] ?? 'Utilisateur';
+
       await _firestore.collection('chat').add({
         "text": _controller.text,
         "isMe": true,
         "senderId": _user!.uid,
-        "senderName": _user!.displayName ?? 'Utilisateur',
+        "senderName": senderName,
         "time": DateFormat('HH:mm').format(DateTime.now()),
         "timestamp": FieldValue.serverTimestamp(),
-        "priority": 1, // Priorité par défaut
+        "priority": 1,
       });
+
       if (kDebugMode) {
         print('Message envoyé avec succès');
+      }
+      await NotificationService.savenotificationdatabase(
+        'message',
+        '{&senderName}send a message ',
+      );
+      if (Appobservation.isAppInForeground) {
+        NotificationService.showNotification(senderName, _controller.text);
+      } else {
+        NotificationService.sendNotification(
+          'all',
+          senderName,
+          _controller.text,
+        );
       }
       _controller.clear();
     } catch (error) {
@@ -72,6 +93,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   context: context,
                   builder:
                       (ctx) => AlertDialog(
+                        backgroundColor: Colors.white,
                         title: const Text('Supprimer le message ?'),
                         content: const Text(
                           'Ce message sera supprimé pour tout le monde.',
@@ -117,12 +139,10 @@ class _ChatScreenState extends State<ChatScreen> {
               margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 5),
               padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
               constraints: BoxConstraints(
-                maxWidth:
-                    MediaQuery.of(context).size.width *
-                    0.4, // Limiter la largeur de la bulle
+                maxWidth: MediaQuery.of(context).size.width * 0.4,
               ),
               decoration: BoxDecoration(
-                color: isMe ? Colors.blueAccent : Colors.grey[300],
+                color: Colors.blueAccent, // Toutes les bulles sont bleues
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(12),
                   topRight: const Radius.circular(12),
@@ -137,7 +157,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   Text(
                     msg['text'],
                     style: TextStyle(
-                      color: isMe ? Colors.white : Colors.black87,
+                      color: Colors.white, // Le texte est toujours blanc
                       fontSize: 15,
                     ),
                   ),
@@ -152,7 +172,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           .substring(11, 16),
                       style: TextStyle(
                         fontSize: 11,
-                        color: isMe ? Colors.white70 : Colors.grey[600],
+                        color: Colors.white, // L'heure est également blanche
                       ),
                     ),
                   ),
@@ -168,10 +188,10 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xfff4f4f4),
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Chat Global'),
-        backgroundColor: Colors.blueAccent,
+        title: const Text('Chat '),
+        backgroundColor: Colors.white10,
         elevation: 0,
         actions: [
           IconButton(
@@ -197,7 +217,6 @@ class _ChatScreenState extends State<ChatScreen> {
                 }
 
                 final messages = snapshot.data!.docs;
-
                 DateTime? lastMessageDate;
 
                 return ListView.builder(
@@ -209,18 +228,28 @@ class _ChatScreenState extends State<ChatScreen> {
                     final docId = messages[index].id;
                     final messageTime =
                         (msg['timestamp'] as Timestamp).toDate();
-                    final _ = msg['senderName'] ?? 'Utilisateur';
 
+                    // Créer un objet DateTime sans l'heure (juste la date)
+                    DateTime messageDateOnly = DateTime(
+                      messageTime.year,
+                      messageTime.month,
+                      messageTime.day,
+                    );
+
+                    // Vérifier si la date actuelle est différente de la dernière date
                     bool showDateHeader = false;
 
                     if (lastMessageDate == null ||
-                        !isSameDay(lastMessageDate!, messageTime)) {
+                        !isSameDay(lastMessageDate!, messageDateOnly)) {
+                      // Si la date change, afficher l'en-tête de la date
                       showDateHeader = true;
-                      lastMessageDate = messageTime;
+                      lastMessageDate =
+                          messageDateOnly; // Mettre à jour la date de dernier message
                     }
 
                     return Column(
                       children: [
+                        // Si la date change, afficher l'en-tête avec la date complète
                         if (showDateHeader)
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 10),
@@ -231,8 +260,14 @@ class _ChatScreenState extends State<ChatScreen> {
                                   vertical: 6,
                                 ),
                                 child: Text(
-                                  formatDateHeader(messageTime),
-                                  style: const TextStyle(fontSize: 11),
+                                  DateFormat(
+                                    'd MMMM yyyy',
+                                    'fr_FR',
+                                  ).format(messageTime), // Date complète
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey,
+                                  ),
                                 ),
                               ),
                             ),

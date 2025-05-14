@@ -131,6 +131,7 @@ class DatabaseService {
       await _fire.collection("station").doc("Hussein Dey-Caroubier").set({
         "coordinates": geoPoints,
       });
+      // ignore: empty_catches
     } catch (e) {}
   }
 }

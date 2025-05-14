@@ -1,354 +1,310 @@
-import 'dart:io';
-import 'login_page.dart';
+import 'package:appmob/adminepage.dart';
+
+import 'package:appmob/edit_profile.dart';
+import 'package:appmob/enquette_satisfaction.dart';
+
+import 'package:appmob/historique_page.dart';
+
+import 'package:appmob/home.dart';
+import 'package:appmob/login_page.dart';
+import 'package:appmob/messageri.dart';
+import 'package:appmob/notification.dart';
+import 'package:appmob/statistique.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'adminepage.dart';
-import 'edit_profile.dart';
-import 'historique_page.dart';
-import 'apropos_page.dart';
-import 'theme_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
-class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+class ProfileScreen extends StatelessWidget {
+  final Color primaryColor = const Color(0xFF008ECC);
 
-  @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
-}
+  Widget _buildBottomButton(
+    IconData icon,
+    String label,
+    Function() onPressed, {
+    bool isActive = false,
+  }) {
+    final color = isActive ? Colors.black : Colors.white;
 
-class _ProfileScreenState extends State<ProfileScreen> {
-  final user = FirebaseAuth.instance.currentUser;
-  final firestore = FirebaseFirestore.instance;
-  final storage = FirebaseStorage.instance;
-  bool isAdmin = false;
-
-  String nom = '';
-  String email = '';
-  String age = '';
-  String sexe = '';
-  String metier = '';
-  String profileImageUrl = '';
-  bool isLoading = true;
-  final currentUser = FirebaseAuth.instance.currentUser;
-
-  final adminEmails = [
-    'rkoki797@gmail.com',
-    'kiare030@gmail.com',
-    'hadjerachouri004@gmail.com',
-    'mankouryousra@gmail.com',
-    'zhorcherat2004@gmail.com',
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUserProfile();
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          icon: Icon(icon, color: color, size: 24),
+          onPressed: onPressed,
+        ),
+        const SizedBox(height: 2),
+        Text(label, style: TextStyle(color: color, fontSize: 9)),
+      ],
+    );
   }
 
-  Future<void> _loadUserProfile() async {
-    final doc = await firestore.collection('users').doc(user!.uid).get();
-    final data = doc.data();
-    if (data != null) {
-      nom = data['nom'] ?? '';
-      email = data['email'] ?? '';
-      age = data['age']?.toString() ?? '';
-      sexe = data['sexe'] ?? '';
-      metier = data['metier'] ?? '';
-      isAdmin = data['isAdmin'] ?? false;
-      if (currentUser != null && adminEmails.contains(currentUser!.email)) {
-        isAdmin = true;
-      }
-    }
-
-    try {
-      profileImageUrl =
-          await storage
-              .ref('profile_pictures/${user!.uid}.jpg')
-              .getDownloadURL();
-    } catch (_) {
-      profileImageUrl = '';
-    }
-
-    setState(() {
-      isLoading = false;
-    });
-  }
-
-  Future<void> _pickAndUploadImage(ImageSource source) async {
-    final picker = ImagePicker();
-    final image = await picker.pickImage(source: source, imageQuality: 50);
-    if (image != null) {
-      final ref = storage.ref('profile_pictures/${user!.uid}.jpg');
-      await ref.putFile(File(image.path));
-      profileImageUrl = await ref.getDownloadURL();
-      setState(() {});
-    }
+  Widget _buildModernCard(
+    IconData icon,
+    String title, {
+    Color iconColor = const Color(0xFF008ECC),
+    Color textColor = Colors.black,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        margin: EdgeInsets.only(bottom: 3),
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 8,
+              offset: Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: iconColor),
+            SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 15,
+                  color: textColor,
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      // Si non connecté, redirige ou affiche message
+      return Scaffold(body: Center(child: Text('Veuillez vous connecter.')));
+    }
+    return StreamBuilder<DocumentSnapshot>(
+      stream:
+          FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
+        if (!snapshot.hasData || !snapshot.data!.exists) {
+          return Scaffold(body: Center(child: Text('Profil introuvable.')));
+        }
+        final data = snapshot.data!.data() as Map<String, dynamic>;
+        final name = data['name'] ?? 'Utilisateur';
+        final email = data['email'] ?? '';
+        final isAdmin = data['isAdmin'] ?? false;
+        return Scaffold(
+          backgroundColor: Colors.white,
+          body: SafeArea(
+            child: Column(
+              children: [
+                SizedBox(height: 40),
+                Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                    border: Border.all(color: Colors.grey.shade300, width: 2),
+                  ),
+                  child: Icon(
+                    Icons.person,
+                    size: 50,
+                    color: Colors.grey.shade400,
+                  ),
+                ),
+                SizedBox(height: 15),
+                Text(
+                  name,
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                Text(email, style: TextStyle(color: Colors.grey)),
+                SizedBox(height: 30),
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Text("profile".tr()),
-        backgroundColor: const Color(0xFF2196F3),
-      ),
-      body:
-          isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      elevation: 6,
-                      child: Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Row(
-                          children: [
-                            GestureDetector(
-                              onTap:
-                                  () => showDialog(
-                                    context: context,
-                                    builder:
-                                        (_) => AlertDialog(
-                                          title: Text("change_photo".tr()),
-                                          content: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              TextButton(
-                                                onPressed: () {
-                                                  _pickAndUploadImage(
-                                                    ImageSource.camera,
-                                                  );
-                                                  Navigator.pop(context);
-                                                },
-                                                child: Text("take_photo".tr()),
-                                              ),
-                                              TextButton(
-                                                onPressed: () {
-                                                  _pickAndUploadImage(
-                                                    ImageSource.gallery,
-                                                  );
-                                                  Navigator.pop(context);
-                                                },
-                                                child: Text(
-                                                  "choose_gallery".tr(),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                  ),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 400),
-                                curve: Curves.easeInOut,
-                                width: 100,
-                                height: 100,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  image:
-                                      profileImageUrl.isNotEmpty
-                                          ? DecorationImage(
-                                            image: NetworkImage(
-                                              profileImageUrl,
-                                            ),
-                                            fit: BoxFit.cover,
-                                          )
-                                          : null,
-                                  color: Colors.grey[300],
-                                ),
-                                child:
-                                    profileImageUrl.isEmpty
-                                        ? CircleAvatar(
-                                          radius: 50,
-                                          backgroundColor: Colors.blue,
-                                          child: Text(
-                                            nom.isNotEmpty ? nom[0] : '',
-                                            style: const TextStyle(
-                                              fontSize: 40,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        )
-                                        : null,
-                              ),
-                            ),
-                            const SizedBox(width: 20),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    nom,
-                                    style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 5),
-                                  Text(
-                                    email,
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.black54,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const EditProfilePage(),
-                          ),
-                        );
-                        _loadUserProfile();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF2196F3),
-                        minimumSize: const Size.fromHeight(45),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: Text(
-                        "edit_info".tr(),
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-
-                    // 🌐 Changement de langue
-                    _buildOption(Icons.language, "language".tr(), () {
-                      showDialog(
-                        context: context,
-                        builder:
-                            (_) => AlertDialog(
-                              title: Text("language".tr()),
-                              content: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  TextButton(
-                                    onPressed: () {
-                                      context.setLocale(const Locale('en'));
-                                      Navigator.pop(context);
-                                    },
-                                    child: const Text("English"),
-                                  ),
-                                  TextButton(
-                                    onPressed: () {
-                                      context.setLocale(const Locale('fr'));
-                                      Navigator.pop(context);
-                                    },
-                                    child: const Text("Français"),
-                                  ),
-                                  TextButton(
-                                    onPressed: () {
-                                      context.setLocale(const Locale('ar'));
-                                      Navigator.pop(context);
-                                    },
-                                    child: const Text("العربية"),
-                                  ),
-                                ],
-                              ),
-                            ),
-                      );
-                    }),
-
-                    // 🌙 Mode sombre
-                    ListTile(
-                      leading: const Icon(
-                        Icons.dark_mode,
-                        color: Color(0xFF2196F3),
-                      ),
-                      title: Text("dark_mode".tr()),
-                      trailing: Switch(
-                        value: themeProvider.isDarkMode,
-                        onChanged: (value) => themeProvider.toggleTheme(),
-                      ),
-                    ),
-
-                    // 📜 Historique
-                    _buildOption(Icons.history, "history".tr(), () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const HistoriquePage(),
-                        ),
-                      );
-                    }),
-
-                    // ℹ️ À propos
-                    _buildOption(Icons.info_outline, "about".tr(), () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const AProposPage()),
-                      );
-                    }),
-
-                    const Divider(height: 40),
-
-                    // 🚪 Déconnexion
-                    _buildOption(Icons.logout, "logout".tr(), () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const LoginPage()),
-                      );
-                    }, iconColor: Colors.red),
-
-                    // 🛠️ Admin Options
-                    if (isAdmin)
-                      _buildOption(
-                        Icons.admin_panel_settings,
-                        "admin_panel".tr(),
-                        () {
-                          // Naviguer vers la  page d'administration
-                          // Remplacer ceci par l'action spécifique
+                Expanded(
+                  child: ListView(
+                    padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+                    children: [
+                      _buildModernCard(
+                        LucideIcons.userCog,
+                        "modifier profile",
+                        onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const AdminPanelPage(),
+                              builder: (_) => EditProfileScreen(),
                             ),
                           );
                         },
                       ),
-                  ],
-                ),
-              ),
-    );
-  }
+                      _buildModernCard(
+                        LucideIcons.history,
+                        "historique",
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => TripHistoryPage(),
+                            ),
+                          );
+                        },
+                      ),
+                      _buildModernCard(
+                        LucideIcons.globe,
+                        "languages",
+                        onTap: () {
+                          showDialog(
+                            context: context,
+                            builder:
+                                (_) => AlertDialog(
+                                  title: Text("Choisir la langue"),
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      TextButton(
+                                        onPressed: () {
+                                          // Change la langue
+                                          context.setLocale(const Locale('en'));
+                                          Navigator.pop(context);
+                                        },
+                                        child: const Text("English"),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          context.setLocale(const Locale('fr'));
+                                          Navigator.pop(context);
+                                        },
+                                        child: const Text("Français"),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          context.setLocale(const Locale('ar'));
+                                          Navigator.pop(context);
+                                        },
+                                        child: const Text("العربية"),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                          );
+                        },
+                      ),
+                      _buildModernCard(
+                        LucideIcons.info,
+                        "feedback",
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => SatisfactionSurveyPage(),
+                            ),
+                          );
+                        },
+                      ),
+                      if (isAdmin) // Affichage conditionnel
+                        _buildModernCard(
+                          LucideIcons.userCog,
+                          "Ajouts & Création",
+                          onTap: () {
+                            // Naviguer vers la page de gestion des admins
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => AdminPanelPage(),
+                              ),
+                            );
+                          },
+                        ),
 
-  Widget _buildOption(
-    IconData icon,
-    String label,
-    VoidCallback onTap, {
-    Color? iconColor,
-  }) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ListTile(
-        leading: Icon(icon, color: iconColor ?? const Color(0xFF2196F3)),
-        title: Text(label),
-        onTap: onTap,
-      ),
+                      _buildModernCard(
+                        LucideIcons.logOut,
+                        "Se déconnecter",
+                        iconColor: Colors.blue,
+                        textColor: Colors.blue,
+                        onTap: () async {
+                          // Déconnexion de Firebase
+                          await FirebaseAuth.instance.signOut();
+
+                          // Redirection vers la page de connexion
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => LoginPage(),
+                            ), // Assure-toi que LoginPage est bien ta page de connexion
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          bottomNavigationBar: Container(
+            decoration: BoxDecoration(
+              color: Color(0xFF008ECC),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(2)),
+            ),
+            padding: EdgeInsets.symmetric(vertical: 2),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildBottomButton(LucideIcons.map, "Carte", () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => HomeScreen()),
+                  );
+                }),
+                _buildBottomButton(LucideIcons.barChart, "Statistique", () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => StatistiqueGareScreen(),
+                    ),
+                  );
+                }),
+                _buildBottomButton(LucideIcons.bell, "Notifications", () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => NotificationScreen(),
+                    ),
+                  );
+                }),
+                _buildBottomButton(LucideIcons.messageCircle, "Messagerie", () {
+                  final user = FirebaseAuth.instance.currentUser;
+                  if (user != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ChatScreen()),
+                    );
+                  }
+                  ;
+                }),
+                _buildBottomButton(LucideIcons.user, "Profil", () {
+                  // Ne rien faire
+                }, isActive: true),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

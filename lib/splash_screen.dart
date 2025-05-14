@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:easy_localization/easy_localization.dart'; // Import EasyLocalization
 import 'splash2.dart'; // Import de la page de connexion
+import 'notification_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -15,6 +16,10 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
+    NotificationService.showNotification(
+      "Hello",
+      "Bienvenue dans l'application",
+    );
     //Redirige vers la page de connexion après 3 secondes
     Timer(const Duration(seconds: 5), () {
       Navigator.pushReplacement(

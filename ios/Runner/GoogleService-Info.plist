@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>354763314345-ft7fc1hbkf7h5dn8pcjref9tt0vt36e3.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.354763314345-ft7fc1hbkf7h5dn8pcjref9tt0vt36e3</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>354763314345-sgmappvpts92jdp1iuc604uj823kncin.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyBMCMdDZodXdvU8-VHfZOqBaEbt4lDAdHo</string>
+	<key>GCM_SENDER_ID</key>
+	<string>354763314345</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.example.appmob</string>
+	<key>PROJECT_ID</key>
+	<string>prjtrain-18dde</string>
+	<key>STORAGE_BUCKET</key>
+	<string>prjtrain-18dde.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:354763314345:ios:6c244bd5e87b59147745b8</string>
+	<key>DATABASE_URL</key>
+	<string>https://prjtrain-18dde-default-rtdb.firebaseio.com</string>
+</dict>
+</plist>

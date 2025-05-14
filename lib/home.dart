@@ -1,4 +1,7 @@
-import 'package:appmob/back-end.dart';
+import 'dart:developer' as developer;
+import 'dart:math';
+
+import 'package:appmob/etatdeapp.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -6,16 +9,93 @@ import 'package:location/location.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'dart:convert';
-import 'package:flutter/services.dart' show rootBundle;
 import 'statistique.dart';
 import 'notification.dart';
 import 'messageri.dart';
 import 'profile.dart';
 import 'package:vector_math/vector_math.dart' hide Colors;
 import 'package:geolocator/geolocator.dart';
+import 'notification_service.dart';
+//import 'etatdeapp.dart';
 
 class HomeScreen extends StatefulWidget {
+  static late final String nextStation;
+
+  static Future<void> virifierlist(List position) async {
+    int cpt = 1;
+    while (true) {
+      if (position.length >= 2) {
+        final double distance = HomeScreen.calculateDistance(
+          position[0],
+          position[1],
+        );
+        developer.log("Distance entre deux points : $distance");
+
+        if (distance < 2) {
+          cpt++;
+          position.removeAt(0);
+        } else {
+          position.removeAt(0);
+        }
+        if (cpt == 30) {
+          await NotificationService.savenotificationdatabase(
+            'retard',
+            'le train1 qui  vien de : {$HomeScreen.nextStation} doit faire  un peut de retard',
+          );
+          if (Appobservation.isAppInForeground) {
+            NotificationService.showNotification(
+              "retard!",
+              'le train1 qui vien de : {$HomeScreen.nextStation} doit faire  un peut de retard',
+            );
+          } else {
+            NotificationService.sendNotification(
+              "all",
+              ' retard!',
+              'le train qui vien de : {$HomeScreen.nextStation} doit faire  un peut de retard',
+            );
+          }
+        } else {
+          if (cpt == 60) {
+            await NotificationService.savenotificationdatabase(
+              'panne',
+              'le train1 qui vien de : {$HomeScreen.nextStation} est on panne!',
+            );
+            if (Appobservation.isAppInForeground) {
+              NotificationService.showNotification(
+                "panne!",
+                'le train1 qui vien de : {$HomeScreen.nextStation} est on panne!',
+              );
+            } else {
+              NotificationService.sendNotification(
+                "all",
+                ' panne!',
+                'le train1 qui vien de : {$HomeScreen.nextStation} est on panne!',
+              );
+            }
+          }
+        }
+      }
+      cpt = 1;
+      await Future.delayed(Duration(milliseconds: 100));
+    }
+  }
+
+  static final List<LatLng> notification = [];
+  static double calculateDistance(LatLng p1, LatLng p2) {
+    const R = 6371000;
+    final lat1 = p1.latitude * pi / 180;
+    final lat2 = p2.latitude * pi / 180;
+    final dLat = (p2.latitude - p1.latitude) * pi / 180;
+    final dLon = (p2.longitude - p1.longitude) * pi / 180;
+
+    final a =
+        sin(dLat / 2) * sin(dLat / 2) +
+        cos(lat1) * cos(lat2) * sin(dLon / 2) * sin(dLon / 2);
+    final c = 2 * atan2(sqrt(a), sqrt(1 - a));
+
+    return R * c;
+  }
+
   const HomeScreen({super.key});
 
   @override
@@ -26,27 +106,20 @@ class _HomeScreenState extends State<HomeScreen> {
   Map<String, dynamic> railPolylines =
       {}; // map that contains all railsId+the whole rail polyline
   final _dbRef = FirebaseFirestore.instance; //
-  Location _locationController = Location();
+  final Location _locationController = Location();
   LatLng? _currentP;
   GoogleMapController? mapController;
   List<Map<String, dynamic>> _etaList = [];
+  // ignore: unused_field
   String _searchText = '';
   LatLng? _destination;
   List<LatLng> _itineraire = [];
-  final DatabaseReference _trainRef = FirebaseDatabase.instance.ref(
-    "trains/train1",
-  );
-  LatLng? _trainLocation;
+  Map<String, Map<String, bool>> stationPassedStatusMap = {};
+
   LatLng? _trainLocationSnapped;
   late BitmapDescriptor trainIcon;
-  double _currentZoom = 11.0;
-  final CameraPosition _initialPosition = CameraPosition(
-    target: LatLng(36.7333, 3.2800),
-    zoom: 11,
-  );
-  final _dbServices = DatabaseService();
-  int currentIndex = 1;
-  List<LatLng> _trainRoute = [];
+  Map<String, Marker> trainMarkers = {};
+  final List<LatLng> _trainRoute = [];
   final List<LatLng> _gares = [
     LatLng(36.77947718263685, 3.062102318233201), // Alger
     LatLng(36.76786434370996, 3.0571634472437097), // Agha
@@ -66,12 +139,13 @@ class _HomeScreenState extends State<HomeScreen> {
     LatLng(36.7310886744763, 3.500921535370594), // Tidjelabine
     LatLng(36.725311597872135, 3.5530624990360025),
   ];
-  Map<String, LatLng> stationCoordinatesMap = {
-    "Agha": LatLng(36.7673269, 3.05720034),
-    "Les Ateliers": LatLng(36.75656656, 3.06556762),
-    "Hussein Dey": LatLng(36.74546964, 3.09419534),
-    "Caroubier": LatLng(36.73509586, 3.12006988),
-  };
+  Set<Marker> get allMarkers => trainMarkers.values.toSet();
+  /* Map<String, LatLng> stationCoordinatesMap= {
+  "Agha": LatLng(36.7673269,3.05720034),
+   "Les Ateliers": LatLng(36.75656656,3.06556762),
+  "Hussein Dey": LatLng(36.74546964,3.09419534),
+    "Caroubier": LatLng(36.73509586,3.12006988)
+  };*/
 
   final List<String> _nomsGares = [
     "Alger",
@@ -98,8 +172,9 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     requestLocation();
-    listenToTrainLocation();
+    listenToAllTrains();
     buildFullPolylines();
+    HomeScreen.virifierlist(HomeScreen.notification);
   }
 
   @override
@@ -114,7 +189,7 @@ class _HomeScreenState extends State<HomeScreen> {
       String ligneId = doc.id;
       List<dynamic> stations = doc['gares'];
       List<LatLng> fullPolyline = [];
-      List<String> railStations = [];
+      List<Map<String, dynamic>> railStations = [];
 
       for (int i = 0; i < stations.length - 1; i++) {
         String st1 = "${stations[i]}-${stations[i + 1]}";
@@ -132,7 +207,30 @@ class _HomeScreenState extends State<HomeScreen> {
         fullPolyline.addAll(
           geoCordinates.map((gp) => LatLng(gp.latitude, gp.longitude)).toList(),
         );
-        railStations.add(stations[i]);
+      }
+
+      for (String stationName in stations) {
+        // Fetch the real coordinate of the station from DB (or your stations list)
+        DocumentSnapshot doc =
+            await _dbRef.collection("gares").doc(stationName).get();
+        GeoPoint coord =
+            doc['coordinates']; // assuming each doc has a `position` field
+
+        LatLng stationLatLng = LatLng(coord.latitude, coord.longitude);
+
+        // Snap this station location to the fullPolyline
+        SnapResult snap = findClosestPointOnPolyline(
+          stationLatLng,
+          fullPolyline,
+        );
+
+        // Save the bestIndex where this station snaps
+        int index = snap.segmentIndex;
+        railStations.add({
+          'name': stationName,
+          'coordinates': stationLatLng, // your station's actual coordinates
+          'index': index,
+        });
       }
       railPolylines[ligneId] = {
         'polyline': fullPolyline,
@@ -212,46 +310,146 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void listenToTrainLocation() {
-    _trainRef.onValue.listen((event) {
-      final data = event.snapshot.value as Map?;
-      if (data != null &&
-          data['latitude'] != null &&
-          data['longitude'] != null) {
-        final LatLng rawLocation = LatLng(
-          double.parse(data['latitude'].toString()),
-          double.parse(data['longitude'].toString()),
-        );
+  void listenToAllTrains() {
+    DatabaseReference allTrainsRef = FirebaseDatabase.instance.ref('trains');
 
-        final double speed = double.parse(data['speed'].toString());
-        // Find the closest point on the route
-        final LatLng snappedLocation = findClosestPointOnPolyline(
-          rawLocation,
-          railPolylines["Alger->Thénia"]['polyline'],
-        );
-        bool is_going = data['direction'] == "going";
+    allTrainsRef.onValue.listen((event) async {
+      final data = event.snapshot.value as Map<dynamic, dynamic>?;
 
-        setState(() {
-          _trainLocationSnapped = snappedLocation; //exactly on the rail
-          _trainLocation = rawLocation; // this is now "on the rail"
-        });
+      if (data != null) {
+        for (var entry in data.entries) {
+          final String trainNom =
+              entry.key; // <-- Here! Get the train name from the document ID
+          final trainData = entry.value as Map<dynamic, dynamic>;
 
-        calculateETA(
-          garesList: railPolylines["Alger->Thénia"]['station'],
-          stationCoordinates: stationCoordinatesMap,
-          snappedTrainLocation: snappedLocation,
-          fullPolyline: railPolylines["Alger->Thénia"]['polyline'],
-          speedKmh: speed, // train speed
-          isGoingDirection: is_going,
-        );
+          if (trainData['latitude'] != null && trainData['longitude'] != null) {
+            final LatLng rawLocation = LatLng(
+              double.parse(trainData['latitude'].toString()),
+              double.parse(trainData['longitude'].toString()),
+            );
+            final double speed = double.parse(trainData['speed'].toString());
+
+            // 🔥 Fetch train info from Firestore
+            final querySnapshot =
+                await FirebaseFirestore.instance
+                    .collection('trains')
+                    .where('nom', isEqualTo: trainNom)
+                    .get();
+
+            if (querySnapshot.docs.isNotEmpty) {
+              final trainDoc = querySnapshot.docs.first;
+              final String ligne = trainDoc['ligne'];
+              final bool isGoing = trainDoc['isGoing'];
+
+              // 🔥 Find the correct polyline and station list
+              final List<LatLng> polyline =
+                  railPolylines[ligne]?['polyline'] ?? [];
+              final List<Map<String, dynamic>> stationList =
+                  List<Map<String, dynamic>>.from(
+                    railPolylines[ligne]?['stations'] ?? [],
+                  );
+
+              developer.log("📍 Station list for $ligne:");
+              for (var station in stationList) {
+                developer.log(
+                  " - ${station['name']} at ${station['coordinates']} (index: ${station['index']})",
+                );
+              }
+              // rawLocation=LatLng(36.76699671,3.05718731);
+              if (polyline.isNotEmpty && stationList.isNotEmpty) {
+                // Snap to polyline
+                //rawLocation = LatLng(36.75943808,3.0619855 );
+                final SnapResult snappedLocation = findClosestPointOnPolyline(
+                  rawLocation,
+                  polyline,
+                );
+                HomeScreen.notification.add(snappedLocation.snappedPoint);
+                if (HomeScreen.notification.length > 100) {
+                  HomeScreen.notification.removeAt(0);
+                }
+                //snappedLocation.snappedPoint;
+                developer.log(
+                  "📍 Snapped Location: ${snappedLocation.snappedPoint.latitude}, ${snappedLocation.snappedPoint.longitude}",
+                );
+
+                if (!stationPassedStatusMap.containsKey(trainNom)) {
+                  stationPassedStatusMap[trainNom] = {};
+                }
+                //snappedLocation.snappedPoint_trainLocationSnapped = snappedLocation.snappedPoint;
+                // 🛠 Calculate ETA for this train
+
+                calculateETA(
+                  garesList: stationList,
+                  snappedTrainLocation: snappedLocation,
+                  fullPolyline: polyline,
+                  speedKmh: speed,
+                  stationPassedStatus: stationPassedStatusMap[trainNom]!,
+                  isGoingDirection: isGoing,
+                  updateDirectionCallback: (newIsGoing) {
+                    // Update direction for this train if needed
+                  },
+                );
+
+                // 🗺 Update marker position
+                updateTrainMarker(trainNom, snappedLocation.snappedPoint);
+              }
+            }
+          }
+        }
       }
     });
   }
 
-  LatLng findClosestPointOnPolyline(LatLng point, List<LatLng> polyline) {
+  Map<String, dynamic>? getNextStation({
+    required List<Map<String, dynamic>> orderedStations,
+    required int trainIndex,
+    required Map<String, bool> stationPassedStatus,
+    required void Function(bool newIsGoing) updateDirectionCallback,
+    required bool isGoingDirection,
+  }) {
+    bool foundNext = false;
+
+    for (var station in orderedStations) {
+      int stationIndex = station['index'];
+      String name = station['name'];
+
+      if ((isGoingDirection && trainIndex > stationIndex) ||
+          (!isGoingDirection && trainIndex < stationIndex)) {
+        // Mark as passed
+        stationPassedStatus[name] = true;
+      } else {
+        foundNext = true;
+        HomeScreen.nextStation = station['name'];
+        return station;
+      }
+    }
+
+    // If no unpassed station found = all passed
+    if (!foundNext) {
+      stationPassedStatus.updateAll((key, value) => false); // reset
+      updateDirectionCallback(!isGoingDirection); // toggle direction
+      developer.log("🔁 All stations passed, switching direction!");
+    }
+
+    return null; // No next station found
+  }
+
+  void updateTrainMarker(String trainNom, LatLng snappedLocation) {
+    trainMarkers[trainNom] = Marker(
+      markerId: MarkerId(trainNom),
+      position: snappedLocation,
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+      infoWindow: InfoWindow(title: trainNom),
+    );
+    setState(() {}); // Refresh the map
+  }
+
+  SnapResult findClosestPointOnPolyline(LatLng point, List<LatLng> polyline) {
     Vector2 p = Vector2(point.latitude, point.longitude);
     double minDistance = double.infinity;
     LatLng closestPoint = polyline.first;
+    int bestIndex = 0;
+    double bestT = 0;
 
     for (int i = 0; i < polyline.length - 1; i++) {
       LatLng start = polyline[i];
@@ -264,7 +462,7 @@ class _HomeScreenState extends State<HomeScreen> {
       Vector2 ab = b - a;
 
       double t = ap.dot(ab) / ab.length2;
-      t = t.clamp(0.0, 1.0); // keep t within segment
+      t = t.clamp(0.0, 1.0);
 
       Vector2 projection = a + ab * t;
       double distance = (p - projection).length;
@@ -272,10 +470,12 @@ class _HomeScreenState extends State<HomeScreen> {
       if (distance < minDistance) {
         minDistance = distance;
         closestPoint = LatLng(projection.x, projection.y);
+        bestIndex = i;
+        bestT = t;
       }
     }
 
-    return closestPoint;
+    return SnapResult(closestPoint, bestIndex, bestT);
   }
 
   List<LatLng> slicePolylineFromTo(
@@ -311,58 +511,77 @@ class _HomeScreenState extends State<HomeScreen> {
     return [];
   }
 
-  Future<void> calculateETA({
-    required List<String> garesList,
-    required Map<String, LatLng>
-    stationCoordinates, // {"alger": LatLng(...), ...}
-    required LatLng snappedTrainLocation,
+  void calculateETA({
+    required List<Map<String, dynamic>> garesList,
+    required SnapResult snappedTrainLocation,
     required List<LatLng> fullPolyline,
-    required double speedKmh, // train speed
+    required double speedKmh,
+    required Map<String, bool> stationPassedStatus,
     required bool isGoingDirection,
-  }) async {
-    // Clear previous ETA data
-    List<Map<String, dynamic>> tempEtaList = [];
-    setState(() {
-      _etaList = tempEtaList;
-    });
-
-    List<String> orderedGares =
+    required void Function(bool newIsGoing) updateDirectionCallback,
+  }) {
+    List<Map<String, dynamic>> orderedGares =
         isGoingDirection ? garesList : garesList.reversed.toList();
 
-    // Initialize the current index if necessary
-    int currentIndex = 0;
+    List<Map<String, dynamic>> tempEtaList = [];
+    int trainIndex = snappedTrainLocation.segmentIndex;
 
-    for (int i = currentIndex; i < orderedGares.length; i++) {
-      LatLng stationCoord = stationCoordinates[orderedGares[i]]!;
+    // 🔁 Get next station and update passed status
+    Map<String, dynamic>? nextStation = getNextStation(
+      orderedStations: orderedGares,
+      trainIndex: trainIndex,
+      stationPassedStatus: stationPassedStatus,
+      updateDirectionCallback: updateDirectionCallback,
+      isGoingDirection: isGoingDirection,
+    );
 
+    if (nextStation == null) {
+      developer.log("✅ No next station (maybe just switched direction)");
+      return;
+    }
+
+    // 🧮 Continue to calculate ETA for the remaining stations
+    int nextIndex = orderedGares.indexWhere(
+      (s) => s['name'] == nextStation['name'],
+    );
+    for (int i = nextIndex; i < orderedGares.length; i++) {
       List<LatLng> segment = slicePolylineFromTo(
         fullPolyline,
-        snappedTrainLocation,
-        stationCoord,
+        snappedTrainLocation.snappedPoint,
+        orderedGares[i]['coordinates'],
       );
-
       double distance = calculateDistanceBetweenPoints(segment); // meters
       double speedMps = (speedKmh * 1000) / 3600;
       double etaSeconds = speedMps > 0 ? distance / speedMps : double.infinity;
       double etaMinutes = etaSeconds / 60;
-
-      // Skip this station if it's too close
-      if (distance < 50 || etaMinutes < 1) {
-        currentIndex++; // train just passed this station
-        continue;
-      }
+      developer.log(
+        "📏 Distance to ${orderedGares[i]['name']}: ${distance.toStringAsFixed(2)} meters",
+      );
 
       tempEtaList.add({
-        "station": orderedGares[i],
-        "eta_minutes": etaMinutes.ceil(), // avoid showing 0
+        "station": orderedGares[i]['name'],
+        "eta_minutes": etaMinutes.isFinite ? etaMinutes.ceil() : 0,
+        "passed": stationPassedStatus[orderedGares[i]['name']],
       });
+
+      // You can compute distance between snappedTrainLocation and station[i], then divide by speedKmh
+      // Display or store ETA
     }
 
-    // After calculation, update the UI with the new ETA list
     setState(() {
       _etaList = tempEtaList;
     });
-    print(_etaList);
+    developer.log("📋 ETA List:");
+    for (var eta in tempEtaList) {
+      developer.log(
+        "→ Station: ${eta['station']}, ETA: ${eta['eta_minutes']} min, Passed: ${eta['passed']}",
+      );
+    }
+    developer.log("🚅 Speed: $speedKmh km/h");
+    developer.log("🚉 Next Station: ${nextStation['name']}");
+    developer.log(
+      "📌 Next Station Index: ${orderedGares.indexWhere((s) => s['name'] == nextStation['name'])}",
+    );
   }
 
   void _selectGare(LatLng garePosition) {
@@ -414,32 +633,18 @@ class _HomeScreenState extends State<HomeScreen> {
     return LatLngBounds(southwest: LatLng(x0, y0), northeast: LatLng(x1, y1));
   }
 
-  void _onMapCreated(GoogleMapController controller) {
-    mapController = controller;
-    if (_trainRoute.isNotEmpty) {
-      _fitMapToBounds();
-    }
-  }
-
-  void _fitMapToBounds() {
-    if (mapController == null || _trainRoute.isEmpty) return;
-
-    final bounds = _boundsFromLatLngList(_trainRoute);
-    mapController!.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50));
-  }
-
-  void _onCameraMove(CameraPosition position) {
-    _currentZoom = position.zoom;
-  }
-
   Future<void> _openInGoogleMaps(LatLng destination) async {
     final String url =
         'https://www.google.com/maps/dir/?api=1&destination=${destination.latitude},${destination.longitude}';
     if (await canLaunchUrl(Uri.parse(url))) {
       await launchUrl(Uri.parse(url));
     } else {
-      print('Could not launch $url');
+      developer.log('Could not launch $url');
     }
+  }
+
+  Map<String, bool> initializeStationPassedStatus(List<String> stationList) {
+    return {for (var station in stationList) station: false};
   }
 
   @override
@@ -467,21 +672,21 @@ class _HomeScreenState extends State<HomeScreen> {
               }
             },
             markers: {
+              ...allMarkers,
               /* if (_currentP != null)
                 Marker(
                   markerId: MarkerId("current_position"),
                   position: _currentP!,
                   icon: BitmapDescriptor.defaultMarker,
                 ),*/
-              if (_trainLocation != null)
+
+              /*if (_trainLocation != null)
                 Marker(
                   markerId: MarkerId("train_location_actual"),
                   position: _trainLocation!,
-                  icon: BitmapDescriptor.defaultMarkerWithHue(
-                    BitmapDescriptor.hueOrange,
-                  ),
+                  icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
                   infoWindow: InfoWindow(title: "Train Position"),
-                ),
+                ),*/
               if (_trainLocationSnapped != null)
                 Marker(
                   markerId: MarkerId("train_location_Snapped"),
@@ -526,7 +731,7 @@ class _HomeScreenState extends State<HomeScreen> {
           DraggableScrollableSheet(
             initialChildSize: 0.1,
             minChildSize: 0.1,
-            maxChildSize: 0.4,
+            maxChildSize: 0.7,
             builder: (BuildContext context, ScrollController scrollController) {
               return Container(
                 decoration: BoxDecoration(
@@ -534,22 +739,99 @@ class _HomeScreenState extends State<HomeScreen> {
                   borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                   boxShadow: [BoxShadow(blurRadius: 10, color: Colors.black26)],
                 ),
-                padding: EdgeInsets.all(16),
-                child: ListView.builder(
-                  controller: scrollController,
-                  itemCount: _etaList.length,
-                  itemBuilder: (context, index) {
-                    final eta = _etaList[index];
-                    return ListTile(
-                      leading: Icon(Icons.train),
-                      title: Text(eta["station"]),
-                      trailing: Text("${eta["eta_minutes"]} min"),
-                    );
-                  },
+                child: Column(
+                  children: [
+                    // 🔹 Grab Handle
+                    Container(
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      width: 40,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    Expanded(
+                      child: ListView.builder(
+                        controller: scrollController,
+                        padding: EdgeInsets.all(16),
+                        itemCount: _etaList.length,
+                        itemBuilder: (context, index) {
+                          final eta = _etaList[index];
+                          final bool isPassed = eta["passed"] ?? false;
+                          final String station = eta["station"];
+
+                          return Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Column(
+                                children: [
+                                  Container(
+                                    width: 12,
+                                    height: 12,
+                                    decoration: BoxDecoration(
+                                      color:
+                                          isPassed
+                                              ? Colors.grey
+                                              : Color(0xFF008ECC),
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  if (index != _etaList.length - 1)
+                                    Container(
+                                      width: 2,
+                                      height: 50,
+                                      color:
+                                          isPassed
+                                              ? Colors.grey
+                                              : Color(0xFF008ECC),
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(width: 8),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    station,
+                                    style: TextStyle(
+                                      color:
+                                          isPassed ? Colors.grey : Colors.black,
+                                      decoration:
+                                          isPassed
+                                              ? TextDecoration.lineThrough
+                                              : null,
+                                    ),
+                                  ),
+                                  if (!isPassed)
+                                    Text(
+                                      "${eta["eta_minutes"]} min",
+                                      style: TextStyle(
+                                        color: Colors.green,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  if (isPassed)
+                                    Text(
+                                      "✔️",
+                                      style: TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               );
             },
           ),
+
           /* Positioned(top:350,
         left:20,
         child: ElevatedButton(onPressed: (){
@@ -690,7 +972,9 @@ class _HomeScreenState extends State<HomeScreen> {
             _buildBottomButton(LucideIcons.barChart, "الإحصائيات", () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const StatsScreen()),
+                MaterialPageRoute(
+                  builder: (context) => StatistiqueGareScreen(),
+                ),
               );
             }),
             _buildBottomButton(LucideIcons.bell, "الإشعارات", () {
@@ -730,4 +1014,12 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
+}
+
+class SnapResult {
+  final LatLng snappedPoint;
+  final int segmentIndex;
+  final double tAlongSegment; // from 0 to 1
+
+  SnapResult(this.snappedPoint, this.segmentIndex, this.tAlongSegment);
 }

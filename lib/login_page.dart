@@ -44,6 +44,7 @@ class _LoginPageState extends State<LoginPage> {
       setState(() => isLoading = true);
       await _auth.signInWithEmailAndPassword(email: email, password: password);
       Navigator.pushReplacement(
+        // ignore: use_build_context_synchronously
         context,
         MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
@@ -237,33 +238,6 @@ class _LoginPageState extends State<LoginPage> {
                                                 : Colors.white,
                                       ),
                                     ),
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                                SizedBox(
-                                  width: 200,
-                                  height: 50,
-                                  child: OutlinedButton.icon(
-                                    style: OutlinedButton.styleFrom(
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      side: BorderSide(color: primaryColor),
-                                    ),
-                                    icon: Image.asset(
-                                      'assets/googlelogo.png',
-                                      height: 15,
-                                      width: 15,
-                                    ),
-                                    label: Text(
-                                      'sign_in_google'.tr(),
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: textColor,
-                                      ),
-                                    ),
-                                    onPressed: signInWithGoogle,
                                   ),
                                 ),
                               ],
