@@ -1,3 +1,5 @@
+// ignore_for_file: unused_field, unused_element
+
 import 'package:appmob/back-end.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -6,7 +8,9 @@ import 'package:location/location.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:firebase_database/firebase_database.dart';
+// ignore: unused_import
 import 'dart:convert';
+// ignore: unused_import
 import 'package:flutter/services.dart' show rootBundle;
 import 'statistique.dart';
 import 'notification.dart';

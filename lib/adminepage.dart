@@ -1,8 +1,10 @@
+import 'package:appmob/feeduser.dart';
+import 'package:appmob/station.dart';
 import 'package:flutter/material.dart';
-import 'train.dart';
-import 'line.dart';
-import 'gars.dart';
-import 'station.dart';
+import 'admin.dart';
+import 'affigars.dart';
+
+import 'lin.dart';
 
 class AdminPanelPage extends StatefulWidget {
   const AdminPanelPage({super.key});
@@ -18,26 +20,57 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
 
   @override
   Widget build(BuildContext context) {
+    // ignore: unused_local_variable
+    final theme = Theme.of(context);
+
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        title: Text("Panneau d'administration"),
+        title: Text("Ajouts & Création"),
         centerTitle: true,
+        backgroundColor: Colors.white10,
+        elevation: 0,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16.0),
         child: GridView.count(
           crossAxisCount: 2,
-          crossAxisSpacing: 20,
-          mainAxisSpacing: 20,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
           children: [
-            buildButton("Gars", Icons.person, Colors.blue, GarsPage()),
-            buildButton("Train", Icons.train, Colors.green, TrainPage()),
-            buildButton("Ligne", Icons.timeline, Colors.orange, LignePage()),
-            buildButton(
-              "Station",
-              Icons.location_on,
-              Colors.purple,
-              StationPage(),
+            buildAdminCard(
+              icon: Icons.place,
+              label: 'Gares',
+              color: Colors.blue.shade400,
+              onTap: () => navigateTo(GareListPage()),
+            ),
+            buildAdminCard(
+              icon: Icons.admin_panel_settings,
+              label: 'Admin',
+              color: const Color.fromARGB(255, 206, 201, 201),
+              onTap: () => navigateTo(AdminListPage()),
+            ),
+            buildAdminCard(
+              icon: Icons.timeline,
+              label: 'Lignes',
+              color: const Color.fromARGB(255, 206, 201, 201),
+              onTap: () => navigateTo(RailLinesScreen()),
+            ),
+            buildAdminCard(
+              icon: Icons.location_on,
+              label: 'Stations',
+              color: Colors.blue.shade400,
+              onTap: () => navigateTo(AddCoordinatesPage()),
+            ),
+            buildAdminCard(
+              // Carte ajoutée pour le feedback des utilisateurs
+              icon: Icons.feedback,
+              label: 'Feedback ',
+              color: Colors.blueAccent,
+              onTap:
+                  () => navigateTo(
+                    FeedbackAdminScreen(),
+                  ), // Navigue vers la page de feedback
             ),
           ],
         ),
@@ -45,21 +78,42 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
     );
   }
 
-  Widget buildButton(String title, IconData icon, Color color, Widget page) {
-    return ElevatedButton(
-      onPressed: () => navigateTo(page),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        padding: const EdgeInsets.all(20),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 40, color: Colors.white),
-          SizedBox(height: 10),
-          Text(title, style: TextStyle(fontSize: 18, color: Colors.white)),
-        ],
+  Widget buildAdminCard({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Card(
+      elevation: 6,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shadowColor: Colors.black26,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 50, color: Colors.white),
+                const SizedBox(height: 12),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

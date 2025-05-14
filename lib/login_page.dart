@@ -6,33 +6,37 @@ import 'theme_provider.dart';
 import 'package:provider/provider.dart';
 import 'home.dart';
 import 'forgot_password.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  const LoginPage({Key? key}) : super(key: key);
 
   @override
-  // ignore: library_private_types_in_public_api
   _LoginPageState createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final TextEditingController email1 = TextEditingController();
-  final TextEditingController password1 = TextEditingController();
+  // Contrôleurs pour les champs de texte
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+  // Instance de FirebaseAuth pour l'authentification
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
+  // Variables pour gérer l'état de l'erreur et du chargement
   String errorMessage = '';
   bool isLoading = false;
 
+  // Fonction pour gérer la connexion de l'utilisateur
   Future<void> signIn() async {
-    final email = email1.text.trim();
-    final password = password1.text;
+    final email = emailController.text.trim();
+    final password = passwordController.text;
 
+    // Réinitialiser le message d'erreur
     setState(() {
       errorMessage = '';
     });
 
+    // Vérifier si les champs sont vides
     if (email.isEmpty || password.isEmpty) {
       setState(() {
         errorMessage = 'Veuillez remplir tous les champs.';
@@ -42,12 +46,20 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       setState(() => isLoading = true);
-      await _auth.signInWithEmailAndPassword(email: email, password: password);
+
+      // Tentative de connexion avec Firebase
+      final _ = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      // Naviguer vers la page d'accueil en cas de succès
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
     } on FirebaseAuthException catch (e) {
+      // Gérer les erreurs d'authentification
       setState(() {
         errorMessage = e.message ?? 'Une erreur est survenue.';
       });
@@ -56,76 +68,15 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  Future<void> signInWithGoogle() async {
-    setState(() {
-      isLoading = true;
-      errorMessage = '';
-    });
-
-    try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) {
-        setState(() => isLoading = false);
-        return; // L'utilisateur a annulé la connexion
-      }
-
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-
-      final AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      final UserCredential userCredential = await _auth.signInWithCredential(
-        credential,
-      );
-
-      final User? user = userCredential.user;
-
-      if (user != null) {
-        final DocumentSnapshot userDoc =
-            await FirebaseFirestore.instance
-                .collection('users')
-                .doc(user.uid)
-                .get();
-
-        // ✅ Si l'utilisateur n'existe pas dans Firestore, on l'ajoute
-        if (!userDoc.exists) {
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(user.uid)
-              .set({
-                'name': user.displayName ?? '',
-                'email': user.email ?? '',
-                'photoUrl': user.photoURL ?? '',
-                'createdAt': DateTime.now(),
-                'isAdmin': false,
-                'signInMethod': 'google',
-              });
-        }
-
-        // ✅ Redirection vers la page d'accueil
-        Navigator.pushReplacement(
-          // ignore: use_build_context_synchronously
-          context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-        );
-      }
-    } catch (e) {
-      setState(() {
-        errorMessage = 'Erreur de connexion Google.';
-      });
-    } finally {
-      setState(() => isLoading = false);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    // Déterminer le mode sombre ou clair
     final bool isDark = Provider.of<ThemeProvider>(context).isDarkMode;
+
+    // Définir les couleurs en fonction du thème
     final backgroundColor = isDark ? Colors.black : Colors.white;
-    final primaryColor = const Color(0xFF008ECC);
+    final primaryColor =
+        isDark ? const Color.fromARGB(255, 0, 2, 116) : const Color(0xFF008ECC);
     final textColor = isDark ? Colors.white : Colors.black;
 
     return Scaffold(
@@ -135,29 +86,35 @@ class _LoginPageState extends State<LoginPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+            // Barre supérieure
             Container(height: 50, color: primaryColor),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 30.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Logo de l'application
                   Center(
-                    child: Image.asset('assets/logo9itari.png', height: 20),
+                    child: Image.asset('assets/logo9itari.png', height: 80),
                   ),
                   const SizedBox(height: 20),
+                  // Titre de la page
                   Center(
                     child: Text(
-                      'sign_in'.tr(),
+                      'sign in', // "Sign In" ici
                       style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 34,
+                        fontWeight:
+                            FontWeight
+                                .w700, // Moins bold (poids de police moyen)
                         color: textColor,
                       ),
                     ),
                   ),
                   const SizedBox(height: 20),
+                  // Champ pour l'email
                   TextField(
-                    controller: email1,
+                    controller: emailController,
                     decoration: InputDecoration(
                       labelText: 'email'.tr(),
                       labelStyle: TextStyle(color: textColor, fontSize: 16),
@@ -166,8 +123,9 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   const SizedBox(height: 20),
+                  // Champ pour le mot de passe
                   TextField(
-                    controller: password1,
+                    controller: passwordController,
                     obscureText: true,
                     decoration: InputDecoration(
                       labelText: 'password'.tr(),
@@ -177,6 +135,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   const SizedBox(height: 10),
+                  // Lien pour le mot de passe oublié
                   Align(
                     alignment: Alignment.centerLeft,
                     child: TextButton(
@@ -187,6 +146,7 @@ class _LoginPageState extends State<LoginPage> {
                             builder: (context) => const ForgotPasswordPage(),
                           ),
                         );
+                        // Implémentez la logique de mot de passe oublié ici
                       },
                       child: Text(
                         'forgot_password'.tr(),
@@ -198,6 +158,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   ),
+                  // Affichage du message d'erreur
                   if (errorMessage.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -209,69 +170,37 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   const SizedBox(height: 30),
+                  // Bouton de connexion
                   Center(
                     child:
                         isLoading
                             ? const CircularProgressIndicator()
-                            : Column(
-                              children: [
-                                SizedBox(
-                                  width: 200,
-                                  height: 50,
-                                  child: ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: primaryColor,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                    ),
-                                    onPressed: signIn,
-                                    child: Text(
-                                      'sign_in'.tr(),
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color:
-                                            isDark
-                                                ? Colors.black
-                                                : Colors.white,
-                                      ),
-                                    ),
+                            : SizedBox(
+                              width: 200,
+                              height: 50,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: primaryColor,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
                                   ),
                                 ),
-                                const SizedBox(height: 10),
-                                SizedBox(
-                                  width: 200,
-                                  height: 50,
-                                  child: OutlinedButton.icon(
-                                    style: OutlinedButton.styleFrom(
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      side: BorderSide(color: primaryColor),
-                                    ),
-                                    icon: Image.asset(
-                                      'assets/googlelogo.png',
-                                      height: 15,
-                                      width: 15,
-                                    ),
-                                    label: Text(
-                                      'sign_in_google'.tr(),
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: textColor,
-                                      ),
-                                    ),
-                                    onPressed: signInWithGoogle,
+                                onPressed: signIn,
+                                child: Text(
+                                  'sign_in'.tr(), // "Sign In" ici
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark ? Colors.black : Colors.white,
                                   ),
                                 ),
-                              ],
+                              ),
                             ),
                   ),
                 ],
               ),
             ),
+            // Barre inférieure avec lien vers l'inscription
             Container(
               height: 50,
               color: primaryColor,
@@ -293,7 +222,7 @@ class _LoginPageState extends State<LoginPage> {
                         'sign_up'.tr(),
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: textColor,
+                          color: Colors.white,
                         ),
                       ),
                     ),

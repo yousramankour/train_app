@@ -1,23 +1,19 @@
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 
-class EditProfilePage extends StatefulWidget {
-  const EditProfilePage({super.key});
-
+class EditProfileScreen extends StatefulWidget {
   @override
-  State<EditProfilePage> createState() => _EditProfilePageState();
+  State<EditProfileScreen> createState() => _EditProfileScreenState();
 }
 
-class _EditProfilePageState extends State<EditProfilePage> {
-  final _formKey = GlobalKey<FormState>();
-  final _auth = FirebaseAuth.instance;
-  final _firestore = FirebaseFirestore.instance;
-
-  final TextEditingController _nomController = TextEditingController();
-  final TextEditingController _ageController = TextEditingController();
-  final TextEditingController _metierController = TextEditingController();
-  String _selectedSexe = "Homme";
+class _EditProfileScreenState extends State<EditProfileScreen> {
+  final _nameController = TextEditingController();
+  final _ageController = TextEditingController();
+  final _jobController = TextEditingController();
+  final _sexController = TextEditingController();
+  String email = "";
+  final user = FirebaseAuth.instance.currentUser;
 
   @override
   void initState() {
@@ -26,35 +22,58 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   Future<void> _loadUserData() async {
-    final user = _auth.currentUser;
     if (user != null) {
-      final doc = await _firestore.collection('users').doc(user.uid).get();
-      final data = doc.data();
-      if (data != null) {
+      final doc =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user!.uid)
+              .get();
+      if (doc.exists) {
         setState(() {
-          _nomController.text = data['nom'] ?? '';
-          _ageController.text = data['age']?.toString() ?? '';
-          _metierController.text = data['metier'] ?? '';
-          _selectedSexe = data['sexe'] ?? 'Homme';
+          email = user!.email ?? '';
+          _nameController.text = doc['name'] ?? '';
+          _ageController.text = doc['age']?.toString() ?? '';
+          _jobController.text = doc['job'] ?? '';
+          _sexController.text = doc['sex'] ?? '';
         });
       }
     }
   }
 
-  Future<void> _saveChanges() async {
-    if (_formKey.currentState!.validate()) {
-      final user = _auth.currentUser;
-      if (user != null) {
-        await _firestore.collection('users').doc(user.uid).update({
-          'nom': _nomController.text.trim(),
-          'email': user.email, // Ne pas modifier l'email
-          'age': int.tryParse(_ageController.text.trim()) ?? 0,
-          'metier': _metierController.text.trim(),
-          'sexe': _selectedSexe,
-        });
-        // ignore: use_build_context_synchronously
-        Navigator.pop(context); // Retour au profil après sauvegarde
-      }
+  void _saveChanges() async {
+    final name = _nameController.text.trim();
+    final age = _ageController.text.trim();
+    final job = _jobController.text.trim();
+    final sex = _sexController.text.trim();
+    if (name.isEmpty || age.isEmpty || job.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Veuillez remplir tous les champs.')),
+      );
+      return;
+    }
+
+    await FirebaseFirestore.instance.collection('users').doc(user!.uid).set({
+      'name': name,
+      'age': int.tryParse(age),
+      'job': job,
+      'sex': sex,
+    }, SetOptions(merge: true));
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Profil mis à jour avec succès')),
+    );
+  }
+
+  void _changePassword() async {
+    if (user != null) {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: user!.email!);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Un lien de réinitialisation a été envoyé à votre email.',
+          ),
+        ),
+      );
     }
   }
 
@@ -62,66 +81,90 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Modifier les informations"),
-        backgroundColor: const Color(0xFF2196F3),
+        title: const Text(
+          'Modifier le Profil',
+          style: TextStyle(color: Colors.black),
+        ),
+        backgroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.black),
+        elevation: 0,
       ),
+      backgroundColor: Colors.white,
       body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKey,
-          child: ListView(
+        padding: const EdgeInsets.all(16),
+        child: SingleChildScrollView(
+          child: Column(
             children: [
-              TextFormField(
-                controller: _nomController,
-                decoration: const InputDecoration(labelText: 'Nom'),
-                validator:
-                    (val) => val == null || val.isEmpty ? 'Nom requis' : null,
+              _buildReadOnlyField("Email", email),
+              const SizedBox(height: 20),
+              _buildEditableField("Nom", _nameController),
+              const SizedBox(height: 20),
+              _buildEditableField(
+                "Âge",
+                _ageController,
+                type: TextInputType.number,
               ),
-              // Suppression du champ email
-              TextFormField(
-                controller: _ageController,
-                decoration: const InputDecoration(labelText: 'Âge'),
-                keyboardType: TextInputType.number,
-                validator:
-                    (val) =>
-                        val == null || int.tryParse(val) == null
-                            ? 'Âge invalide'
-                            : null,
-              ),
-              DropdownButtonFormField<String>(
-                // Sélection du sexe
-                value: _selectedSexe,
-                items: const [
-                  DropdownMenuItem(value: 'Homme', child: Text('Homme')),
-                  DropdownMenuItem(value: 'Femme', child: Text('Femme')),
-                  DropdownMenuItem(value: 'Autre', child: Text('Autre')),
-                ],
-                onChanged: (val) {
-                  if (val != null) {
-                    setState(() => _selectedSexe = val);
-                  }
-                },
-                decoration: const InputDecoration(labelText: 'Sexe'),
-              ),
-              TextFormField(
-                controller: _metierController,
-                decoration: const InputDecoration(labelText: 'Métier'),
-              ),
+              const SizedBox(height: 20),
+              _buildEditableField("Métier", _jobController),
+              const SizedBox(height: 20),
+              _buildEditableField("genre", _sexController),
               const SizedBox(height: 30),
+
               ElevatedButton(
                 onPressed: _saveChanges,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2196F3),
-                  minimumSize: const Size.fromHeight(50),
-                ),
                 child: const Text(
-                  "Sauvegarder",
+                  'Enregistrer',
                   style: TextStyle(color: Colors.white),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  minimumSize: const Size(double.infinity, 50),
+                ),
+              ),
+              const SizedBox(height: 20),
+              OutlinedButton.icon(
+                onPressed: _changePassword,
+                icon: const Icon(Icons.lock_reset, color: Colors.blue),
+                label: const Text(
+                  "Changer le mot de passe",
+                  style: TextStyle(color: Colors.blue),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Colors.blue),
+                  minimumSize: const Size(double.infinity, 50),
                 ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildEditableField(
+    String label,
+    TextEditingController controller, {
+    TextInputType type = TextInputType.text,
+  }) {
+    return TextField(
+      controller: controller,
+      keyboardType: type,
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+      ),
+    );
+  }
+
+  Widget _buildReadOnlyField(String label, String value) {
+    return TextField(
+      controller: TextEditingController(text: value),
+      readOnly: true,
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+        fillColor: Colors.grey[100],
+        filled: true,
       ),
     );
   }
