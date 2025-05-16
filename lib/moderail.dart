@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class EditLineScreen extends StatefulWidget {
   final String docId;
@@ -7,11 +8,11 @@ class EditLineScreen extends StatefulWidget {
   final List<String> initialGares;
 
   const EditLineScreen({
-    Key? key,
+    super.key,
     required this.docId,
     required this.initialName,
     required this.initialGares,
-  }) : super(key: key);
+  });
 
   @override
   State<EditLineScreen> createState() => _EditLineScreenState();
@@ -46,7 +47,7 @@ class _EditLineScreenState extends State<EditLineScreen> {
 
     if (newName.isEmpty || newGares.any((gare) => gare.isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Veuillez remplir tous les champs.')),
+        SnackBar(content: Text('Veuillez remplir tous les champs.'.tr())),
       );
       return;
     }
@@ -65,11 +66,12 @@ class _EditLineScreenState extends State<EditLineScreen> {
         'gares': newGares,
       });
     }
-
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Ligne mise à jour avec succès')),
-    );
+    if (mounted) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ligne mise à jour avec succès'.tr())),
+      );
+    }
   }
 
   void _addGare() {
@@ -88,8 +90,8 @@ class _EditLineScreenState extends State<EditLineScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Modifier la Ligne',
+        title: Text(
+          'Modifier la Ligne'.tr(),
           style: TextStyle(color: Colors.black),
         ),
         backgroundColor: Colors.white,
@@ -104,8 +106,8 @@ class _EditLineScreenState extends State<EditLineScreen> {
             children: [
               TextField(
                 controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Nom de la ligne',
+                decoration: InputDecoration(
+                  labelText: 'Nom de la ligne'.tr(),
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -141,8 +143,8 @@ class _EditLineScreenState extends State<EditLineScreen> {
               ElevatedButton.icon(
                 onPressed: _addGare,
                 icon: const Icon(Icons.add, color: Colors.white),
-                label: const Text(
-                  'Ajouter une gare',
+                label: Text(
+                  'Ajouter une gare'.tr(),
                   style: TextStyle(color: Colors.white),
                 ),
                 style: ElevatedButton.styleFrom(
@@ -152,13 +154,13 @@ class _EditLineScreenState extends State<EditLineScreen> {
               const SizedBox(height: 30),
               ElevatedButton(
                 onPressed: _saveChanges,
-                child: const Text(
-                  'Enregistrer',
-                  style: TextStyle(color: Colors.white),
-                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue, // bouton noir
                   minimumSize: const Size(double.infinity, 50),
+                ),
+                child: Text(
+                  'Enregistrer'.tr(),
+                  style: TextStyle(color: Colors.white),
                 ),
               ),
             ],

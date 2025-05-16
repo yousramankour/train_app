@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class FeedbackAdminScreen extends StatelessWidget {
-  const FeedbackAdminScreen({Key? key}) : super(key: key);
+  const FeedbackAdminScreen({super.key});
 
   final Map<String, String> questionLabels = const {
-    'q1': "1. Le suivi en temps réel est-il précis ?",
-    'q2': "2. La traçabilité des trajets vous satisfait-elle ?",
-    'q3': "3. Les alertes/notifications sont-elles fiables ?",
-    'q4': "4. La messagerie est-elle utile ?",
-    'q5': "5. L’application est-elle facile à utiliser ?",
+    'q1': "feedback.q1",
+    'q2': "feedback.q2",
+    'q3': "feedback.q3",
+    'q4': "feedback.q4",
+    'q5': "feedback.q5",
   };
 
   Future<String> _getUserName(String userId) async {
@@ -33,9 +34,9 @@ class FeedbackAdminScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Retours des utilisateurs',
-          style: TextStyle(color: Colors.black),
+        title: Text(
+          'admin_feedback.title'.tr(),
+          style: const TextStyle(color: Colors.black),
         ),
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
@@ -52,7 +53,7 @@ class FeedbackAdminScreen extends StatelessWidget {
                   .snapshots(),
           builder: (context, snapshot) {
             if (snapshot.hasError) {
-              return const Center(child: Text('Erreur de chargement.'));
+              return Center(child: Text('Erreur de chargement.'));
             }
             if (!snapshot.hasData) {
               return const Center(child: CircularProgressIndicator());
@@ -61,7 +62,7 @@ class FeedbackAdminScreen extends StatelessWidget {
             final feedbacks = snapshot.data!.docs;
 
             if (feedbacks.isEmpty) {
-              return const Center(child: Text('Aucun retour trouvé.'));
+              return Center(child: Text('Aucun retour trouvé.'));
             }
 
             return ListView.separated(
@@ -78,32 +79,33 @@ class FeedbackAdminScreen extends StatelessWidget {
 
                     return GestureDetector(
                       onLongPress: () {
-                        // Ouvre une boîte de dialogue de confirmation
                         showDialog(
                           context: context,
                           builder:
                               (context) => AlertDialog(
                                 backgroundColor: Colors.white,
-                                title: const Text("Supprimer ce retour ?"),
-                                content: const Text(
-                                  "Voulez-vous vraiment supprimer ce feedback?",
+                                title: Text("admin_feedback.delete_title".tr()),
+                                content: Text(
+                                  "admin_feedback.delete_confirm".tr(),
                                 ),
                                 actions: [
                                   TextButton(
                                     onPressed: () => Navigator.pop(context),
-                                    child: const Text("Annuler"),
+                                    child: Text("admin_feedback.cancel".tr()),
                                   ),
                                   TextButton(
                                     onPressed: () async {
-                                      Navigator.pop(context); // Ferme la boîte
+                                      Navigator.pop(context);
                                       await FirebaseFirestore.instance
                                           .collection('feedbacks')
                                           .doc(feedbacks[index].id)
                                           .delete();
                                     },
-                                    child: const Text(
-                                      "Supprimer",
-                                      style: TextStyle(color: Colors.blue),
+                                    child: Text(
+                                      "admin_feedback.delete".tr(),
+                                      style: const TextStyle(
+                                        color: Colors.blue,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -116,7 +118,7 @@ class FeedbackAdminScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         elevation: 8,
-                        shadowColor: Colors.grey.withOpacity(0.5),
+                        shadowColor: Colors.grey.withAlpha((0.5 * 255).toInt()),
                         child: Padding(
                           padding: const EdgeInsets.all(16),
                           child: Column(
@@ -132,7 +134,9 @@ class FeedbackAdminScreen extends StatelessWidget {
                               const SizedBox(height: 10),
                               ...questionLabels.entries.map((entry) {
                                 final note = data[entry.key] ?? 'N/A';
-                                return Text('⭐ ${entry.value} : $note / 5');
+                                return Text(
+                                  '⭐ ${entry.value.tr()} : $note / 5',
+                                );
                               }),
                               const SizedBox(height: 10),
                               if ((data['problemes'] ?? '')

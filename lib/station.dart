@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class AddCoordinatesPage extends StatefulWidget {
+  const AddCoordinatesPage({super.key});
+
   @override
-  _AddCoordinatesPageState createState() => _AddCoordinatesPageState();
+  AddCoordinatesPageState createState() => AddCoordinatesPageState();
 }
 
-class _AddCoordinatesPageState extends State<AddCoordinatesPage> {
+class AddCoordinatesPageState extends State<AddCoordinatesPage> {
   final TextEditingController _fromController = TextEditingController();
   final TextEditingController _toController = TextEditingController();
   final TextEditingController _coordsTextController = TextEditingController();
@@ -29,7 +32,7 @@ class _AddCoordinatesPageState extends State<AddCoordinatesPage> {
 
     if (newCoords.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Aucune coordonnée valide trouvée ❌")),
+        SnackBar(content: Text("Aucune coordonnée valide trouvée ❌".tr())),
       );
     } else {
       setState(() {
@@ -43,9 +46,9 @@ class _AddCoordinatesPageState extends State<AddCoordinatesPage> {
     final to = _toController.text.trim();
 
     if (from.isEmpty || to.isEmpty || _coordinates.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Remplir tous les champs 📌")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Remplir tous les champs 📌".tr())),
+      );
       return;
     }
 
@@ -56,10 +59,13 @@ class _AddCoordinatesPageState extends State<AddCoordinatesPage> {
         "coordinates":
             _coordinates.map((coord) => GeoPoint(coord[0], coord[1])).toList(),
       });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Coordonnées enregistrées avec succès ✅")),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Coordonnées enregistrées avec succès ✅".tr()),
+          ),
+        );
+      }
 
       setState(() {
         _coordinates.clear();
@@ -68,9 +74,11 @@ class _AddCoordinatesPageState extends State<AddCoordinatesPage> {
         _coordsTextController.clear();
       });
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Erreur: $e")));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Erreur: $e")));
+      }
     }
   }
 
@@ -79,7 +87,7 @@ class _AddCoordinatesPageState extends State<AddCoordinatesPage> {
     return Scaffold(
       resizeToAvoidBottomInset: true, // permet d'éviter overflow avec clavier
       appBar: AppBar(
-        title: Text("Ajouter des coordonnées"),
+        title: Text("Ajouter des coordonnées".tr()),
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
@@ -95,7 +103,7 @@ class _AddCoordinatesPageState extends State<AddCoordinatesPage> {
             TextField(
               controller: _fromController,
               decoration: InputDecoration(
-                labelText: "Station 1",
+                labelText: "Station 1".tr(),
                 prefixIcon: Icon(Icons.train, color: Colors.blue),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -106,7 +114,7 @@ class _AddCoordinatesPageState extends State<AddCoordinatesPage> {
             TextField(
               controller: _toController,
               decoration: InputDecoration(
-                labelText: "Station 2",
+                labelText: "Station 2".tr(),
                 prefixIcon: Icon(Icons.train, color: Colors.blue),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -130,7 +138,7 @@ class _AddCoordinatesPageState extends State<AddCoordinatesPage> {
             ElevatedButton.icon(
               onPressed: _parseCoordinatesFromText,
               icon: Icon(Icons.format_list_bulleted),
-              label: Text("Charger la liste"),
+              label: Text("Charger la liste".tr()),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
                 foregroundColor: Colors.white,
@@ -138,7 +146,6 @@ class _AddCoordinatesPageState extends State<AddCoordinatesPage> {
             ),
             SizedBox(height: 20),
             Container(
-              height: 200, // fixe la hauteur de la liste
               child:
                   _coordinates.isEmpty
                       ? Center(child: Text("Aucune coordonnée chargée"))

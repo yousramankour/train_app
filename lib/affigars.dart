@@ -1,6 +1,7 @@
 import 'package:appmob/gars.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart'; // ajouté
 
 class GareListPage extends StatefulWidget {
   const GareListPage({super.key});
@@ -14,9 +15,9 @@ class GareListPageState extends State<GareListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Liste des Gares',
-          style: TextStyle(color: Colors.black),
+        title: Text(
+          'liste_gares'.tr(), // traduit
+          style: const TextStyle(color: Colors.black),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
@@ -32,7 +33,7 @@ class GareListPageState extends State<GareListPage> {
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text('Aucune gare trouvée'));
+            return Center(child: Text('aucune_gare'.tr())); // traduit
           }
 
           var docs = snapshot.data!.docs;
@@ -72,9 +73,9 @@ class GareListPageState extends State<GareListPage> {
         },
         backgroundColor: Colors.blue,
         icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text(
-          'Ajouter Gare',
-          style: TextStyle(color: Colors.white),
+        label: Text(
+          'ajouter_gare'.tr(), // traduit
+          style: const TextStyle(color: Colors.white),
         ),
       ),
     );
@@ -86,14 +87,17 @@ class GareListPageState extends State<GareListPage> {
       builder:
           (context) => AlertDialog(
             backgroundColor: Colors.white,
-            title: const Text('Supprimer'),
+            title: Text('supprimer'.tr()), // traduit
             content: Text(
-              'Voulez-vous vraiment supprimer la gare "$gareName" ?',
+              tr(
+                'confirm_delete_gare',
+                args: [gareName],
+              ), // traduit avec paramètre
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Annuler'),
+                child: Text('annuler'.tr()), // traduit
               ),
               TextButton(
                 onPressed: () async {
@@ -116,17 +120,21 @@ class GareListPageState extends State<GareListPage> {
                           .update({'gares': gares});
                     }
                   }
+                  if (context.mounted) {
+                    Navigator.pop(context);
 
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Gare "$gareName" supprimée partout'),
-                    ),
-                  );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          tr('gare_deleted_everywhere', args: [gareName]),
+                        ),
+                      ),
+                    );
+                  }
                 },
-                child: const Text(
-                  'Supprimer',
-                  style: TextStyle(color: Colors.red),
+                child: Text(
+                  'supprimer'.tr(), // traduit
+                  style: const TextStyle(color: Colors.red),
                 ),
               ),
             ],

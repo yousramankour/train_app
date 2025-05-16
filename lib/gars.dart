@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
-
+import 'package:easy_localization/easy_localization.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AddGareForm extends StatefulWidget {
+  const AddGareForm({super.key});
+
   @override
-  _AddGareFormState createState() => _AddGareFormState();
+  AddGareFormState createState() => AddGareFormState();
 }
 
-class _AddGareFormState extends State<AddGareForm> {
+class AddGareFormState extends State<AddGareForm> {
   final _formKey = GlobalKey<FormState>();
 
   // Contrôleurs pour les champs de texte
@@ -27,11 +29,15 @@ class _AddGareFormState extends State<AddGareForm> {
 
     if (documentSnapshot.exists) {
       // Si le document existe déjà, afficher un message d'erreur
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Cette gare existe déjà dans la base de données.'),
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Cette gare existe déjà dans la base de données.'.tr(),
+            ),
+          ),
+        );
+      }
     } else {
       // Si le document n'existe pas, on l'ajoute à Firestore
       try {
@@ -47,19 +53,24 @@ class _AddGareFormState extends State<AddGareForm> {
         });
 
         // Afficher un message de succès
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Gare ajoutée avec succès.')));
-
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Gare ajoutée avec succès.'.tr())),
+          );
+        }
         // Réinitialiser les champs
         _gareController.clear();
         _latitudeController.clear();
         _longitudeController.clear();
       } catch (e) {
         // En cas d'erreur lors de l'ajout de la gare
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur lors de l\'ajout de la gare : $e')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Erreur lors de l\'ajout de la gare : $e'.tr()),
+            ),
+          );
+        }
       }
     }
   }
@@ -68,7 +79,7 @@ class _AddGareFormState extends State<AddGareForm> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Ajouter une gare'),
+        title: Text('Ajouter une gare'.tr()),
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
@@ -84,7 +95,7 @@ class _AddGareFormState extends State<AddGareForm> {
               TextFormField(
                 controller: _gareController,
                 decoration: InputDecoration(
-                  labelText: 'Nom de la gare',
+                  labelText: 'Nom de la gare'.tr(),
                   prefixIcon: Icon(Icons.location_on, color: Colors.blue),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -92,7 +103,7 @@ class _AddGareFormState extends State<AddGareForm> {
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Le nom de la gare est requis';
+                    return 'Le nom de la gare est requis'.tr();
                   }
                   return null;
                 },
@@ -103,7 +114,7 @@ class _AddGareFormState extends State<AddGareForm> {
               TextFormField(
                 controller: _latitudeController,
                 decoration: InputDecoration(
-                  labelText: 'Latitude',
+                  labelText: 'Latitude'.tr(),
                   prefixIcon: Icon(Icons.my_location, color: Colors.blue),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -111,7 +122,7 @@ class _AddGareFormState extends State<AddGareForm> {
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'La latitude est requise';
+                    return 'La latitude est requise'.tr();
                   }
                   return null;
                 },
@@ -123,7 +134,7 @@ class _AddGareFormState extends State<AddGareForm> {
               TextFormField(
                 controller: _longitudeController,
                 decoration: InputDecoration(
-                  labelText: 'Longitude',
+                  labelText: 'Longitude'.tr(),
                   prefixIcon: Icon(Icons.my_location, color: Colors.blue),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -131,7 +142,7 @@ class _AddGareFormState extends State<AddGareForm> {
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'La longitude est requise';
+                    return 'La longitude est requise'.tr();
                   }
                   return null;
                 },
@@ -154,7 +165,10 @@ class _AddGareFormState extends State<AddGareForm> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                child: Text('Ajouter la gare', style: TextStyle(fontSize: 16)),
+                child: Text(
+                  'Ajouter la gare'.tr(),
+                  style: TextStyle(fontSize: 16),
+                ),
               ),
             ],
           ),

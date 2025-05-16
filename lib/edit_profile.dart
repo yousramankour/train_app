@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:easy_localization/easy_localization.dart'; // ajouté
 
 class EditProfileScreen extends StatefulWidget {
+  const EditProfileScreen({super.key});
+
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();
 }
@@ -46,9 +49,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final job = _jobController.text.trim();
     final sex = _sexController.text.trim();
     if (name.isEmpty || age.isEmpty || job.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Veuillez remplir tous les champs.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('fill_all_fields'.tr())));
       return;
     }
 
@@ -58,22 +61,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       'job': job,
       'sex': sex,
     }, SetOptions(merge: true));
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Profil mis à jour avec succès')),
-    );
+    if (mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('profile_updated'.tr())));
+    }
   }
 
   void _changePassword() async {
     if (user != null) {
       await FirebaseAuth.instance.sendPasswordResetEmail(email: user!.email!);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Un lien de réinitialisation a été envoyé à votre email.',
-          ),
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('reset_link_sent'.tr())));
+      }
     }
   }
 
@@ -81,9 +83,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Modifier le Profil',
-          style: TextStyle(color: Colors.black),
+        title: Text(
+          'edit_profile'.tr(),
+          style: const TextStyle(color: Colors.black),
         ),
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
@@ -95,39 +97,39 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              _buildReadOnlyField("Email", email),
+              _buildReadOnlyField('email'.tr(), email),
               const SizedBox(height: 20),
-              _buildEditableField("Nom", _nameController),
+              _buildEditableField('name'.tr(), _nameController),
               const SizedBox(height: 20),
               _buildEditableField(
-                "Âge",
+                'age'.tr(),
                 _ageController,
                 type: TextInputType.number,
               ),
               const SizedBox(height: 20),
-              _buildEditableField("Métier", _jobController),
+              _buildEditableField('job'.tr(), _jobController),
               const SizedBox(height: 20),
-              _buildEditableField("genre", _sexController),
+              _buildEditableField('gender'.tr(), _sexController),
               const SizedBox(height: 30),
 
               ElevatedButton(
                 onPressed: _saveChanges,
-                child: const Text(
-                  'Enregistrer',
-                  style: TextStyle(color: Colors.white),
-                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                   minimumSize: const Size(double.infinity, 50),
+                ),
+                child: Text(
+                  'save'.tr(),
+                  style: const TextStyle(color: Colors.white),
                 ),
               ),
               const SizedBox(height: 20),
               OutlinedButton.icon(
                 onPressed: _changePassword,
                 icon: const Icon(Icons.lock_reset, color: Colors.blue),
-                label: const Text(
-                  "Changer le mot de passe",
-                  style: TextStyle(color: Colors.blue),
+                label: Text(
+                  'change_password'.tr(),
+                  style: const TextStyle(color: Colors.blue),
                 ),
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: Colors.blue),

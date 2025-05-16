@@ -1,10 +1,7 @@
 import 'package:appmob/adminepage.dart';
-
 import 'package:appmob/edit_profile.dart';
 import 'package:appmob/enquette_satisfaction.dart';
-
 import 'package:appmob/historique_page.dart';
-
 import 'package:appmob/home.dart';
 import 'package:appmob/login_page.dart';
 import 'package:appmob/messageri.dart';
@@ -18,6 +15,8 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 class ProfileScreen extends StatelessWidget {
   final Color primaryColor = const Color(0xFF008ECC);
+
+  const ProfileScreen({super.key});
 
   Widget _buildBottomButton(
     IconData icon,
@@ -90,7 +89,9 @@ class ProfileScreen extends StatelessWidget {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       // Si non connecté, redirige ou affiche message
-      return Scaffold(body: Center(child: Text('Veuillez vous connecter.')));
+      return Scaffold(
+        body: Center(child: Text('Veuillez vous connecter.'.tr())),
+      );
     }
     return StreamBuilder<DocumentSnapshot>(
       stream:
@@ -103,7 +104,9 @@ class ProfileScreen extends StatelessWidget {
           return Scaffold(body: Center(child: CircularProgressIndicator()));
         }
         if (!snapshot.hasData || !snapshot.data!.exists) {
-          return Scaffold(body: Center(child: Text('Profil introuvable.')));
+          return Scaffold(
+            body: Center(child: Text('Profil introuvable.'.tr())),
+          );
         }
         final data = snapshot.data!.data() as Map<String, dynamic>;
         final name = data['name'] ?? 'Utilisateur';
@@ -143,7 +146,7 @@ class ProfileScreen extends StatelessWidget {
                     children: [
                       _buildModernCard(
                         LucideIcons.userCog,
-                        "modifier profile",
+                        "modifier profile".tr(),
                         onTap: () {
                           Navigator.push(
                             context,
@@ -155,7 +158,7 @@ class ProfileScreen extends StatelessWidget {
                       ),
                       _buildModernCard(
                         LucideIcons.history,
-                        "historique",
+                        "historique".tr(),
                         onTap: () {
                           Navigator.push(
                             context,
@@ -167,13 +170,13 @@ class ProfileScreen extends StatelessWidget {
                       ),
                       _buildModernCard(
                         LucideIcons.globe,
-                        "languages",
+                        "languages".tr(),
                         onTap: () {
                           showDialog(
                             context: context,
                             builder:
                                 (_) => AlertDialog(
-                                  title: Text("Choisir la langue"),
+                                  title: Text("Choisir la langue".tr()),
                                   content: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
@@ -207,7 +210,7 @@ class ProfileScreen extends StatelessWidget {
                       ),
                       _buildModernCard(
                         LucideIcons.info,
-                        "feedback",
+                        "feedback".tr(),
                         onTap: () {
                           Navigator.push(
                             context,
@@ -220,7 +223,7 @@ class ProfileScreen extends StatelessWidget {
                       if (isAdmin) // Affichage conditionnel
                         _buildModernCard(
                           LucideIcons.userCog,
-                          "Ajouts & Création",
+                          "Ajouts & Création".tr(),
                           onTap: () {
                             // Naviguer vers la page de gestion des admins
                             Navigator.push(
@@ -234,7 +237,7 @@ class ProfileScreen extends StatelessWidget {
 
                       _buildModernCard(
                         LucideIcons.logOut,
-                        "Se déconnecter",
+                        "Se déconnecter".tr(),
                         iconColor: Colors.blue,
                         textColor: Colors.blue,
                         onTap: () async {
@@ -242,12 +245,14 @@ class ProfileScreen extends StatelessWidget {
                           await FirebaseAuth.instance.signOut();
 
                           // Redirection vers la page de connexion
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => LoginPage(),
-                            ), // Assure-toi que LoginPage est bien ta page de connexion
-                          );
+                          if (context.mounted) {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => LoginPage(),
+                              ), // Assure-toi que LoginPage est bien ta page de connexion
+                            );
+                          }
                         },
                       ),
                     ],
@@ -265,21 +270,25 @@ class ProfileScreen extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildBottomButton(LucideIcons.map, "Carte", () {
+                _buildBottomButton(LucideIcons.map, "Carte".tr(), () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => HomeScreen()),
                   );
                 }),
-                _buildBottomButton(LucideIcons.barChart, "Statistique", () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => StatistiqueGareScreen(),
-                    ),
-                  );
-                }),
-                _buildBottomButton(LucideIcons.bell, "Notifications", () {
+                _buildBottomButton(
+                  LucideIcons.barChart,
+                  "Statistique".tr(),
+                  () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => StatistiqueGareScreen(),
+                      ),
+                    );
+                  },
+                ),
+                _buildBottomButton(LucideIcons.bell, "Notifications".tr(), () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -287,17 +296,20 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   );
                 }),
-                _buildBottomButton(LucideIcons.messageCircle, "Messagerie", () {
-                  final user = FirebaseAuth.instance.currentUser;
-                  if (user != null) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => ChatScreen()),
-                    );
-                  }
-                  ;
-                }),
-                _buildBottomButton(LucideIcons.user, "Profil", () {
+                _buildBottomButton(
+                  LucideIcons.messageCircle,
+                  "Messagerie".tr(),
+                  () {
+                    final user = FirebaseAuth.instance.currentUser;
+                    if (user != null) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => ChatScreen()),
+                      );
+                    }
+                  },
+                ),
+                _buildBottomButton(LucideIcons.user, "Profil".tr(), () {
                   // Ne rien faire
                 }, isActive: true),
               ],

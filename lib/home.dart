@@ -1,7 +1,9 @@
 import 'dart:developer' as developer;
 import 'dart:math';
-
 import 'package:appmob/etatdeapp.dart';
+import 'package:appmob/notification_service.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'back_end.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -15,15 +17,13 @@ import 'messageri.dart';
 import 'profile.dart';
 import 'package:vector_math/vector_math.dart' hide Colors;
 import 'package:geolocator/geolocator.dart';
-import 'notification_service.dart';
-//import 'etatdeapp.dart';
 
 class HomeScreen extends StatefulWidget {
-  static late final String nextStation;
-
-  static Future<void> virifierlist(List position) async {
+  const HomeScreen({super.key});
+  static Future<void> virifierlist(String trainNom) async {
     int cpt = 1;
     while (true) {
+      List<LatLng> position = HomeScreen.notification[trainNom] ?? [];
       if (position.length >= 2) {
         final double distance = HomeScreen.calculateDistance(
           position[0],
@@ -39,48 +39,57 @@ class HomeScreen extends StatefulWidget {
         }
         if (cpt == 30) {
           await NotificationService.savenotificationdatabase(
-            'retard',
-            'le train1 qui  vien de : {$HomeScreen.nextStation} doit faire  un peut de retard',
+            'retard'.tr(),
+            'le $trainNom qui  vien de $HomeScreen.nextStation doit faire  un peut de retard'
+                .tr(),
           );
           if (Appobservation.isAppInForeground) {
             NotificationService.showNotification(
-              "retard!",
-              'le train1 qui vien de : {$HomeScreen.nextStation} doit faire  un peut de retard',
+              "retard!".tr(),
+              'le $trainNom qui vien de $HomeScreen.nextStation doit faire  un peut de retard'
+                  .tr(),
             );
           } else {
             NotificationService.sendNotification(
               "all",
-              ' retard!',
-              'le train qui vien de : {$HomeScreen.nextStation} doit faire  un peut de retard',
+              ' retard!'.tr(),
+              'le $trainNom qui vien de : $HomeScreen.nextStation doit faire  un peut de retard'
+                  .tr(),
             );
           }
         } else {
           if (cpt == 60) {
             await NotificationService.savenotificationdatabase(
-              'panne',
-              'le train1 qui vien de : {$HomeScreen.nextStation} est on panne!',
+              'panne'.tr(),
+              'le $trainNom qui vien de :$HomeScreen.nextStation  est on panne!'
+                  .tr(),
             );
             if (Appobservation.isAppInForeground) {
               NotificationService.showNotification(
-                "panne!",
-                'le train1 qui vien de : {$HomeScreen.nextStation} est on panne!',
+                "panne!".tr(),
+                'le $trainNom qui vien de &home: $HomeScreen.nextStation est on panne!'
+                    .tr(),
               );
             } else {
               NotificationService.sendNotification(
                 "all",
-                ' panne!',
-                'le train1 qui vien de : {$HomeScreen.nextStation} est on panne!',
+                ' panne!'.tr(),
+                'le $trainNom qui vien de : $HomeScreen.nextStation est on panne!'
+                    .tr(),
               );
             }
           }
         }
       }
-      cpt = 1;
+      if (cpt == 60) {
+        cpt = 1;
+      }
       await Future.delayed(Duration(milliseconds: 100));
     }
   }
 
-  static final List<LatLng> notification = [];
+  static Map<String, List<LatLng>> notification = {};
+
   static double calculateDistance(LatLng p1, LatLng p2) {
     const R = 6371000;
     final lat1 = p1.latitude * pi / 180;
@@ -96,8 +105,6 @@ class HomeScreen extends StatefulWidget {
     return R * c;
   }
 
-  const HomeScreen({super.key});
-
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -110,16 +117,28 @@ class _HomeScreenState extends State<HomeScreen> {
   LatLng? _currentP;
   GoogleMapController? mapController;
   List<Map<String, dynamic>> _etaList = [];
-  // ignore: unused_field
   String _searchText = '';
   LatLng? _destination;
   List<LatLng> _itineraire = [];
-  Map<String, Map<String, bool>> stationPassedStatusMap = {};
+  String? _selectedTrain;
 
+  final DatabaseReference _trainRef = FirebaseDatabase.instance.ref(
+    "trains/train1",
+  );
+  Map<String, Map<String, bool>> stationPassedStatusMap = {};
+  final Map<String, TrainInfo> _trains =
+      {}; // map that contains all the the trains info
+  LatLng? _trainLocation;
   LatLng? _trainLocationSnapped;
   late BitmapDescriptor trainIcon;
+  double _currentZoom = 11.0;
+  final CameraPosition _initialPosition = CameraPosition(
+    target: LatLng(36.7333, 3.2800),
+    zoom: 11,
+  );
+  final _dbServices = DatabaseService();
   Map<String, Marker> trainMarkers = {};
-  final List<LatLng> _trainRoute = [];
+  List<LatLng> _trainRoute = [];
   final List<LatLng> _gares = [
     LatLng(36.77947718263685, 3.062102318233201), // Alger
     LatLng(36.76786434370996, 3.0571634472437097), // Agha
@@ -139,7 +158,9 @@ class _HomeScreenState extends State<HomeScreen> {
     LatLng(36.7310886744763, 3.500921535370594), // Tidjelabine
     LatLng(36.725311597872135, 3.5530624990360025),
   ];
+
   Set<Marker> get allMarkers => trainMarkers.values.toSet();
+
   /* Map<String, LatLng> stationCoordinatesMap= {
   "Agha": LatLng(36.7673269,3.05720034),
    "Les Ateliers": LatLng(36.75656656,3.06556762),
@@ -148,24 +169,24 @@ class _HomeScreenState extends State<HomeScreen> {
   };*/
 
   final List<String> _nomsGares = [
-    "Alger",
-    "Agha",
-    "Les Ateliers",
-    "Hussein Dey",
-    "Caroubier",
-    "El Harrach",
-    "Oued Smar",
-    "Bab Ezzouar",
-    "Dar El Beïda",
-    "Rouiba",
-    "Rouiba industrielle",
-    "Réghaïa industrielle",
-    "Réghaïa",
-    "Boudouaou",
-    "Corso",
-    "Boumerdès",
-    "Tidjelabine",
-    "Thénia",
+    "Alger".tr(),
+    "Agha".tr(),
+    "Les Ateliers".tr(),
+    "Hussein Dey".tr(),
+    "Caroubier".tr(),
+    "El Harrach".tr(),
+    "Oued Smar".tr(),
+    "Bab Ezzouar".tr(),
+    "Dar El Beïda".tr(),
+    "Rouiba".tr(),
+    "Rouiba industrielle".tr(),
+    "Réghaïa industrielle".tr(),
+    "Réghaïa".tr(),
+    "Boudouaou".tr(),
+    "Corso".tr(),
+    "Boumerdès".tr(),
+    "Tidjelabine".tr(),
+    "Thénia".tr(),
   ];
 
   @override
@@ -174,7 +195,11 @@ class _HomeScreenState extends State<HomeScreen> {
     requestLocation();
     listenToAllTrains();
     buildFullPolylines();
-    HomeScreen.virifierlist(HomeScreen.notification);
+    ChatScreen.checknewmsg((newmsg) {
+      setState(() {
+        ChatScreen.hasnewmsg = newmsg;
+      });
+    });
   }
 
   @override
@@ -315,18 +340,30 @@ class _HomeScreenState extends State<HomeScreen> {
 
     allTrainsRef.onValue.listen((event) async {
       final data = event.snapshot.value as Map<dynamic, dynamic>?;
-
+      Set<String> trainIsBeingWatched = {};
       if (data != null) {
         for (var entry in data.entries) {
           final String trainNom =
               entry.key; // <-- Here! Get the train name from the document ID
           final trainData = entry.value as Map<dynamic, dynamic>;
 
+          List<Map<String, dynamic>> etaList = [];
+
           if (trainData['latitude'] != null && trainData['longitude'] != null) {
             final LatLng rawLocation = LatLng(
               double.parse(trainData['latitude'].toString()),
               double.parse(trainData['longitude'].toString()),
             );
+            HomeScreen.notification.putIfAbsent(trainNom, () => []);
+            HomeScreen.notification[trainNom]!.add(rawLocation);
+            if (HomeScreen.notification[trainNom]!.length > 100) {
+              HomeScreen.notification[trainNom]!.removeAt(0);
+            }
+            if (!trainIsBeingWatched.contains(trainNom)) {
+              trainIsBeingWatched.add(trainNom);
+              HomeScreen.virifierlist(trainNom);
+            }
+            _trainLocation = rawLocation;
             final double speed = double.parse(trainData['speed'].toString());
 
             // 🔥 Fetch train info from Firestore
@@ -349,9 +386,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     railPolylines[ligne]?['stations'] ?? [],
                   );
 
-              developer.log("📍 Station list for $ligne:");
+              print("📍 Station list for $ligne:");
               for (var station in stationList) {
-                developer.log(
+                print(
                   " - ${station['name']} at ${station['coordinates']} (index: ${station['index']})",
                 );
               }
@@ -363,12 +400,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   rawLocation,
                   polyline,
                 );
-                HomeScreen.notification.add(snappedLocation.snappedPoint);
-                if (HomeScreen.notification.length > 100) {
-                  HomeScreen.notification.removeAt(0);
-                }
+
                 //snappedLocation.snappedPoint;
-                developer.log(
+                print(
                   "📍 Snapped Location: ${snappedLocation.snappedPoint.latitude}, ${snappedLocation.snappedPoint.longitude}",
                 );
 
@@ -378,7 +412,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 //snappedLocation.snappedPoint_trainLocationSnapped = snappedLocation.snappedPoint;
                 // 🛠 Calculate ETA for this train
 
-                calculateETA(
+                etaList = calculateETA(
                   garesList: stationList,
                   snappedTrainLocation: snappedLocation,
                   fullPolyline: polyline,
@@ -390,6 +424,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                 );
 
+                _trains[trainNom] = TrainInfo(
+                  //enregistrer les info du train avec trainNom comme key et valeur est une variable de type TrainInfo qui est déclarer comme une classe dans le map _trains qui va contenire tous les trains dans notre base de données , dans ce cas là on a qu'un seul train
+                  rail: ligne, // la ligne ex Alger->Thénia
+                  snappedLocation:
+                      snappedLocation, // la position du train dans la ligne
+                  speed: speed,
+                  etaList: etaList,
+                  isGoing: isGoing,
+                );
+                //if u want to get any all trains location u need to loop throught _trains map and for each train get their location that would be _trains.forEach((key,value){ 'le train est $key et sa position est ${value.snappedLocation.snappedpoint} }
                 // 🗺 Update marker position
                 updateTrainMarker(trainNom, snappedLocation.snappedPoint);
               }
@@ -419,7 +463,6 @@ class _HomeScreenState extends State<HomeScreen> {
         stationPassedStatus[name] = true;
       } else {
         foundNext = true;
-        HomeScreen.nextStation = station['name'];
         return station;
       }
     }
@@ -428,7 +471,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!foundNext) {
       stationPassedStatus.updateAll((key, value) => false); // reset
       updateDirectionCallback(!isGoingDirection); // toggle direction
-      developer.log("🔁 All stations passed, switching direction!");
+      print("🔁 All stations passed, switching direction!");
     }
 
     return null; // No next station found
@@ -438,6 +481,11 @@ class _HomeScreenState extends State<HomeScreen> {
     trainMarkers[trainNom] = Marker(
       markerId: MarkerId(trainNom),
       position: snappedLocation,
+      onTap: () {
+        setState(() {
+          _selectedTrain = trainNom; // Trigger the correct sheet
+        });
+      },
       icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
       infoWindow: InfoWindow(title: trainNom),
     );
@@ -511,7 +559,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return [];
   }
 
-  void calculateETA({
+  List<Map<String, dynamic>> calculateETA({
     required List<Map<String, dynamic>> garesList,
     required SnapResult snappedTrainLocation,
     required List<LatLng> fullPolyline,
@@ -536,8 +584,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     if (nextStation == null) {
-      developer.log("✅ No next station (maybe just switched direction)");
-      return;
+      print("✅ No next station (maybe just switched direction)");
+      return tempEtaList;
     }
 
     // 🧮 Continue to calculate ETA for the remaining stations
@@ -554,7 +602,7 @@ class _HomeScreenState extends State<HomeScreen> {
       double speedMps = (speedKmh * 1000) / 3600;
       double etaSeconds = speedMps > 0 ? distance / speedMps : double.infinity;
       double etaMinutes = etaSeconds / 60;
-      developer.log(
+      print(
         "📏 Distance to ${orderedGares[i]['name']}: ${distance.toStringAsFixed(2)} meters",
       );
 
@@ -563,26 +611,17 @@ class _HomeScreenState extends State<HomeScreen> {
         "eta_minutes": etaMinutes.isFinite ? etaMinutes.ceil() : 0,
         "passed": stationPassedStatus[orderedGares[i]['name']],
       });
-
-      // You can compute distance between snappedTrainLocation and station[i], then divide by speedKmh
-      // Display or store ETA
     }
 
-    setState(() {
-      _etaList = tempEtaList;
-    });
-    developer.log("📋 ETA List:");
-    for (var eta in tempEtaList) {
-      developer.log(
-        "→ Station: ${eta['station']}, ETA: ${eta['eta_minutes']} min, Passed: ${eta['passed']}",
-      );
-    }
-    developer.log("🚅 Speed: $speedKmh km/h");
-    developer.log("🚉 Next Station: ${nextStation['name']}");
-    developer.log(
-      "📌 Next Station Index: ${orderedGares.indexWhere((s) => s['name'] == nextStation['name'])}",
-    );
+    return tempEtaList;
   }
+
+  /* double calculateETime(double distanceMeters, double speedKmh) {
+    double speedMps = (speedKmh * 1000) / 3600;
+    if (speedMps == 0) return double.infinity;
+    return (distanceMeters / speedMps) / 60; // in minutes
+  }
+*/
 
   void _selectGare(LatLng garePosition) {
     setState(() {
@@ -633,13 +672,31 @@ class _HomeScreenState extends State<HomeScreen> {
     return LatLngBounds(southwest: LatLng(x0, y0), northeast: LatLng(x1, y1));
   }
 
+  void _onMapCreated(GoogleMapController controller) {
+    mapController = controller;
+    if (_trainRoute.isNotEmpty) {
+      _fitMapToBounds();
+    }
+  }
+
+  void _fitMapToBounds() {
+    if (mapController == null || _trainRoute.isEmpty) return;
+
+    final bounds = _boundsFromLatLngList(_trainRoute);
+    mapController!.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50));
+  }
+
+  void _onCameraMove(CameraPosition position) {
+    _currentZoom = position.zoom;
+  }
+
   Future<void> _openInGoogleMaps(LatLng destination) async {
     final String url =
         'https://www.google.com/maps/dir/?api=1&destination=${destination.latitude},${destination.longitude}';
     if (await canLaunchUrl(Uri.parse(url))) {
       await launchUrl(Uri.parse(url));
     } else {
-      developer.log('Could not launch $url');
+      print('Could not launch $url');
     }
   }
 
@@ -658,6 +715,11 @@ class _HomeScreenState extends State<HomeScreen> {
               target: LatLng(36.7333, 3.2800),
               zoom: 13,
             ),
+            onTap: (_) {
+              setState(() {
+                _selectedTrain = null;
+              });
+            },
             zoomControlsEnabled: false,
             mapToolbarEnabled: false,
             onMapCreated: (GoogleMapController controller) {
@@ -689,16 +751,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),*/
               if (_trainLocationSnapped != null)
                 Marker(
-                  markerId: MarkerId("train_location_Snapped"),
+                  markerId: MarkerId("train_location_Snapped".tr()),
                   position: _trainLocationSnapped!,
                   icon: BitmapDescriptor.defaultMarkerWithHue(
                     BitmapDescriptor.hueGreen,
                   ),
-                  infoWindow: InfoWindow(title: "Train Position"),
+                  infoWindow: InfoWindow(title: "Train Position".tr()),
                 ),
               ..._gares.asMap().entries.map(
                 (entry) => Marker(
-                  markerId: MarkerId("gare_${entry.key}"),
+                  markerId: MarkerId("gare_${entry.key}".tr()),
                   position: entry.value,
                   infoWindow: InfoWindow(title: _nomsGares[entry.key]),
                   icon: BitmapDescriptor.defaultMarkerWithHue(
@@ -728,109 +790,132 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
             },
           ),
-          DraggableScrollableSheet(
-            initialChildSize: 0.1,
-            minChildSize: 0.1,
-            maxChildSize: 0.7,
-            builder: (BuildContext context, ScrollController scrollController) {
-              return Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                  boxShadow: [BoxShadow(blurRadius: 10, color: Colors.black26)],
-                ),
-                child: Column(
-                  children: [
-                    // 🔹 Grab Handle
-                    Container(
-                      margin: const EdgeInsets.symmetric(vertical: 8),
-                      width: 40,
-                      height: 5,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+          if (_selectedTrain != null && _trains.containsKey(_selectedTrain))
+            DraggableScrollableSheet(
+              initialChildSize: 0.1,
+              minChildSize: 0.1,
+              maxChildSize: 0.7,
+              builder: (
+                BuildContext context,
+                ScrollController scrollController,
+              ) {
+                final train = _trains[_selectedTrain]!;
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(20),
                     ),
-                    Expanded(
-                      child: ListView.builder(
-                        controller: scrollController,
-                        padding: EdgeInsets.all(16),
-                        itemCount: _etaList.length,
-                        itemBuilder: (context, index) {
-                          final eta = _etaList[index];
-                          final bool isPassed = eta["passed"] ?? false;
-                          final String station = eta["station"];
+                    boxShadow: [
+                      BoxShadow(blurRadius: 10, color: Colors.black26),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      // 🔹 Grab Handle
+                      Container(
+                        margin: const EdgeInsets.symmetric(vertical: 8),
+                        width: 40,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      // 🚉 Rail Name in Center Top
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(
+                          "${train.rail}",
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 22,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: ListView.builder(
+                          controller: scrollController,
+                          padding: const EdgeInsets.all(16),
+                          itemCount: train.etaList.length,
+                          itemBuilder: (context, index) {
+                            final eta = train.etaList[index];
+                            final bool isPassed = eta["passed"] ?? false;
+                            final String station = eta["station"];
 
-                          return Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Column(
-                                children: [
-                                  Container(
-                                    width: 12,
-                                    height: 12,
-                                    decoration: BoxDecoration(
-                                      color:
-                                          isPassed
-                                              ? Colors.grey
-                                              : Color(0xFF008ECC),
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  if (index != _etaList.length - 1)
+                            return Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Column(
+                                  children: [
                                     Container(
-                                      width: 2,
-                                      height: 50,
-                                      color:
-                                          isPassed
-                                              ? Colors.grey
-                                              : Color(0xFF008ECC),
-                                    ),
-                                ],
-                              ),
-                              const SizedBox(width: 8),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    station,
-                                    style: TextStyle(
-                                      color:
-                                          isPassed ? Colors.grey : Colors.black,
-                                      decoration:
-                                          isPassed
-                                              ? TextDecoration.lineThrough
-                                              : null,
-                                    ),
-                                  ),
-                                  if (!isPassed)
-                                    Text(
-                                      "${eta["eta_minutes"]} min",
-                                      style: TextStyle(
-                                        color: Colors.green,
-                                        fontSize: 12,
+                                      width: 12,
+                                      height: 12,
+                                      decoration: BoxDecoration(
+                                        color:
+                                            isPassed
+                                                ? Colors.grey
+                                                : const Color(0xFF008ECC),
+                                        shape: BoxShape.circle,
                                       ),
                                     ),
-                                  if (isPassed)
+                                    if (index != train.etaList.length - 1)
+                                      Container(
+                                        width: 2,
+                                        height: 50,
+                                        color:
+                                            isPassed
+                                                ? Colors.grey
+                                                : const Color(0xFF008ECC),
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(width: 8),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
                                     Text(
-                                      "✔️",
+                                      station,
                                       style: TextStyle(
-                                        color: Colors.grey,
-                                        fontSize: 12,
+                                        color:
+                                            isPassed
+                                                ? Colors.grey
+                                                : Colors.black,
+                                        decoration:
+                                            isPassed
+                                                ? TextDecoration.lineThrough
+                                                : null,
                                       ),
                                     ),
-                                ],
-                              ),
-                            ],
-                          );
-                        },
+                                    if (!isPassed)
+                                      Text(
+                                        "${eta["eta_minutes"]} min",
+                                        style: const TextStyle(
+                                          color: Colors.green,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    if (isPassed)
+                                      const Text(
+                                        "✔️",
+                                        style: TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ],
+                            );
+                          },
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
+                    ],
+                  ),
+                );
+              },
+            ),
 
           /* Positioned(top:350,
         left:20,
@@ -855,7 +940,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 onChanged: (value) => _searchText = value,
                 onSubmitted: _handleSearch,
                 decoration: InputDecoration(
-                  hintText: 'ابحث عن محطة...',
+                  hintText: 'rechercher sur une gars..'.tr(),
                   border: InputBorder.none,
                   icon: Icon(Icons.search),
                 ),
@@ -919,7 +1004,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             }
                           },
                           icon: Icon(Icons.map),
-                          label: Text("Voir sur la carte"),
+                          label: Text("Voir sur la carte".tr()),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Color(0xFF008ECC),
                             foregroundColor: Colors.white,
@@ -968,28 +1053,37 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _buildBottomButton(LucideIcons.map, "الخريطة", () {}),
-            _buildBottomButton(LucideIcons.barChart, "الإحصائيات", () {
+            _buildBottomButton(LucideIcons.map, "Carte".tr(), () {}),
+            _buildBottomButton(LucideIcons.barChart, "Statistique".tr(), () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => StatistiqueGareScreen(),
+                  builder: (context) => const StatistiqueGareScreen(),
                 ),
               );
             }),
-            _buildBottomButton(LucideIcons.bell, "الإشعارات", () {
+            _buildBottomButton(LucideIcons.bell, "Notifications".tr(), () {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => NotificationScreen()),
               );
             }),
-            _buildBottomButton(LucideIcons.messageCircle, "الرسائل", () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ChatScreen()),
-              );
-            }),
-            _buildBottomButton(LucideIcons.user, "الملف الشخصي", () {
+            _buildBottomButton2(
+              LucideIcons.messageCircle,
+              "Messagerie".tr(),
+              () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ChatScreen()),
+                );
+                setState(() {
+                  ChatScreen.hasnewmsg = false;
+                });
+              },
+              showpoint: ChatScreen.hasnewmsg,
+            ),
+
+            _buildBottomButton(LucideIcons.user, "Profil".tr(), () {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => ProfileScreen()),
@@ -1014,6 +1108,42 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
+
+  Widget _buildBottomButton2(
+    IconData icon,
+    String label,
+    VoidCallback onTap, {
+    bool showpoint = false,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Stack(
+            children: [
+              Icon(icon, color: Colors.white, size: 24),
+              if (showpoint)
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Text(label, style: TextStyle(color: Colors.white, fontSize: 9)),
+        ],
+      ),
+    );
+  }
 }
 
 class SnapResult {
@@ -1022,4 +1152,22 @@ class SnapResult {
   final double tAlongSegment; // from 0 to 1
 
   SnapResult(this.snappedPoint, this.segmentIndex, this.tAlongSegment);
+}
+
+class TrainInfo {
+  // class pour contenir les info de chaque train
+  final String rail; // la ligne
+  final SnapResult snappedLocation; //la position
+  final double speed;
+  final List<Map<String, dynamic>>
+  etaList; // list des gares suivant et leurs temps
+  final bool isGoing;
+
+  TrainInfo({
+    required this.rail,
+    required this.snappedLocation,
+    required this.speed,
+    required this.etaList,
+    required this.isGoing,
+  });
 }

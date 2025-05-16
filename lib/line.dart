@@ -2,6 +2,7 @@ import 'package:appmob/moderail.dart'; // page modification
 import 'package:appmob/rail.dart'; // page ajout ligne
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class RailLinesScreen extends StatelessWidget {
   const RailLinesScreen({super.key});
@@ -12,12 +13,12 @@ class RailLinesScreen extends StatelessWidget {
       builder:
           (context) => AlertDialog(
             backgroundColor: Colors.white,
-            title: const Text('Supprimer la ligne'),
-            content: const Text('Voulez-vous vraiment supprimer cette ligne ?'),
+            title: Text('Supprimer la ligne'.tr()),
+            content: Text('Voulez-vous vraiment supprimer cette ligne ?'.tr()),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Annuler'),
+                child: Text('Annuler'.tr()),
               ),
               TextButton(
                 onPressed: () async {
@@ -25,13 +26,15 @@ class RailLinesScreen extends StatelessWidget {
                       .collection('rail')
                       .doc(docId)
                       .delete();
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Ligne supprimée')),
-                  );
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Ligne supprimée'.tr())),
+                    );
+                  }
                 },
-                child: const Text(
-                  'Supprimer',
+                child: Text(
+                  'Supprimer'.tr(),
                   style: TextStyle(color: Colors.red),
                 ),
               ),
@@ -59,8 +62,8 @@ class RailLinesScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
-          'Lignes de Rail',
+        title: Text(
+          'Lignes de Rail'.tr(),
           style: TextStyle(color: Colors.black),
         ),
         centerTitle: true,
@@ -72,7 +75,7 @@ class RailLinesScreen extends StatelessWidget {
         stream: FirebaseFirestore.instance.collection('rail').snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return const Center(child: Text('Erreur de chargement'));
+            return Center(child: Text('Erreur de chargement'.tr()));
           }
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -81,7 +84,7 @@ class RailLinesScreen extends StatelessWidget {
           var rails = snapshot.data!.docs;
 
           if (rails.isEmpty) {
-            return const Center(child: Text('Aucune ligne disponible.'));
+            return Center(child: Text('Aucune ligne disponible.'.tr()));
           }
 
           return ListView.builder(
@@ -182,8 +185,8 @@ class RailLinesScreen extends StatelessWidget {
         },
         backgroundColor: Colors.blue,
         icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text(
-          'Ajouter ligne',
+        label: Text(
+          'Ajouter ligne'.tr(),
           style: TextStyle(color: Colors.white),
         ),
       ),

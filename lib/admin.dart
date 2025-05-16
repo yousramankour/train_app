@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class AdminListPage extends StatefulWidget {
   const AdminListPage({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _AdminListPageState createState() => _AdminListPageState();
 }
 
@@ -16,9 +16,9 @@ class _AdminListPageState extends State<AdminListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Liste des Admins',
-          style: TextStyle(color: Colors.black),
+        title: Text(
+          'admin_list_title'.tr(),
+          style: const TextStyle(color: Colors.black),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
@@ -35,9 +35,9 @@ class _AdminListPageState extends State<AdminListPage> {
                 Expanded(
                   child: TextField(
                     controller: _emailController,
-                    decoration: const InputDecoration(
-                      labelText: 'Email utilisateur',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: 'user_email_label'.tr(),
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                 ),
@@ -48,7 +48,7 @@ class _AdminListPageState extends State<AdminListPage> {
                     backgroundColor: Colors.blue,
                     foregroundColor: Colors.white,
                   ),
-                  child: const Text('Ajouter'),
+                  child: Text('add_button'.tr()),
                 ),
               ],
             ),
@@ -67,7 +67,7 @@ class _AdminListPageState extends State<AdminListPage> {
                 }
 
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return const Center(child: Text('Aucun admin trouvé'));
+                  return Center(child: Text('no_admin_found'.tr()));
                 }
 
                 var admins = snapshot.data!.docs;
@@ -76,7 +76,7 @@ class _AdminListPageState extends State<AdminListPage> {
                   itemCount: admins.length,
                   itemBuilder: (context, index) {
                     var doc = admins[index];
-                    var email = doc['email'] ?? 'Email inconnu';
+                    var email = doc['email'] ?? 'unknown_email'.tr();
 
                     return Card(
                       color: Colors.white,
@@ -111,7 +111,6 @@ class _AdminListPageState extends State<AdminListPage> {
     final email = _emailController.text.trim();
     if (email.isEmpty) return;
 
-    // Rechercher l'utilisateur par email
     final query =
         await FirebaseFirestore.instance
             .collection('users')
@@ -126,13 +125,13 @@ class _AdminListPageState extends State<AdminListPage> {
       _emailController.clear();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Admin ajouté avec succès : $email')),
+        SnackBar(content: Text('admin_added_success'.tr(args: [email]))),
       );
     } else {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Utilisateur introuvable avec cet email.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('user_not_found'.tr())));
     }
   }
 
@@ -143,6 +142,6 @@ class _AdminListPageState extends State<AdminListPage> {
     if (!mounted) return;
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text('Admin retiré : $email')));
+    ).showSnackBar(SnackBar(content: Text('admin_removed'.tr(args: [email]))));
   }
 }

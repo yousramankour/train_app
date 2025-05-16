@@ -1,13 +1,17 @@
+import 'dart:developer' as developer;
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class SatisfactionSurveyPage extends StatefulWidget {
+  const SatisfactionSurveyPage({super.key});
+
   @override
-  _SatisfactionSurveyPageState createState() => _SatisfactionSurveyPageState();
+  SatisfactionSurveyPageState createState() => SatisfactionSurveyPageState();
 }
 
-class _SatisfactionSurveyPageState extends State<SatisfactionSurveyPage> {
+class SatisfactionSurveyPageState extends State<SatisfactionSurveyPage> {
   final _formKey = GlobalKey<FormState>();
   Map<int, int> ratings = {};
   TextEditingController suggestionController = TextEditingController();
@@ -37,18 +41,21 @@ class _SatisfactionSurveyPageState extends State<SatisfactionSurveyPage> {
   }
 
   List<String> questions = [
-    " 1.Le suivi en temps réel est-il précis ?",
-    "2.La traçabilité des trajets vous satisfait-elle ?",
-    "3.Les alertes/notifications sont-elles fiables ?",
-    "4.La messagerie est-elle utile ?",
-    "5.L’application est-elle facile à utiliser ?",
+    " 1.Le suivi en temps réel est-il précis ?".tr(),
+    "2.La traçabilité des trajets vous satisfait-elle ?".tr(),
+    "3.Les alertes/notifications sont-elles fiables ?".tr(),
+    "4.La messagerie est-elle utile ?".tr(),
+    "5.L’application est-elle facile à utiliser ?".tr(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(title: Text('Feedback'), backgroundColor: Colors.white),
+      appBar: AppBar(
+        title: Text('Feedback'.tr()),
+        backgroundColor: Colors.white,
+      ),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -69,7 +76,7 @@ class _SatisfactionSurveyPageState extends State<SatisfactionSurveyPage> {
               );
             }),
             Text(
-              "6.Avez-vous rencontré des problèmes ?",
+              "6.Avez-vous rencontré des problèmes ?".tr(),
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
@@ -78,13 +85,13 @@ class _SatisfactionSurveyPageState extends State<SatisfactionSurveyPage> {
               controller: serviceAjouteController,
               maxLines: 3,
               decoration: InputDecoration(
-                hintText: "Entrez votre réponse",
+                hintText: "Entrez votre réponse".tr(),
                 border: OutlineInputBorder(),
               ),
             ),
             SizedBox(height: 16),
             Text(
-              "7.Quels services voudriez-vous ajouter ?",
+              "7.Quels services voudriez-vous ajouter ?".tr(),
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
@@ -93,7 +100,7 @@ class _SatisfactionSurveyPageState extends State<SatisfactionSurveyPage> {
               controller: suggestionController,
               maxLines: 3,
               decoration: InputDecoration(
-                hintText: "Entrez votre suggestion",
+                hintText: "Entrez votre suggestion".tr(),
                 border: OutlineInputBorder(),
               ),
             ),
@@ -107,7 +114,7 @@ class _SatisfactionSurveyPageState extends State<SatisfactionSurveyPage> {
                     if (user != null) {
                       // Enregistre les réponses dans Firestore
                       await FirebaseFirestore.instance
-                          .collection('feedbacks')
+                          .collection('feedback'.tr())
                           .add({
                             'userId': user.uid, // Identifiant de l'utilisateur
                             'timestamp':
@@ -118,28 +125,37 @@ class _SatisfactionSurveyPageState extends State<SatisfactionSurveyPage> {
                             'q3': ratings[2], // Note question 3
                             'q4': ratings[3], // Note question 4
                             'q5': ratings[4], // Note question 5
-                            'problemes':
+                            'problemes'.tr():
                                 serviceAjouteController
                                     .text, // Text de la question "problèmes"
-                            'suggestions':
+                            'suggestions'.tr():
                                 suggestionController
                                     .text, // Text de la question "suggestions"
                           });
 
                       // Message de confirmation
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Réponses envoyées !')),
-                      );
+
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Réponses envoyées !'.tr())),
+                        );
+                      }
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Veuillez vous connecter.')),
+                        SnackBar(
+                          content: Text('Veuillez vous connecter.'.tr()),
+                        ),
                       );
                     }
                   } catch (e) {
-                    print("Erreur : $e");
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Erreur d’envoi des réponses.')),
-                    );
+                    developer.log("Erreur: $e".tr());
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Erreur d’envoi des réponses.'.tr()),
+                        ),
+                      );
+                    }
                   }
                 }
               },
@@ -148,7 +164,7 @@ class _SatisfactionSurveyPageState extends State<SatisfactionSurveyPage> {
                 padding: EdgeInsets.symmetric(vertical: 14),
               ),
               child: Text(
-                "Envoyer",
+                "Envoyer".tr(),
                 style: TextStyle(fontSize: 16, color: Colors.white),
               ),
             ),

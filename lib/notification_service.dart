@@ -87,19 +87,10 @@ class NotificationService {
     final String accessToken = await getAccessToken();
     String endpointFCM =
         'https://fcm.googleapis.com/v1/projects/prjtrain-18dde/messages:send';
-
-    final int timestamp = DateTime.now().millisecondsSinceEpoch;
-
     final Map<String, dynamic> message = {
       "message": {
         "topic": topic,
-        "notification": {"title": title, "body": body, "icon": "logoapp"},
-        "android": {
-          "notification": {
-            "channel_id": "default",
-            "tag": "notif_$timestamp", // unique tag to avoid replacement
-          },
-        },
+        "notification": {"title": title, "body": body},
         "data": {"route": "serviceScreen"},
       },
     };
@@ -114,9 +105,11 @@ class NotificationService {
     );
 
     if (response.statusCode == 200) {
-      print('✅ Notification envoyée avec succès');
+      // ignore: avoid_print
+      print('Notification sent successfully');
     } else {
-      print('❌ Échec de l’envoi : ${response.statusCode} ${response.body}');
+      // ignore: avoid_print
+      ('Failed to send notification');
     }
   }
 

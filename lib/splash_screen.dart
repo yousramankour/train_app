@@ -1,88 +1,168 @@
-import 'package:flutter/material.dart';
 import 'dart:async';
-import 'package:easy_localization/easy_localization.dart'; // Import EasyLocalization
-import 'splash2.dart'; // Import de la page de connexion
-import 'notification_service.dart';
+import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'login_page.dart';
 
-class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+class WelcomeScreen extends StatefulWidget {
+  const WelcomeScreen({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _SplashScreenState createState() => _SplashScreenState();
+  State<WelcomeScreen> createState() => _WelcomeScreen();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _WelcomeScreen extends State<WelcomeScreen> {
+  final PageController _pageController = PageController();
+
   @override
   void initState() {
     super.initState();
-    NotificationService.showNotification(
-      "Hello",
-      "Bienvenue dans l'application",
-    );
-    //Redirige vers la page de connexion après 3 secondes
+
+    // Glisse automatiquement vers la 2e page après 5 secondes
     Timer(const Duration(seconds: 5), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => Splash2()),
-      );
+      if (_pageController.hasClients) {
+        _pageController.animateToPage(
+          1,
+          duration: const Duration(milliseconds: 800),
+          curve: Curves.easeInOut,
+        );
+      }
     });
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF81D4FA), // Bleu ciel plus foncé
-              Color(0xFFFFFFFF), // Blanc pur
-            ],
+      body: PageView(
+        controller: _pageController,
+        physics:
+            const NeverScrollableScrollPhysics(), // Empêche de glisser manuellement
+        children: [buildSplash1(), buildSplash2()],
+      ),
+    );
+  }
+
+  Widget buildSplash1() {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF81D4FA), Color(0xFFFFFFFF)],
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(15),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 5),
+            ),
+            child: const Icon(Icons.search, size: 89, color: Colors.white),
           ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(15),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 5),
-              ),
-              child: const Icon(
-                Icons.search,
-                size: 89, // Réduit la taille
-                color: Colors.white,
-              ),
+          const SizedBox(height: 30),
+          Text(
+            'search_train'.tr(),
+            style: const TextStyle(
+              fontSize: 30,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
             ),
-            const SizedBox(height: 30),
-            Text(
-              'search_train'.tr(), // Utilisation de la traduction
+          ),
+          const SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40.0),
+            child: Text(
+              'train_info'.tr(),
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 20, color: Colors.black),
+            ),
+          ),
+          const SizedBox(height: 40),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [buildDot(true), buildDot(false)],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildSplash2() {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF81D4FA), Color(0xFFFFFFFF)],
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(15),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 3),
+            ),
+            child: const Icon(Icons.access_time, size: 80, color: Colors.white),
+          ),
+          const SizedBox(height: 30),
+          Text(
+            'save_time'.tr(),
+            style: const TextStyle(
+              fontSize: 30,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40.0),
+            child: Text(
+              'description_text'.tr(),
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 20, color: Colors.black54),
+            ),
+          ),
+          const SizedBox(height: 30),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [buildDot(false), buildDot(true)],
+          ),
+          const SizedBox(height: 70),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const LoginPage()),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.black87,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 70, vertical: 15),
+            ),
+            child: Text(
+              'get_started'.tr(),
               style: const TextStyle(
-                fontSize: 30,
+                fontSize: 16,
+                color: Colors.white,
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
               ),
             ),
-            const SizedBox(height: 10),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 40.0),
-              child: Text(
-                'train_info'.tr(), // Utilisation de la traduction
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 20, color: Colors.black),
-              ),
-            ),
-            const SizedBox(height: 40),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [buildDot(true), buildDot(false)],
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

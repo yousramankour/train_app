@@ -1,4 +1,3 @@
-import 'package:appmob/home.dart';
 import 'package:appmob/login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -58,7 +57,12 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
                 buildDropdownField("sex".tr(), isDark),
                 buildTextField("job".tr(), job1, isDark: isDark),
-                buildTextField("email".tr(), email1, isDark: isDark),
+                buildTextField(
+                  "email".tr(),
+                  email1,
+                  keyboardType: TextInputType.emailAddress,
+                  isDark: isDark,
+                ),
                 buildTextField(
                   "password".tr(),
                   password1,
@@ -162,7 +166,7 @@ class _SignUpPageState extends State<SignUpPage> {
     final name = name1.text.trim();
     final age = age1.text.trim();
     final job = job1.text.trim();
-    final email = '$name@montrain.com';
+    final email = email1.text.trim();
     final password = password1.text;
     final confirmPassword = confirmPassword1.text;
 
@@ -187,7 +191,7 @@ class _SignUpPageState extends State<SignUpPage> {
     // Vérification que les mots de passe correspondent
     if (password != confirmPassword) {
       setState(() {
-        errorMessage = "Les mots de passe ne correspondent pas.";
+        errorMessage = "Les mots de passe ne correspondent pas.".tr();
       });
       return;
     }
@@ -200,6 +204,9 @@ class _SignUpPageState extends State<SignUpPage> {
         email: email,
         password: password,
       );
+
+      // Envoi de l'email de vérification
+      await userCredential.user!.sendEmailVerification();
 
       // Sauvegarde des informations de l'utilisateur dans Firestore
       await FirebaseFirestore.instance
@@ -218,14 +225,14 @@ class _SignUpPageState extends State<SignUpPage> {
       // Affichage du message de confirmation
       // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("l'inscription est fait avec successer")),
+        SnackBar(content: Text("Un e-mail de vérification a été envoyé.".tr())),
       );
 
       // Redirection vers la page de connexion après l'inscription
       Navigator.pushReplacement(
         // ignore: use_build_context_synchronously
         context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
+        MaterialPageRoute(builder: (context) => const LoginPage()),
       );
     } on FirebaseAuthException catch (e) {
       // Gestion des erreurs Firebase

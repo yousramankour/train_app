@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _ForgotPasswordPageState createState() => _ForgotPasswordPageState();
 }
 
@@ -23,7 +23,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
     if (email.isEmpty) {
       setState(() {
-        message = 'Veuillez entrer votre adresse e-mail.';
+        message = 'forgot.enter_email'.tr();
       });
       return;
     }
@@ -31,24 +31,21 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     try {
       setState(() => isLoading = true);
 
-      // Vérifier si l'e-mail existe
-      // ignore: deprecated_member_use
       final methods = await _auth.fetchSignInMethodsForEmail(email);
       if (methods.isEmpty) {
         setState(() {
-          message = 'Aucun compte associé à cet e-mail.';
+          message = 'forgot.no_account'.tr();
         });
         return;
       }
 
-      // Envoyer l'e-mail de réinitialisation
       await _auth.sendPasswordResetEmail(email: email);
       setState(() {
-        message = 'Un e-mail de réinitialisation a été envoyé.';
+        message = 'forgot.email_sent'.tr();
       });
     } on FirebaseAuthException catch (e) {
       setState(() {
-        message = e.message ?? 'Une erreur est survenue.';
+        message = e.message ?? 'forgot.error_occurred'.tr();
       });
     } finally {
       setState(() => isLoading = false);
@@ -61,21 +58,21 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     final textColor = isDark ? Colors.white : Colors.black;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Réinitialiser le mot de passe')),
+      appBar: AppBar(title: Text('forgot.title'.tr())),
       body: Padding(
         padding: const EdgeInsets.all(30.0),
         child: Column(
           children: [
             TextField(
               controller: emailController,
-              decoration: const InputDecoration(labelText: 'Adresse e-mail'),
+              decoration: InputDecoration(labelText: 'forgot.email_label'.tr()),
             ),
             const SizedBox(height: 20),
             isLoading
                 ? const CircularProgressIndicator()
                 : ElevatedButton(
                   onPressed: resetPassword,
-                  child: const Text('Envoyer le lien de réinitialisation'),
+                  child: Text('forgot.send_button'.tr()),
                 ),
             const SizedBox(height: 20),
             if (message.isNotEmpty)

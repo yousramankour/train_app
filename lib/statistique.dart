@@ -4,11 +4,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
 
 class StatistiqueGareScreen extends StatefulWidget {
+  const StatistiqueGareScreen({super.key});
+
   @override
-  _StatistiqueGareScreenState createState() => _StatistiqueGareScreenState();
+  StatistiqueGareScreenState createState() => StatistiqueGareScreenState();
 }
 
-class _StatistiqueGareScreenState extends State<StatistiqueGareScreen> {
+class StatistiqueGareScreenState extends State<StatistiqueGareScreen> {
   Position? _currentPosition;
   String? _gareProche;
   Map<String, int> _votes = {'faible': 0, 'moyenne': 0, 'forte': 0};
@@ -172,17 +174,17 @@ class _StatistiqueGareScreenState extends State<StatistiqueGareScreen> {
   Widget _buildVoteButton(String niveau, Color color, IconData icon) {
     return ElevatedButton(
       onPressed: () => _voter(niveau),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+      ),
       child: Row(
         children: [
           Icon(icon, color: const Color.fromARGB(255, 255, 255, 255)),
           SizedBox(width: 8),
           Text(niveau, style: TextStyle(color: Colors.white)),
         ],
-      ),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
       ),
     );
   }

@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart'; // Pour formater la date proprement
+import 'package:easy_localization/easy_localization.dart';
 
 class NotificationScreen extends StatelessWidget {
   final DateFormat formatter = DateFormat('dd MMM yyyy - HH:mm');
+
+  NotificationScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 216, 245, 243),
       appBar: AppBar(
-        title: Text('Notifications'),
+        title: Text('Notifications'.tr()),
         backgroundColor: Colors.blue,
         centerTitle: false,
         elevation: 4,
@@ -23,7 +26,7 @@ class NotificationScreen extends StatelessWidget {
                 .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return Center(child: Text('Erreur de chargement'));
+            return Center(child: Text('Erreur de chargement'.tr()));
           }
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
@@ -34,7 +37,7 @@ class NotificationScreen extends StatelessWidget {
           if (notifications.isEmpty) {
             return Center(
               child: Text(
-                "Aucune notification",
+                "Aucune notification".tr(),
                 style: TextStyle(fontSize: 18, color: Colors.grey),
               ),
             );

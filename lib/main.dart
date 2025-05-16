@@ -1,4 +1,4 @@
-import 'package:appmob/splash__2.dart';
+import 'splash_screen.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -7,7 +7,10 @@ import 'theme_provider.dart'; // Importer le fichier ThemeProvider
 import 'package:firebase_core/firebase_core.dart';
 import 'notification_service.dart';
 import 'etatdeapp.dart';
-import 'dart:async';
+
+void subscibetotopic() {
+  FirebaseMessaging.instance.subscribeToTopic("all");
+}
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
@@ -18,24 +21,14 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   );
 }
 
-void subscibetotopic() {
-  FirebaseMessaging.instance.subscribeToTopic("all");
-}
-
-void sendNotificationAfterDelay() async {
-  NotificationService.showNotification("welcome!", "bienvenus dans notre app");
-  await Future.delayed(Duration(milliseconds: 100));
-}
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
   await Firebase.initializeApp();
   await NotificationService.initialize();
   Appobservation.startObserver();
-  subscibetotopic();
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-  sendNotificationAfterDelay();
+  subscibetotopic();
   runApp(
     EasyLocalization(
       supportedLocales: [Locale('en'), Locale('fr'), Locale('ar')],

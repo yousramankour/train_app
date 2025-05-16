@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class VoirReponsesPage extends StatelessWidget {
+  const VoirReponsesPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -12,8 +14,9 @@ class VoirReponsesPage extends StatelessWidget {
                 .collection("enquetes_satisfaction")
                 .snapshots(),
         builder: (context, snapshot) {
-          if (!snapshot.hasData)
+          if (!snapshot.hasData) {
             return Center(child: CircularProgressIndicator());
+          }
 
           final docs = snapshot.data!.docs;
           return ListView.builder(

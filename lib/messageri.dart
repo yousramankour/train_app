@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'notification_service.dart';
 import 'package:flutter/foundation.dart';
@@ -8,6 +9,26 @@ import 'etatdeapp.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
+  static bool hasnewmsg = false;
+  // fonction pour ecouter si un nouveaux message apperetre returne un boulene utiliser dans le home pour afficher le boutons rouge :
+  static checknewmsg(Function(bool) newmsg) {
+    FirebaseFirestore.instance
+        .collection('chat')
+        .orderBy('timestamp', descending: true)
+        .limit(1)
+        .snapshots()
+        .listen((snapshot) {
+          if (snapshot.docs.isNotEmpty) {
+            final lastmsg = snapshot.docs.first.data();
+            final sendeId = lastmsg['senderId'];
+            if (sendeId != FirebaseAuth.instance.currentUser?.uid) {
+              newmsg(true);
+            } else {
+              newmsg(false);
+            }
+          }
+        });
+  }
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -17,7 +38,8 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
+  String?
+  msgid; // variable pour virifier le id de message avec celui de user pour les notification
   User? get _user => _auth.currentUser;
 
   // Fonction d'envoi de message
@@ -53,18 +75,10 @@ class _ChatScreenState extends State<ChatScreen> {
         print('Message envoyé avec succès');
       }
       await NotificationService.savenotificationdatabase(
-        'message',
-        '{&senderName}send a message ',
+        'chat',
+        'nouveaux message de  $senderName :${_controller.text}',
       );
-      if (Appobservation.isAppInForeground) {
-        NotificationService.showNotification(senderName, _controller.text);
-      } else {
-        NotificationService.sendNotification(
-          'all',
-          senderName,
-          _controller.text,
-        );
-      }
+
       _controller.clear();
     } catch (error) {
       if (kDebugMode) {
@@ -94,22 +108,22 @@ class _ChatScreenState extends State<ChatScreen> {
                   builder:
                       (ctx) => AlertDialog(
                         backgroundColor: Colors.white,
-                        title: const Text('Supprimer le message ?'),
-                        content: const Text(
-                          'Ce message sera supprimé pour tout le monde.',
+                        title: Text('Supprimer le message ?'.tr()),
+                        content: Text(
+                          'Ce message sera supprimé pour tout le monde.'.tr(),
                         ),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.of(ctx).pop(),
-                            child: const Text('Annuler'),
+                            child: Text('Annuler'.tr()),
                           ),
                           TextButton(
                             onPressed: () {
                               _deleteMessage(docId);
                               Navigator.of(ctx).pop();
                             },
-                            child: const Text(
-                              'Supprimer',
+                            child: Text(
+                              'Supprimer'.tr(),
                               style: TextStyle(color: Colors.red),
                             ),
                           ),
@@ -190,7 +204,7 @@ class _ChatScreenState extends State<ChatScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Chat '),
+        title: Text('Chat '.tr()),
         backgroundColor: Colors.white10,
         elevation: 0,
         actions: [
@@ -218,7 +232,29 @@ class _ChatScreenState extends State<ChatScreen> {
 
                 final messages = snapshot.data!.docs;
                 DateTime? lastMessageDate;
-
+                if (messages.isEmpty) {
+                  final lastmsg = messages.first;
+                  final lastmsgdata = lastmsg.data() as Map<String, dynamic>;
+                  final lastmsgid = lastmsg.id;
+                  final isme = lastmsgdata['senderId'] == _user?.uid;
+                  //virifier le nouveux message
+                  if (msgid != lastmsgid && !isme) {
+                    msgid = lastmsgid;
+                    //affiche la notification
+                    if (Appobservation.isAppInForeground) {
+                      NotificationService.showNotification(
+                        lastmsgdata['senderName'] ?? 'utilisateur',
+                        lastmsgdata['text'] ?? '',
+                      );
+                    } else {
+                      NotificationService.sendNotification(
+                        'all',
+                        lastmsgdata['senderName'] ?? 'utilisateur',
+                        lastmsgdata['text'] ?? '',
+                      );
+                    }
+                  }
+                }
                 return ListView.builder(
                   reverse: true,
                   itemCount: messages.length,
@@ -300,8 +336,8 @@ class _ChatScreenState extends State<ChatScreen> {
                         Expanded(
                           child: TextField(
                             controller: _controller,
-                            decoration: const InputDecoration(
-                              hintText: "Type a message...",
+                            decoration: InputDecoration(
+                              hintText: "Type a message...".tr(),
                               border: InputBorder.none,
                             ),
                           ),
@@ -401,9 +437,9 @@ String formatDateHeader(DateTime date) {
   final msgDate = DateTime(date.year, date.month, date.day);
 
   if (msgDate == today) {
-    return 'Aujourd\'hui';
+    return 'Aujourd\'hui'.tr();
   } else if (msgDate == yesterday) {
-    return 'Hier';
+    return 'Hier'.tr();
   } else {
     return DateFormat('d MMMM yyyy', 'fr_FR').format(date);
   }

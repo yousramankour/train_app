@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class AddRailLinePage extends StatefulWidget {
+  const AddRailLinePage({super.key});
+
   @override
-  _AddRailLinePageState createState() => _AddRailLinePageState();
+  AddRailLinePageState createState() => AddRailLinePageState();
 }
 
-class _AddRailLinePageState extends State<AddRailLinePage> {
+class AddRailLinePageState extends State<AddRailLinePage> {
   final TextEditingController _lineNameController = TextEditingController();
   final TextEditingController _gareController = TextEditingController();
-  List<String> _gares = [];
+  final List<String> _gares = [];
 
   // Méthode pour enregistrer dans Firestore
   Future<void> _saveLineToFirestore() async {
@@ -17,7 +20,7 @@ class _AddRailLinePageState extends State<AddRailLinePage> {
 
     if (lineName.isEmpty || _gares.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Veuillez remplir tous les champs')),
+        SnackBar(content: Text('Veuillez remplir tous les champs'.tr())),
       );
       return;
     }
@@ -30,29 +33,33 @@ class _AddRailLinePageState extends State<AddRailLinePage> {
               .get();
 
       if (doc.exists) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Cette ligne existe déjà 🔴')));
-        return;
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Cette ligne existe déjà 🔴'.tr())),
+          );
+          return;
+        }
       }
 
       await FirebaseFirestore.instance.collection('rail').doc(lineName).set({
         'gares': _gares,
       });
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Ligne ajoutée avec succès 🎉')));
-
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ligne ajoutée avec succès 🎉'.tr())),
+        );
+      }
       _lineNameController.clear();
       _gareController.clear();
       setState(() {
         _gares.clear();
       });
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
+      }
     }
   }
 
@@ -70,18 +77,24 @@ class _AddRailLinePageState extends State<AddRailLinePage> {
               .get();
 
       if (!gareDoc.exists) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('La gare "$gareName" n\'existe pas dans les gars 🔴'),
-          ),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'La gare "$gareName" n\'existe pas dans les gars 🔴',
+              ),
+            ),
+          );
+        }
         return;
       }
 
       if (_gares.contains(gareName)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('La gare "$gareName" est déjà ajoutée ⚠️')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('La gare "$gareName" est déjà ajoutée ⚠️')),
+          );
+        }
         return;
       }
 
@@ -90,9 +103,11 @@ class _AddRailLinePageState extends State<AddRailLinePage> {
         _gareController.clear();
       });
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
+      }
     }
   }
 
@@ -103,7 +118,10 @@ class _AddRailLinePageState extends State<AddRailLinePage> {
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
-        title: Text('Ajouter une Ligne', style: TextStyle(color: Colors.black)),
+        title: Text(
+          'Ajouter une Ligne'.tr(),
+          style: TextStyle(color: Colors.black),
+        ),
         iconTheme: IconThemeData(color: Colors.black),
       ),
       backgroundColor: Colors.white,
@@ -114,7 +132,7 @@ class _AddRailLinePageState extends State<AddRailLinePage> {
             TextField(
               controller: _lineNameController,
               decoration: InputDecoration(
-                labelText: 'Nom de la ligne',
+                labelText: 'Nom de la ligne'.tr(),
                 prefixIcon: Icon(Icons.train, color: Colors.blue),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -130,7 +148,7 @@ class _AddRailLinePageState extends State<AddRailLinePage> {
                   child: TextField(
                     controller: _gareController,
                     decoration: InputDecoration(
-                      labelText: 'Ajouter une gare',
+                      labelText: 'Ajouter une gare'.tr(),
                       prefixIcon: Icon(Icons.location_on, color: Colors.blue),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -156,7 +174,7 @@ class _AddRailLinePageState extends State<AddRailLinePage> {
             Expanded(
               child:
                   _gares.isEmpty
-                      ? Center(child: Text('Aucune gare ajoutée'))
+                      ? Center(child: Text('Aucune gare ajoutée'.tr()))
                       : ListView.builder(
                         itemCount: _gares.length,
                         itemBuilder: (context, index) {
@@ -190,7 +208,7 @@ class _AddRailLinePageState extends State<AddRailLinePage> {
                 onPressed: _saveLineToFirestore,
                 icon: Icon(Icons.save, color: Colors.black),
                 label: Text(
-                  'Enregistrer la ligne',
+                  'Enregistrer la ligne'.tr(),
                   style: TextStyle(
                     color: Colors.black,
                     fontWeight: FontWeight.bold,
