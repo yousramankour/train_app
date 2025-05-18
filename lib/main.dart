@@ -11,7 +11,7 @@ import 'etatdeapp.dart';
 void subscibetotopic() {
   FirebaseMessaging.instance.subscribeToTopic("all");
 }
-
+/*
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
   // Affiche ou traite la notification
@@ -19,7 +19,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     message.notification?.title ?? 'Titre par défaut',
     message.notification?.body ?? 'Message par défaut',
   );
-}
+}*/
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,8 +27,14 @@ void main() async {
   await Firebase.initializeApp();
   await NotificationService.initialize();
   Appobservation.startObserver();
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   subscibetotopic();
+  Future.delayed(Duration(minutes: 5), () async {
+    await NotificationService.showNotification(
+      "welcome!",
+      "bienvenus dans notre app",
+    );
+  });
+
   runApp(
     EasyLocalization(
       supportedLocales: [Locale('en'), Locale('fr'), Locale('ar')],

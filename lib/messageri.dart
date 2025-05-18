@@ -10,7 +10,7 @@ import 'etatdeapp.dart';
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
   static bool hasnewmsg = false;
-  // fonction pour ecouter si un nouveaux message apperetre returne un boulene utiliser dans le home pour afficher le boutons rouge :
+
   static checknewmsg(Function(bool) newmsg) {
     FirebaseFirestore.instance
         .collection('chat')
@@ -38,25 +38,17 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  String?
-  msgid; // variable pour virifier le id de message avec celui de user pour les notification
+  String? msgid;
   User? get _user => _auth.currentUser;
 
-  // Fonction d'envoi de message
   void _sendMessage() async {
-    if (_controller.text.trim().isEmpty) {
-      return; // Ne pas envoyer de message vide
-    }
-
+    if (_controller.text.trim().isEmpty) return;
     if (_user == null) {
-      if (kDebugMode) {
-        print('L\'utilisateur n\'est pas connecté');
-      }
-      return; // L'utilisateur n'est pas connecté
+      if (kDebugMode) print('L\'utilisateur n\'est pas connecté');
+      return;
     }
 
     try {
-      // 🔽 Récupérer le nom depuis Firestore
       final userDoc =
           await _firestore.collection('users').doc(_user!.uid).get();
       final senderName = userDoc.data()?['name'] ?? 'Utilisateur';
@@ -71,28 +63,16 @@ class _ChatScreenState extends State<ChatScreen> {
         "priority": 1,
       });
 
-      if (kDebugMode) {
-        print('Message envoyé avec succès');
-      }
-      await NotificationService.savenotificationdatabase(
-        'chat',
-        'nouveaux message de  $senderName :${_controller.text}',
-      );
-
       _controller.clear();
     } catch (error) {
-      if (kDebugMode) {
-        print('Erreur lors de l\'envoi du message : $error');
-      }
+      if (kDebugMode) print('Erreur lors de l\'envoi du message : $error');
     }
   }
 
-  // Fonction de suppression d'un message
   Future<void> _deleteMessage(String docId) async {
     await _firestore.collection('chat').doc(docId).delete();
   }
 
-  // Fonction de construction d'un bubble de message
   Widget _buildMessageBubble(
     Map<String, dynamic> msg,
     bool isMe,
@@ -156,10 +136,10 @@ class _ChatScreenState extends State<ChatScreen> {
                 maxWidth: MediaQuery.of(context).size.width * 0.4,
               ),
               decoration: BoxDecoration(
-                color: Colors.blueAccent, // Toutes les bulles sont bleues
+                color: Colors.blueAccent,
                 borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(12),
-                  topRight: const Radius.circular(12),
+                  topLeft: Radius.circular(12),
+                  topRight: Radius.circular(12),
                   bottomLeft: Radius.circular(isMe ? 12 : 0),
                   bottomRight: Radius.circular(isMe ? 0 : 12),
                 ),
@@ -170,12 +150,9 @@ class _ChatScreenState extends State<ChatScreen> {
                 children: [
                   Text(
                     msg['text'],
-                    style: TextStyle(
-                      color: Colors.white, // Le texte est toujours blanc
-                      fontSize: 15,
-                    ),
+                    style: TextStyle(color: Colors.white, fontSize: 15),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Align(
                     alignment: Alignment.bottomRight,
                     child: Text(
@@ -184,10 +161,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           .toLocal()
                           .toString()
                           .substring(11, 16),
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.white, // L'heure est également blanche
-                      ),
+                      style: TextStyle(fontSize: 11, color: Colors.white),
                     ),
                   ),
                 ],
@@ -204,12 +178,12 @@ class _ChatScreenState extends State<ChatScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Chat '.tr()),
+        title: Text('Chat'.tr()),
         backgroundColor: Colors.white10,
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.search),
+            icon: Icon(Icons.search),
             onPressed: () {
               showSearch(context: context, delegate: MessageSearchDelegate());
             },
@@ -227,20 +201,20 @@ class _ChatScreenState extends State<ChatScreen> {
                       .snapshots(),
               builder: (ctx, snapshot) {
                 if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
+                  return Center(child: CircularProgressIndicator());
                 }
 
                 final messages = snapshot.data!.docs;
                 DateTime? lastMessageDate;
-                if (messages.isEmpty) {
+
+                if (messages.isNotEmpty) {
                   final lastmsg = messages.first;
                   final lastmsgdata = lastmsg.data() as Map<String, dynamic>;
                   final lastmsgid = lastmsg.id;
                   final isme = lastmsgdata['senderId'] == _user?.uid;
-                  //virifier le nouveux message
+
                   if (msgid != lastmsgid && !isme) {
                     msgid = lastmsgid;
-                    //affiche la notification
                     if (Appobservation.isAppInForeground) {
                       NotificationService.showNotification(
                         lastmsgdata['senderName'] ?? 'utilisateur',
@@ -255,6 +229,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     }
                   }
                 }
+
                 return ListView.builder(
                   reverse: true,
                   itemCount: messages.length,
@@ -264,28 +239,21 @@ class _ChatScreenState extends State<ChatScreen> {
                     final docId = messages[index].id;
                     final messageTime =
                         (msg['timestamp'] as Timestamp).toDate();
-
-                    // Créer un objet DateTime sans l'heure (juste la date)
                     DateTime messageDateOnly = DateTime(
                       messageTime.year,
                       messageTime.month,
                       messageTime.day,
                     );
-
-                    // Vérifier si la date actuelle est différente de la dernière date
                     bool showDateHeader = false;
 
                     if (lastMessageDate == null ||
                         !isSameDay(lastMessageDate!, messageDateOnly)) {
-                      // Si la date change, afficher l'en-tête de la date
                       showDateHeader = true;
-                      lastMessageDate =
-                          messageDateOnly; // Mettre à jour la date de dernier message
+                      lastMessageDate = messageDateOnly;
                     }
 
                     return Column(
                       children: [
-                        // Si la date change, afficher l'en-tête avec la date complète
                         if (showDateHeader)
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 10),
@@ -299,8 +267,8 @@ class _ChatScreenState extends State<ChatScreen> {
                                   DateFormat(
                                     'd MMMM yyyy',
                                     'fr_FR',
-                                  ).format(messageTime), // Date complète
-                                  style: const TextStyle(
+                                  ).format(messageTime),
+                                  style: TextStyle(
                                     fontSize: 11,
                                     color: Colors.grey,
                                   ),
@@ -316,7 +284,7 @@ class _ChatScreenState extends State<ChatScreen> {
               },
             ),
           ),
-          const Divider(height: 1),
+          Divider(height: 1),
           Padding(
             padding: const EdgeInsets.all(10.0),
             child: Row(
@@ -332,7 +300,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                     child: Row(
                       children: [
-                        const SizedBox(width: 10),
+                        SizedBox(width: 10),
                         Expanded(
                           child: TextField(
                             controller: _controller,
@@ -346,12 +314,12 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: 10),
                 CircleAvatar(
                   backgroundColor: Colors.blueAccent,
                   radius: 25,
                   child: IconButton(
-                    icon: const Icon(Icons.send, color: Colors.white),
+                    icon: Icon(Icons.send, color: Colors.white),
                     onPressed: _sendMessage,
                   ),
                 ),
@@ -364,7 +332,10 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 }
 
-// Classe de recherche dans les messages
+bool isSameDay(DateTime d1, DateTime d2) {
+  return d1.year == d2.year && d1.month == d2.month && d1.day == d2.day;
+}
+
 class MessageSearchDelegate extends SearchDelegate {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -372,7 +343,7 @@ class MessageSearchDelegate extends SearchDelegate {
   List<Widget>? buildActions(BuildContext context) {
     return [
       IconButton(
-        icon: const Icon(Icons.clear),
+        icon: Icon(Icons.clear),
         onPressed: () {
           query = '';
         },
@@ -383,7 +354,7 @@ class MessageSearchDelegate extends SearchDelegate {
   @override
   Widget buildLeading(BuildContext context) {
     return IconButton(
-      icon: const Icon(Icons.arrow_back),
+      icon: Icon(Icons.arrow_back),
       onPressed: () {
         close(context, null);
       },
@@ -401,20 +372,19 @@ class MessageSearchDelegate extends SearchDelegate {
               .snapshots(),
       builder: (ctx, snapshot) {
         if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
+          return Center(child: CircularProgressIndicator());
         }
 
         final messages = snapshot.data!.docs;
-        return ListView.builder(
-          itemCount: messages.length,
-          itemBuilder: (ctx, index) {
-            final msg = messages[index].data() as Map<String, dynamic>;
-            return ListTile(
-              title: Text(msg['text']),
-              subtitle: Text(msg['senderName']),
-              onTap: () {},
-            );
-          },
+        return ListView(
+          children:
+              messages.map((doc) {
+                final data = doc.data() as Map<String, dynamic>;
+                return ListTile(
+                  title: Text(data['senderName'] ?? 'Utilisateur'),
+                  subtitle: Text(data['text'] ?? ''),
+                );
+              }).toList(),
         );
       },
     );
@@ -422,25 +392,6 @@ class MessageSearchDelegate extends SearchDelegate {
 
   @override
   Widget buildSuggestions(BuildContext context) {
-    return Container();
-  }
-}
-
-bool isSameDay(DateTime a, DateTime b) {
-  return a.year == b.year && a.month == b.month && a.day == b.day;
-}
-
-String formatDateHeader(DateTime date) {
-  final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day);
-  final yesterday = today.subtract(Duration(days: 1));
-  final msgDate = DateTime(date.year, date.month, date.day);
-
-  if (msgDate == today) {
-    return 'Aujourd\'hui'.tr();
-  } else if (msgDate == yesterday) {
-    return 'Hier'.tr();
-  } else {
-    return DateFormat('d MMMM yyyy', 'fr_FR').format(date);
+    return buildResults(context);
   }
 }

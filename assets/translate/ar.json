@@ -166,7 +166,7 @@
   "Un e-mail de vérification a été envoyé.": "تم إرسال بريد إلكتروني للتحقق.",
   "Une erreur inattendue est survenue.": "حدث خطأ غير متوقع.",
   "search_train": "ابحث عن قطارك",
-  "no_need_station": "لا حاجة للذهاب إلى المحطة للتحقق من قطارك",
+  "train_info": "لا حاجة للذهاب إلى المحطة للتحقق من قطارك",
   "save_time": "وفر وقتك",
   "description_text": "مع قطاري، لن تضطر للقلق بشأن اللحاق بالقطار",
   "get_started": "ابدأ الآن",

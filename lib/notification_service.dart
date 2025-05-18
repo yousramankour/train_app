@@ -1,3 +1,6 @@
+import 'dart:developer' as devloper;
+
+import 'package:appmob/etatdeapp.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -87,10 +90,19 @@ class NotificationService {
     final String accessToken = await getAccessToken();
     String endpointFCM =
         'https://fcm.googleapis.com/v1/projects/prjtrain-18dde/messages:send';
+
+    final int timestamp = DateTime.now().millisecondsSinceEpoch;
+
     final Map<String, dynamic> message = {
       "message": {
         "topic": topic,
-        "notification": {"title": title, "body": body},
+        "notification": {"title": title, "body": body, "icon": "logoapp"},
+        "android": {
+          "notification": {
+            "channel_id": "default",
+            "tag": "notif_$timestamp", // unique tag to avoid replacement
+          },
+        },
         "data": {"route": "serviceScreen"},
       },
     };
@@ -105,11 +117,9 @@ class NotificationService {
     );
 
     if (response.statusCode == 200) {
-      // ignore: avoid_print
-      print('Notification sent successfully');
+      print('✅ Notification envoyée avec succès');
     } else {
-      // ignore: avoid_print
-      ('Failed to send notification');
+      print('❌ Échec de l’envoi : ${response.statusCode} ${response.body}');
     }
   }
 
@@ -120,4 +130,67 @@ class NotificationService {
       'timestamp': FieldValue.serverTimestamp(),
     });
   }
+
+  /*
+  static Map<String, DateTime> trainmouvement = {};
+  static Future<void> detecttrainnotif(String nomtrain, double speed) async {
+    while (true) {
+      final time = DateTime.now();
+      if (speed <= 4) {
+        if (!trainmouvement.containsKey(nomtrain)) {
+          //par la premiere fois que enregistre la position
+          trainmouvement[nomtrain] = time;
+        } else {
+          final duraction = time.difference(trainmouvement[nomtrain]!);
+          if (duraction.inMinutes == 5) {
+            devloper.log(
+              "🚨 Le train $nomtrain est à l'arrêt depuis plus de 5 minutes !",
+            );
+
+            await NotificationService.savenotificationdatabase(
+              'retard',
+              'le $nomtrain   doit faire  un peut de retard',
+            );
+            if (Appobservation.isAppInForeground) {
+              NotificationService.showNotification(
+                "retard!",
+                'le $nomtrain  doit faire  un peut de retard',
+              );
+            } else {
+              NotificationService.sendNotification(
+                "all",
+                ' retard!',
+                'le $nomtrain  doit faire  un peut de retard',
+              );
+            }
+          } else {
+            if (duraction.inMinutes == 10) {
+              devloper.log(
+                "🚨 Le train $nomtrain est à l'arrêt depuis plus de 10 minutes !",
+              );
+              await NotificationService.savenotificationdatabase(
+                'panne',
+                'le $nomtrain  est on panne!',
+              );
+              if (Appobservation.isAppInForeground) {
+                NotificationService.showNotification(
+                  "panne!",
+                  'le $nomtrain est on panne!',
+                );
+              } else {
+                NotificationService.sendNotification(
+                  "all",
+                  ' panne!',
+                  'le $nomtrain  est on panne!',
+                );
+              }
+            }
+          }
+        }
+      } else {
+        //le train bouge:
+        trainmouvement.remove(nomtrain);
+      }
+    }
+  }*/
 }

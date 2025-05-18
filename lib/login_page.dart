@@ -97,7 +97,7 @@ class _LoginPageState extends State<LoginPage> {
                 children: [
                   // Logo de l'application
                   Center(
-                    child: Image.asset('assets/logo9itari.png', height: 120),
+                    child: Image.asset('assets/logo9itari.png', height: 80),
                   ),
                   const SizedBox(height: 20),
                   // Titre de la page

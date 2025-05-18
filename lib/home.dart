@@ -1,5 +1,6 @@
 import 'dart:developer' as developer;
 import 'dart:math';
+
 import 'package:appmob/etatdeapp.dart';
 import 'package:appmob/notification_service.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -20,75 +21,68 @@ import 'package:geolocator/geolocator.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
-  static Future<void> virifierlist(String trainNom) async {
-    int cpt = 1;
-    while (true) {
-      List<LatLng> position = HomeScreen.notification[trainNom] ?? [];
-      if (position.length >= 2) {
-        final double distance = HomeScreen.calculateDistance(
-          position[0],
-          position[1],
-        );
-        developer.log("Distance entre deux points : $distance");
 
-        if (distance < 2) {
-          cpt++;
-          position.removeAt(0);
+  static Future<void> virifierlist(List<Map<String, dynamic>> position) async {
+    int cpt = 1;
+    while (position.length >= 2) {
+      final String trainNam = position[0]['nom'];
+      final double distance = HomeScreen.calculateDistance(
+        position[0]['position'],
+        position[1]['position'],
+      );
+
+      print("Distance entre deux points : $distance");
+
+      if (distance < 2) {
+        cpt++;
+        position.removeAt(0);
+      } else {
+        position.removeAt(0);
+      }
+      if (cpt == 30) {
+        await NotificationService.savenotificationdatabase(
+          'retard',
+          'le $trainNam  doit faire  un peut de retard',
+        );
+        if (Appobservation.isAppInForeground) {
+          NotificationService.showNotification(
+            "retard!",
+            'le train doit faire  un peut de retard',
+          );
         } else {
-          position.removeAt(0);
+          NotificationService.sendNotification(
+            "all",
+            ' retard!',
+            'le  $trainNam doit faire  un peut de retard',
+          );
         }
-        if (cpt == 30) {
+      } else {
+        if (cpt == 60) {
           await NotificationService.savenotificationdatabase(
-            'retard'.tr(),
-            'le $trainNom qui  vien de $HomeScreen.nextStation doit faire  un peut de retard'
-                .tr(),
+            'panne',
+            'le $trainNam est on panne!',
           );
           if (Appobservation.isAppInForeground) {
             NotificationService.showNotification(
-              "retard!".tr(),
-              'le $trainNom qui vien de $HomeScreen.nextStation doit faire  un peut de retard'
-                  .tr(),
+              "panne!",
+              'le $trainNam est on panne!',
             );
           } else {
             NotificationService.sendNotification(
               "all",
-              ' retard!'.tr(),
-              'le $trainNom qui vien de : $HomeScreen.nextStation doit faire  un peut de retard'
-                  .tr(),
+              ' panne!',
+              'le $trainNam est on panne!',
             );
-          }
-        } else {
-          if (cpt == 60) {
-            await NotificationService.savenotificationdatabase(
-              'panne'.tr(),
-              'le $trainNom qui vien de :$HomeScreen.nextStation  est on panne!'
-                  .tr(),
-            );
-            if (Appobservation.isAppInForeground) {
-              NotificationService.showNotification(
-                "panne!".tr(),
-                'le $trainNom qui vien de &home: $HomeScreen.nextStation est on panne!'
-                    .tr(),
-              );
-            } else {
-              NotificationService.sendNotification(
-                "all",
-                ' panne!'.tr(),
-                'le $trainNom qui vien de : $HomeScreen.nextStation est on panne!'
-                    .tr(),
-              );
-            }
           }
         }
       }
-      if (cpt == 60) {
-        cpt = 1;
-      }
+
+      cpt = 1;
       await Future.delayed(Duration(milliseconds: 100));
     }
   }
 
-  static Map<String, List<LatLng>> notification = {};
+  static List<Map<String, dynamic>> notification = [];
 
   static double calculateDistance(LatLng p1, LatLng p2) {
     const R = 6371000;
@@ -116,7 +110,6 @@ class _HomeScreenState extends State<HomeScreen> {
   final Location _locationController = Location();
   LatLng? _currentP;
   GoogleMapController? mapController;
-  List<Map<String, dynamic>> _etaList = [];
   String _searchText = '';
   LatLng? _destination;
   List<LatLng> _itineraire = [];
@@ -195,6 +188,7 @@ class _HomeScreenState extends State<HomeScreen> {
     requestLocation();
     listenToAllTrains();
     buildFullPolylines();
+    HomeScreen.virifierlist(HomeScreen.notification);
     ChatScreen.checknewmsg((newmsg) {
       setState(() {
         ChatScreen.hasnewmsg = newmsg;
@@ -340,29 +334,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
     allTrainsRef.onValue.listen((event) async {
       final data = event.snapshot.value as Map<dynamic, dynamic>?;
-      Set<String> trainIsBeingWatched = {};
+
       if (data != null) {
         for (var entry in data.entries) {
           final String trainNom =
               entry.key; // <-- Here! Get the train name from the document ID
           final trainData = entry.value as Map<dynamic, dynamic>;
 
-          List<Map<String, dynamic>> etaList = [];
+          List<Map<String, dynamic>> eta_list = [];
 
           if (trainData['latitude'] != null && trainData['longitude'] != null) {
             final LatLng rawLocation = LatLng(
               double.parse(trainData['latitude'].toString()),
               double.parse(trainData['longitude'].toString()),
             );
-            HomeScreen.notification.putIfAbsent(trainNom, () => []);
-            HomeScreen.notification[trainNom]!.add(rawLocation);
-            if (HomeScreen.notification[trainNom]!.length > 100) {
-              HomeScreen.notification[trainNom]!.removeAt(0);
-            }
-            if (!trainIsBeingWatched.contains(trainNom)) {
-              trainIsBeingWatched.add(trainNom);
-              HomeScreen.virifierlist(trainNom);
-            }
             _trainLocation = rawLocation;
             final double speed = double.parse(trainData['speed'].toString());
 
@@ -412,7 +397,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 //snappedLocation.snappedPoint_trainLocationSnapped = snappedLocation.snappedPoint;
                 // 🛠 Calculate ETA for this train
 
-                etaList = calculateETA(
+                eta_list = calculateETA(
                   garesList: stationList,
                   snappedTrainLocation: snappedLocation,
                   fullPolyline: polyline,
@@ -430,10 +415,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   snappedLocation:
                       snappedLocation, // la position du train dans la ligne
                   speed: speed,
-                  etaList: etaList,
+                  etaList: eta_list,
                   isGoing: isGoing,
                 );
                 //if u want to get any all trains location u need to loop throught _trains map and for each train get their location that would be _trains.forEach((key,value){ 'le train est $key et sa position est ${value.snappedLocation.snappedpoint} }
+
+                HomeScreen.notification.add({
+                  'nom': trainNom,
+                  'position': snappedLocation.snappedPoint,
+                });
+                print("$HomeScreen.notification");
+
                 // 🗺 Update marker position
                 updateTrainMarker(trainNom, snappedLocation.snappedPoint);
               }

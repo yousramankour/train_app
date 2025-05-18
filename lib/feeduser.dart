@@ -53,7 +53,7 @@ class FeedbackAdminScreen extends StatelessWidget {
                   .snapshots(),
           builder: (context, snapshot) {
             if (snapshot.hasError) {
-              return Center(child: Text('Erreur de chargement.'));
+              return Center(child: Text('Erreur de chargement.'.tr()));
             }
             if (!snapshot.hasData) {
               return const Center(child: CircularProgressIndicator());
@@ -62,7 +62,7 @@ class FeedbackAdminScreen extends StatelessWidget {
             final feedbacks = snapshot.data!.docs;
 
             if (feedbacks.isEmpty) {
-              return Center(child: Text('Aucun retour trouvé.'));
+              return Center(child: Text('Aucun retour trouvé.'.tr()));
             }
 
             return ListView.separated(
@@ -75,7 +75,7 @@ class FeedbackAdminScreen extends StatelessWidget {
                 return FutureBuilder<String>(
                   future: _getUserName(userId),
                   builder: (context, snapshot) {
-                    final userName = snapshot.data ?? 'Chargement...';
+                    final userName = snapshot.data ?? 'Chargement...'.tr();
 
                     return GestureDetector(
                       onLongPress: () {

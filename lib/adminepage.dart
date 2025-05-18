@@ -1,7 +1,7 @@
 import 'package:appmob/feeduser.dart';
 import 'package:appmob/station.dart';
 import 'package:flutter/material.dart';
-import 'package:easy_localization/easy_localization.dart'; // ✅ Ajouté
+import 'package:easy_localization/easy_localization.dart';
 import 'admin.dart';
 import 'affigars.dart';
 import 'line.dart';
@@ -20,12 +20,12 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    Theme.of(context);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        title: Text("admin_panel_title".tr()), // ✅ traduit
+        title: Text("admin_panel_title".tr()),
         centerTitle: true,
         backgroundColor: Colors.white10,
         elevation: 0,
@@ -39,31 +39,31 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
           children: [
             buildAdminCard(
               icon: Icons.place,
-              label: 'gares'.tr(), // ✅ traduit
+              label: 'gares'.tr(),
               color: Colors.blue.shade400,
               onTap: () => navigateTo(GareListPage()),
             ),
             buildAdminCard(
               icon: Icons.admin_panel_settings,
-              label: 'admin'.tr(), // ✅ traduit
+              label: 'admin'.tr(),
               color: const Color.fromARGB(255, 206, 201, 201),
               onTap: () => navigateTo(AdminListPage()),
             ),
             buildAdminCard(
               icon: Icons.timeline,
-              label: 'lignes'.tr(), // ✅ traduit
+              label: 'lignes'.tr(),
               color: const Color.fromARGB(255, 206, 201, 201),
               onTap: () => navigateTo(RailLinesScreen()),
             ),
             buildAdminCard(
               icon: Icons.location_on,
-              label: 'stations'.tr(), // ✅ traduit
+              label: 'stations'.tr(),
               color: Colors.blue.shade400,
               onTap: () => navigateTo(AddCoordinatesPage()),
             ),
             buildAdminCard(
               icon: Icons.feedback,
-              label: 'feedback'.tr(), // ✅ traduit
+              label: 'feedback'.tr(),
               color: Colors.blueAccent,
               onTap: () => navigateTo(FeedbackAdminScreen()),
             ),

@@ -148,7 +148,7 @@ class SatisfactionSurveyPageState extends State<SatisfactionSurveyPage> {
                       );
                     }
                   } catch (e) {
-                    developer.log("Erreur: $e".tr());
+                    developer.log("Erreur: $e");
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(

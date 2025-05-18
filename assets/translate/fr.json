@@ -1,4 +1,28 @@
 {
+    "//comment":"les texte de fichier admin.dart",
+
+  "Liste des Admins" :"Liste des Admins",
+  "Email utilisateur":"Email utilisateur",
+  "Ajouter" : "Ajouter",
+  "Aucun admin trouvé":"Aucun admin trouvé",
+  "Email inconnu" : "Email inconnu",
+  "Admin ajouté avec succès :":"Admin ajouté avec succès : {}",
+  "Utilisateur introuvable avec cet email.": "Utilisateur introuvable avec cet email.",
+  "Admin retiré :" :"Admin retiré :",
+  "//comment1": "les texte de fichier adminepages.dart",
+  "admin_panel_title" :"admin_panel_title",
+  "gares":"gares",
+  "admin":"admin",
+  "lignes":"lignes",
+
+
+
+
+
+
+
+
+
   "Veuillez vous connecter.": "Veuillez vous connecter.",
   "Profil introuvable.": "Profil introuvable.",
   "modifier profile": "Modifier le profil",
@@ -175,7 +199,7 @@
     "Un e-mail de vérification a été envoyé.": "Un e-mail de vérification a été envoyé.",
     "Une erreur inattendue est survenue.": "Une erreur inattendue est survenue.",
    "search_train": "Recherchez votre train",
-  "no_need_station": "Pas besoin de se rendre à la gare pour vérifier votre train",
+  "train_info": "Pas besoin de se rendre à la gare pour vérifier votre train",
   "save_time": "Gagnez du temps",
   "description_text": "Avec 9itari, vous n'aurez plus à vous battre pour attraper votre train",
   "get_started": "COMMENCER",
@@ -185,7 +209,9 @@
   "Charger la liste": "Charger la liste",
   "Aucune coordonnée valide trouvée ❌": "Aucune coordonnée valide trouvée ❌",
   "Remplir tous les champs 📌": "Remplir tous les champs 📌",
-  "Coordonnées enregistrées avec succès ✅": "Coordonnées enregistrées avec succès ✅"
+  "Coordonnées enregistrées avec succès ✅": "Coordonnées enregistrées avec succès ✅",
+  "Aucun retour trouvé.":"Aucun retour trouvé.",
+  "Erreur de chargement.":"Erreur de chargement."
 
 
 }
