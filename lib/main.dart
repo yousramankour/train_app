@@ -1,9 +1,9 @@
-import 'package:appmob/splash__2.dart';
+import 'package:appmob/splash_screen.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:provider/provider.dart'; // Importer Provider
-import 'theme_provider.dart'; // Importer le fichier ThemeProvider
+import 'package:provider/provider.dart';
+import 'theme_provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'notification_service.dart';
 import 'etatdeapp.dart';

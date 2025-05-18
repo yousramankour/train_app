@@ -42,40 +42,28 @@ class HomeScreen extends StatefulWidget {
             'retard',
             'le train1 qui  vien de : {$HomeScreen.nextStation} doit faire  un peut de retard',
           );
-          if (Appobservation.isAppInForeground) {
-            NotificationService.showNotification(
-              "retard!",
-              'le train1 qui vien de : {$HomeScreen.nextStation} doit faire  un peut de retard',
-            );
-          } else {
-            NotificationService.sendNotification(
-              "all",
-              ' retard!',
-              'le train qui vien de : {$HomeScreen.nextStation} doit faire  un peut de retard',
-            );
-          }
+
+          NotificationService.showNotification(
+            "retard!",
+            'le train1 qui vien de : {$HomeScreen.nextStation} doit faire  un peut de retard',
+          );
         } else {
           if (cpt == 60) {
             await NotificationService.savenotificationdatabase(
               'panne',
               'le train1 qui vien de : {$HomeScreen.nextStation} est on panne!',
             );
-            if (Appobservation.isAppInForeground) {
-              NotificationService.showNotification(
-                "panne!",
-                'le train1 qui vien de : {$HomeScreen.nextStation} est on panne!',
-              );
-            } else {
-              NotificationService.sendNotification(
-                "all",
-                ' panne!',
-                'le train1 qui vien de : {$HomeScreen.nextStation} est on panne!',
-              );
-            }
+
+            NotificationService.showNotification(
+              "panne!",
+              'le train1 qui vien de : {$HomeScreen.nextStation} est on panne!',
+            );
           }
         }
       }
-      cpt = 1;
+      if (cpt == 60) {
+        cpt = 1;
+      }
       await Future.delayed(Duration(milliseconds: 100));
     }
   }
