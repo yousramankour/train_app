@@ -1,11 +1,13 @@
 import 'package:appmob/back-end.dart';
+import 'package:appmob/directions_model.dart';
+import 'package:appmob/directions_repository.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-
+import 'dart:math';
 //import 'package:latlong2/latlong.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'dart:convert';
@@ -37,10 +39,6 @@ class _HomeScreenState extends State<HomeScreen> {
   LatLng? _destination;
   List<LatLng> _itineraire = [];
   String? _selectedTrain;
-
-  final DatabaseReference _trainRef = FirebaseDatabase.instance.ref(
-    "trains/train1",
-  );
   Map<String, Map<String, bool>> stationPassedStatusMap = {};
   Map<String, TrainInfo> _trains = {};// map that contains all the the trains info
   LatLng? _trainLocation;
@@ -52,10 +50,12 @@ class _HomeScreenState extends State<HomeScreen> {
     zoom: 11,
   );
   final _dbServices = DatabaseService();
+  double? lastLat;
+  double? lastLng;
   Map<String, Marker> trainMarkers = {};
   List<LatLng> _trainRoute = [];
-  final List<LatLng> _gares = [
-    LatLng(36.77947718263685, 3.062102318233201), // Alger
+  Map<String,LatLng> _garesMap = {};
+   /* LatLng(36.77947718263685, 3.062102318233201), // Alger
     LatLng(36.76786434370996, 3.0571634472437097), // Agha
     LatLng(36.75637323481598, 3.0657403320287813), // Les Ateliers
     LatLng(36.74538839603068, 3.0943597112363648), // Hussein Dey
@@ -71,9 +71,22 @@ class _HomeScreenState extends State<HomeScreen> {
     LatLng(36.753723557039876, 3.435430500308115), // Corso
     LatLng(36.75324360227452, 3.473915470543915), // Boumerdès
     LatLng(36.7310886744763, 3.500921535370594), // Tidjelabine
-    LatLng(36.725311597872135, 3.5530624990360025),
-  ];
+    LatLng(36.725311597872135, 3.5530624990360025),*/
+  final DirectionsRipository _directionsRepository = DirectionsRipository();
+  Direction? _info;
 
+  Future<void> fetchGares() async {
+    final snapshot = await FirebaseFirestore.instance.collection('gares').get();
+    setState(() {
+      _garesMap = {
+        for (var doc in snapshot.docs)
+          doc.id: LatLng(
+            doc['coordinates'].latitude,
+            doc['coordinates'].longitude,
+          ),
+      };
+    });
+  }
   Set<Marker> get allMarkers => trainMarkers.values.toSet();
 
   /* Map<String, LatLng> stationCoordinatesMap= {
@@ -83,7 +96,10 @@ class _HomeScreenState extends State<HomeScreen> {
     "Caroubier": LatLng(36.73509586,3.12006988)
   };*/
 
-  final List<String> _nomsGares = [
+  bool _isSearchExpanded = false;
+  LatLng? _startStation;
+  LatLng? _destinationStation;
+ /* final List<String> _nomsGares = [
     "Alger",
     "Agha",
     "Les Ateliers",
@@ -102,7 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
     "Boumerdès",
     "Tidjelabine",
     "Thénia",
-  ];
+  ];*/
 
   @override
   void initState() {
@@ -110,6 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
     requestLocation();
     listenToAllTrains();
     buildFullPolylines();
+    fetchGares();
   }
 
   @override
@@ -235,7 +252,34 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _handleSearch(String value) {
+  double haversine(double? lat1, double? lon1, double lat2, double lon2) {
+    const R = 6371; // Earth's radius in km
+    final dLat = _degToRad(lat2 - lat1!);
+    final dLon = _degToRad(lon2 - lon1!);
+
+    final a = sin(dLat / 2) * sin(dLat / 2) +
+        cos(_degToRad(lat1)) * cos(_degToRad(lat2)) *
+            sin(dLon / 2) * sin(dLon / 2);
+
+    final c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    return R * c;
+  }
+
+  double _degToRad(double deg) => deg * pi / 180;
+
+  double calculateSpeedKmh({
+    required double? lastLat,
+    required double? lastLng,
+    required double newLat,
+    required double newLng,
+    required double timeDiffSeconds,
+  }) {
+    final distanceKm = haversine(lastLat!, lastLng!, newLat, newLng);
+    final timeHours = timeDiffSeconds / 3600.0;
+    return timeHours == 0 ? 0 : distanceKm / timeHours;
+  }
+
+ /* void _handleSearch(String value) {
     int index = _nomsGares.indexWhere(
       (gare) => gare.toLowerCase() == value.toLowerCase(),
     );
@@ -243,19 +287,38 @@ class _HomeScreenState extends State<HomeScreen> {
       LatLng garePosition = _gares[index];
       _selectGare(garePosition);
     }
-  }
+  }*/
 
+  String? findLigneIdForStations(String startStation, String destinationStation) {
+    for (var entry in railPolylines.entries) {
+      final String ligneId = entry.key;
+      final List<dynamic> stations = entry.value['stations'];
+
+      // Extract only the station names
+      final List<String> stationNames = stations.map((s) => s['name'] as String).toList();
+
+      if (stationNames.contains(startStation) && stationNames.contains(destinationStation)) {
+        return ligneId; // Found the line
+      }
+    }
+    return null; // Not found
+  }
   void listenToAllTrains() {
     DatabaseReference allTrainsRef = FirebaseDatabase.instance.ref('trains');
-
+    DateTime lastUpdateTime =DateTime.now();
     allTrainsRef.onValue.listen((event) async {
       final data = event.snapshot.value as Map<dynamic, dynamic>?;
 
+
       if (data != null) {
+
+        //double newlat;
+        //double newlng;
+
         for (var entry in data.entries) {
           final String trainNom = entry.key; // <-- Here! Get the train name from the document ID
           final trainData = entry.value as Map<dynamic, dynamic>;
-
+          DateTime CurrentUpdateTime =DateTime.now();
           List<Map<String, dynamic>> eta_list = [];
 
           if (trainData['latitude'] != null && trainData['longitude'] != null) {
@@ -263,8 +326,15 @@ class _HomeScreenState extends State<HomeScreen> {
               double.parse(trainData['latitude'].toString()),
               double.parse(trainData['longitude'].toString()),
             );
+           //lllllllllllllll::::::::::: rawLocation =LatLng(36.745819, 3.092676);
+
+           /* if (lastLng==null && lastLat==null){
+              lastLat=rawLocation.latitude;
+              lastLng=rawLocation.longitude;}*/
             _trainLocation = rawLocation;
+            //double TimeDiffr=CurrentUpdateTime.difference(lastUpdateTime).inSeconds.toDouble();
             final double speed = double.parse(trainData['speed'].toString());
+
 
             // 🔥 Fetch train info from Firestore
             final querySnapshot =
@@ -300,18 +370,24 @@ class _HomeScreenState extends State<HomeScreen> {
                   rawLocation,
                   polyline,
                 );
-
+                //newlat=snappedLocation.snappedPoint.latitude;
+                //newlng= snappedLocation.snappedPoint.longitude;
+               // final double speed =calculateSpeedKmh(lastLat: lastLat!, lastLng:lastLng! , newLat:newlat , newLng: snappedLocation.snappedPoint.longitude, timeDiffSeconds: TimeDiffr);
+                // double.parse(trainData['speed'].toString());
                 //snappedLocation.snappedPoint;
+               // lastLat=newlat;
+              //  lastLng=newlng;
                 print(
                   "📍 Snapped Location: ${snappedLocation.snappedPoint.latitude}, ${snappedLocation.snappedPoint.longitude}",
                 );
+                print("Speed: ${speed.toStringAsFixed(1)} km/h");
 
                 if (!stationPassedStatusMap.containsKey(trainNom)) {
                   stationPassedStatusMap[trainNom] = {};
                 }
                 //snappedLocation.snappedPoint_trainLocationSnapped = snappedLocation.snappedPoint;
                 // 🛠 Calculate ETA for this train
-
+                if (speed>0.5){
                 eta_list = calculateETA(
                   garesList: stationList,
                   snappedTrainLocation: snappedLocation,
@@ -330,9 +406,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   speed: speed,
                   etaList: eta_list,
                   isGoing: isGoing,
-                );
+                );};
                 //if u want to get any all trains location u need to loop throught _trains map and for each train get their location that would be _trains.forEach((key,value){ 'le train est $key et sa position est ${value.snappedLocation.snappedpoint} }
-                // 🗺 Update marker position
+                // Update marker position
                 updateTrainMarker(trainNom, snappedLocation.snappedPoint);
               }
             }
@@ -348,7 +424,8 @@ class _HomeScreenState extends State<HomeScreen> {
     required Map<String, bool> stationPassedStatus,
     required void Function(bool newIsGoing) updateDirectionCallback,
     required bool isGoingDirection,
-  }) {
+  })
+  {
     bool foundNext = false;
 
     for (var station in orderedStations) {
@@ -428,7 +505,8 @@ class _HomeScreenState extends State<HomeScreen> {
     List<LatLng> polyline,
     LatLng from,
     LatLng to,
-  ) {
+  )
+  {
     int startIndex = polyline.indexWhere(
       (p) =>
           Geolocator.distanceBetween(
@@ -439,6 +517,12 @@ class _HomeScreenState extends State<HomeScreen> {
           ) <
           5,
     );
+    if (startIndex == -1) {
+      print("❌ Failed to find start point close to: $from");
+    } else {
+      print("✅ Found start point at index $startIndex for: $from");
+    }
+
 
     int endIndex = polyline.indexWhere(
       (p) =>
@@ -450,10 +534,17 @@ class _HomeScreenState extends State<HomeScreen> {
           ) <
           5,
     );
+    if (endIndex == -1) {
+      print("❌ Failed to find end point close to: $to");
+    } else {
+      print("✅ Found end point at index $endIndex for: $to");
+    }
 
     if (startIndex != -1 && endIndex != -1 && startIndex < endIndex) {
+      print("✂️ Slicing polyline from $startIndex to $endIndex");
       return polyline.sublist(startIndex, endIndex + 1);
     }
+    print("⚠️ Returning empty polyline slice");
     return [];
   }
 
@@ -465,7 +556,8 @@ class _HomeScreenState extends State<HomeScreen> {
     required Map<String, bool> stationPassedStatus,
     required bool isGoingDirection,
     required void Function(bool newIsGoing) updateDirectionCallback,
-  }) {
+  })
+  {
     List<Map<String, dynamic>> orderedGares =
         isGoingDirection ? garesList : garesList.reversed.toList();
 
@@ -534,38 +626,51 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 */
 
-  void _selectGare(LatLng garePosition) {
-    setState(() {
-      _destination = garePosition;
-      if (_currentP != null) {
-        _itineraire = [_currentP!, garePosition];
-      }
-    });
 
-    mapController?.animateCamera(
-      CameraUpdate.newLatLngBounds(
-        LatLngBounds(
-          southwest: LatLng(
-            _currentP!.latitude < garePosition.latitude
-                ? _currentP!.latitude
-                : garePosition.latitude,
-            _currentP!.longitude < garePosition.longitude
-                ? _currentP!.longitude
-                : garePosition.longitude,
-          ),
-          northeast: LatLng(
-            _currentP!.latitude > garePosition.latitude
-                ? _currentP!.latitude
-                : garePosition.latitude,
-            _currentP!.longitude > garePosition.longitude
-                ? _currentP!.longitude
-                : garePosition.longitude,
-          ),
-        ),
-        100,
-      ),
-    );
-  }
+    void _selectGare(LatLng garePosition) async {
+      setState(() {
+        _destination = garePosition;
+      });
+
+      if (_currentP != null) {
+        try {
+          print('Origin: $_currentP');
+          print('Destination: $garePosition');
+          final direction = await _directionsRepository.getDirection(
+            origin: LatLng(36.752778, 3.042222),//_currentP!,
+            destination: LatLng(36.716667, 3.086944), //garePosition,
+          );
+
+          // Vérification : direction non null et contient des points
+          if (direction == null || direction.polylinePoints.isEmpty) {
+            print("Aucune direction trouvée ou polyline vide.");
+            return;
+          }
+
+          setState(() {
+            _info = direction;
+            _itineraire = direction.polylinePoints
+                .map((e) => LatLng(e.latitude, e.longitude))
+                .toList();
+          });
+
+          // Vérifie que mapController et _itineraire ne sont pas vides
+          if (mapController != null && _itineraire.isNotEmpty) {
+            mapController!.animateCamera(
+              CameraUpdate.newLatLngBounds(_boundsFromLatLngList(_itineraire), 50),
+            );
+          }
+        } catch (e) {
+          print("Erreur lors de la récupération de l'itinéraire : $e");
+        }
+      } else {
+        print("Position actuelle inconnue.");
+      }
+    }
+
+
+
+
 
   LatLngBounds _boundsFromLatLngList(List<LatLng> list) {
     double x0 = list.first.latitude;
@@ -669,18 +774,21 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   infoWindow: InfoWindow(title: "Train Position"),
                 ),
-              ..._gares.asMap().entries.map(
-                (entry) => Marker(
+
+              ..._garesMap.entries.map(
+                    (entry) => Marker(
                   markerId: MarkerId("gare_${entry.key}"),
                   position: entry.value,
-                  infoWindow: InfoWindow(title: _nomsGares[entry.key]),
+                  infoWindow: InfoWindow(title: entry.key), // station name
                   icon: BitmapDescriptor.defaultMarkerWithHue(
                     BitmapDescriptor.hueAzure,
                   ),
-                  onTap: () => _selectGare(entry.value),
+
+                 onTap: () => _selectGare(entry.value),
                 ),
               ),
             },
+
 
             polylines: {
               ...railPolylines.entries.map((entry) {
@@ -828,6 +936,80 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
 
+          Positioned(
+            top: 40,
+            left: 16,
+            right: 16,
+            child: AnimatedContainer(
+              duration: Duration(milliseconds: 300),
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 6)],
+              ),
+              child: Column(
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _isSearchExpanded = !_isSearchExpanded;
+                      });
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text("Search Route", style: TextStyle(fontWeight: FontWeight.bold)),
+                        Icon(_isSearchExpanded ? Icons.expand_less : Icons.expand_more),
+                      ],
+                    ),
+                  ),
+                  if (_isSearchExpanded) ...[
+                    SizedBox(height: 10),
+                    DropdownButtonFormField<LatLng>(
+                      hint: Text("Start Station or Current Location"),
+                      value: _startStation, // should be of type LatLng?
+                      items: [
+                        ..._garesMap.entries.map((entry) => DropdownMenuItem(
+                          value: entry.value, // LatLng
+                          child: Text(entry.key), // Station name
+                        )),
+                       /* DropdownMenuItem(
+                          value: _currentP, // current position as LatLng
+                          child: Text("Use My Current Location"),
+                        ),*/
+                      ],
+                     onChanged: (value) async {
+                        setState(() {
+                          _startStation = value;
+                        });
+                      },
+                    ),
+                    SizedBox(height: 10),
+                    DropdownButtonFormField<LatLng>(
+                      hint: Text("Destination Station"),
+                      value: _destinationStation,
+                      items: _garesMap.entries.map((entry) => DropdownMenuItem(
+                        value: entry.value, // LatLng
+                        child: Text(entry.key),
+                      )).toList(),
+                      onChanged: (value) {
+                        setState(() => _destinationStation = value);
+                      },
+                    ),
+                    SizedBox(height: 10),
+                    ElevatedButton(
+                      onPressed: () {
+                        // Call directions API here
+                        print('From: $_startStation - To: $_destinationStation');
+                      },
+                      child: Text("Show Route"),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
 
           /* Positioned(top:350,
         left:20,
@@ -836,7 +1018,7 @@ class _HomeScreenState extends State<HomeScreen> {
        },
             child: Text("Add cordination"),
         ),
-    ),*/
+    ),
           Positioned(
             top: 40,
             left: 10,
@@ -938,12 +1120,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-          ),
+          ),*/
           Positioned(
             bottom: 80,
             left: 10,
             child: FloatingActionButton(
               onPressed: () {
+                requestLocation();
                 if (_currentP != null && mapController != null) {
                   mapController!.animateCamera(
                     CameraUpdate.newLatLngZoom(_currentP!, 15.0),
