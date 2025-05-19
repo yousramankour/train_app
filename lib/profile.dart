@@ -6,7 +6,7 @@ import 'package:appmob/home.dart';
 import 'package:appmob/login_page.dart';
 import 'package:appmob/messageri.dart';
 import 'package:appmob/notification.dart';
-import 'package:appmob/statistique.dart';
+import 'package:appmob/statistiques.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';

@@ -39,31 +39,31 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
           children: [
             buildAdminCard(
               icon: Icons.place,
-              label: 'gares'.tr(),
+              label: "gares".tr(),
               color: Colors.blue.shade400,
               onTap: () => navigateTo(GareListPage()),
             ),
             buildAdminCard(
               icon: Icons.admin_panel_settings,
-              label: 'admin'.tr(),
+              label: "admin".tr(),
               color: const Color.fromARGB(255, 206, 201, 201),
               onTap: () => navigateTo(AdminListPage()),
             ),
             buildAdminCard(
               icon: Icons.timeline,
-              label: 'lignes'.tr(),
+              label: "lignes".tr(),
               color: const Color.fromARGB(255, 206, 201, 201),
               onTap: () => navigateTo(RailLinesScreen()),
             ),
             buildAdminCard(
               icon: Icons.location_on,
-              label: 'stations'.tr(),
+              label: "stations".tr(),
               color: Colors.blue.shade400,
               onTap: () => navigateTo(AddCoordinatesPage()),
             ),
             buildAdminCard(
               icon: Icons.feedback,
-              label: 'feedback'.tr(),
+              label: "feedback".tr(),
               color: Colors.blueAccent,
               onTap: () => navigateTo(FeedbackAdminScreen()),
             ),

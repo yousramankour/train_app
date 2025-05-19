@@ -1,88 +1,186 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart'; // Pour formater la date proprement
-import 'package:easy_localization/easy_localization.dart';
+import 'package:intl/intl.dart';
 
 class NotificationScreen extends StatelessWidget {
   final DateFormat formatter = DateFormat('dd MMM yyyy - HH:mm');
 
-  NotificationScreen({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return DefaultTabController(
+      length: 2, // 2 onglets
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          title: const Text('Notifications'),
+          centerTitle: true,
+          backgroundColor: Colors.white,
+          elevation: 0.5,
+          foregroundColor: Colors.black,
+          bottom: const TabBar(
+            labelColor: Colors.blue,
+            unselectedLabelColor: Colors.grey,
+            indicatorColor: Colors.blue,
+            tabs: [Tab(text: 'retard'), Tab(text: 'panne')],
+          ),
+        ),
+        body: const TabBarView(
+          children: [
+            NotificationList(filter: 'retard'),
+            NotificationList(filter: 'panne'),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class NotificationList extends StatelessWidget {
+  final String filter;
+  const NotificationList({super.key, required this.filter});
+
+  IconData getIcon(String etat) {
+    switch (etat) {
+      case 'retard':
+        return Icons.schedule;
+      case 'panne':
+        return Icons.error;
+
+      default:
+        return Icons.notifications;
+    }
+  }
+
+  Color getIconColor(String etat) {
+    switch (etat) {
+      case 'retard':
+        return Colors.blue;
+      case 'panne':
+        return Colors.red;
+
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String getTitle(String etat) {
+    switch (etat) {
+      case 'retard':
+        return 'Retard signalé';
+      case 'panne':
+        return 'Panne détectée';
+      default:
+        return 'Notification';
+    }
+  }
+
+  String timeAgo(DateTime dateTime) {
+    final Duration diff = DateTime.now().difference(dateTime);
+    if (diff.inSeconds < 60) return 'Il y a quelques secondes';
+    if (diff.inMinutes < 60) return 'Il y a ${diff.inMinutes} min';
+    if (diff.inHours < 24) return 'Il y a ${diff.inHours} h';
+    return DateFormat('dd MMM yyyy').format(dateTime);
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 216, 245, 243),
-      appBar: AppBar(
-        title: Text('Notifications'.tr()),
-        backgroundColor: Colors.blue,
-        centerTitle: false,
-        elevation: 4,
-      ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream:
-            FirebaseFirestore.instance
-                .collection('notification')
-                .orderBy('timestamp', descending: false)
-                .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Center(child: Text('Erreur de chargement'.tr()));
-          }
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          }
+    return StreamBuilder<QuerySnapshot>(
+      stream:
+          FirebaseFirestore.instance
+              .collection('notification')
+              .orderBy('timestamp', descending: true)
+              .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) return const Center(child: Text("Erreur"));
+        if (!snapshot.hasData)
+          return const Center(child: CircularProgressIndicator());
 
-          final notifications = snapshot.data!.docs;
+        final docs = snapshot.data!.docs;
 
-          if (notifications.isEmpty) {
-            return Center(
-              child: Text(
-                "Aucune notification".tr(),
-                style: TextStyle(fontSize: 18, color: Colors.grey),
+        final filteredDocs =
+            docs.where((doc) {
+              final etat = doc['etat'];
+              return etat == filter;
+            }).toList();
+
+        if (filteredDocs.isEmpty) {
+          return const Center(child: Text("Aucune notification"));
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: filteredDocs.length,
+          itemBuilder: (context, index) {
+            final doc = filteredDocs[index];
+            final etat = doc['etat'];
+            final message = doc['message'];
+            final timestamp = doc['timestamp'] as Timestamp;
+            final dateText = timeAgo(timestamp.toDate());
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 4,
+                    offset: Offset(0, 2),
+                  ),
+                ],
               ),
-            );
-          }
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 8,
+                      horizontal: 12,
+                    ),
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(12),
-            itemCount: notifications.length,
-            itemBuilder: (context, index) {
-              final doc = notifications[index];
-              final String type = doc['etat'];
-              final String message = doc['message'];
-              final Timestamp timestamp = doc['timestamp'] ?? Timestamp.now();
-
-              final bool isRetard = type == 'retard';
-
-              return Card(
-                elevation: 3,
-                margin: const EdgeInsets.symmetric(vertical: 8),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor:
-                        isRetard ? Colors.orange[100] : Colors.red[100],
+                    decoration: BoxDecoration(
+                      color: getIconColor(etat).withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
                     child: Icon(
-                      isRetard ? Icons.access_time : Icons.warning_amber,
-                      color: isRetard ? Colors.orange : Colors.red,
+                      getIcon(etat),
+                      color: getIconColor(etat),
+                      size: 24,
                     ),
                   ),
-                  title: Text(
-                    message,
-                    style: TextStyle(fontWeight: FontWeight.w600),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          getTitle(etat),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(message, style: const TextStyle(fontSize: 14)),
+                        const SizedBox(height: 6),
+                        Text(
+                          dateText,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  subtitle: Text(
-                    formatter.format(timestamp.toDate()),
-                    style: TextStyle(fontSize: 13, color: Colors.grey[700]),
-                  ),
-                ),
-              );
-            },
-          );
-        },
-      ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

@@ -1,7 +1,7 @@
 import 'package:appmob/gars.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:easy_localization/easy_localization.dart'; // ajouté
+import 'package:easy_localization/easy_localization.dart';
 
 class GareListPage extends StatefulWidget {
   const GareListPage({super.key});
@@ -16,8 +16,8 @@ class GareListPageState extends State<GareListPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'liste_gares'.tr(), // traduit
-          style: const TextStyle(color: Colors.black),
+          "Liste des Gares".tr(),
+          style: TextStyle(color: Colors.black),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
@@ -33,7 +33,7 @@ class GareListPageState extends State<GareListPage> {
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return Center(child: Text('aucune_gare'.tr())); // traduit
+            return Center(child: Text("Aucune gare trouvée".tr()));
           }
 
           var docs = snapshot.data!.docs;
@@ -73,10 +73,7 @@ class GareListPageState extends State<GareListPage> {
         },
         backgroundColor: Colors.blue,
         icon: const Icon(Icons.add, color: Colors.white),
-        label: Text(
-          'ajouter_gare'.tr(), // traduit
-          style: const TextStyle(color: Colors.white),
-        ),
+        label: Text("Ajouter Gare".tr(), style: TextStyle(color: Colors.white)),
       ),
     );
   }
@@ -87,17 +84,14 @@ class GareListPageState extends State<GareListPage> {
       builder:
           (context) => AlertDialog(
             backgroundColor: Colors.white,
-            title: Text('supprimer'.tr()), // traduit
+            title: Text("Supprimer".tr()),
             content: Text(
-              tr(
-                'confirm_delete_gare',
-                args: [gareName],
-              ), // traduit avec paramètre
+              tr('Voulez-vous vraiment supprimer la gare', args: [gareName]),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text('annuler'.tr()), // traduit
+                child: Text("Annuler".tr()),
               ),
               TextButton(
                 onPressed: () async {
@@ -120,21 +114,17 @@ class GareListPageState extends State<GareListPage> {
                           .update({'gares': gares});
                     }
                   }
-                  if (context.mounted) {
-                    Navigator.pop(context);
 
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          tr('gare_deleted_everywhere', args: [gareName]),
-                        ),
-                      ),
-                    );
-                  }
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(tr("station_deleted", args: ["gareName"])),
+                    ),
+                  );
                 },
                 child: Text(
-                  'supprimer'.tr(), // traduit
-                  style: const TextStyle(color: Colors.red),
+                  "Supprimer".tr(),
+                  style: TextStyle(color: Colors.red),
                 ),
               ),
             ],

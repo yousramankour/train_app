@@ -6,14 +6,70 @@
   "Ajouter" : "Ajouter",
   "Aucun admin trouvé":"Aucun admin trouvé",
   "Email inconnu" : "Email inconnu",
-  "Admin ajouté avec succès :":"Admin ajouté avec succès : {}",
+  "Admin ajouté avec succès :":"Admin ajouté avec succès : {0}",
   "Utilisateur introuvable avec cet email.": "Utilisateur introuvable avec cet email.",
   "Admin retiré :" :"Admin retiré :",
+
   "//comment1": "les texte de fichier adminepages.dart",
+
   "admin_panel_title" :"admin_panel_title",
   "gares":"gares",
   "admin":"admin",
   "lignes":"lignes",
+  "stations":"stations",
+  "feedback":"feedback",
+
+  "//comment2":"les traduction de fichier affigars.dart",
+
+  "Liste des Gares":"Liste des Gares",
+  "Aucune gare trouvée":"Aucune gare trouvée",
+  "Ajouter Gare":"Ajouter Gare",
+  "Supprimer":"Supprimer",
+  "Voulez-vous vraiment supprimer la gare":"Voulez-vous vraiment supprimer la gare {0}",
+  "Annuler":"Annuler",
+  "station_deleted":"Gare \"{}\" supprimée partout",
+
+  "//comment3":"les traduction de fichier apropos_page.dart (la page est vide pour l'instant)",
+
+  "//comment4":"les traduction de fichier edit_profile.dart",
+
+  "Veuillez remplir tous les champs." : "Veuillez remplir tous les champs.",
+  "Profil mis à jour avec succès":"Profil mis à jour avec succès",
+  "Un lien de réinitialisation a été envoyé à votre email.":"Un lien de réinitialisation a été envoyé à votre email.",
+  "Modifier le Profil":"Modifier le Profil",
+  "Enregistrer":"Enregistrer",
+  "Changer le mot de passe":"Changer le mot de passe",
+
+  "//comment5":"les traduction de fichier enquette_satisdaction.dart",
+
+  " 1.Le suivi en temps réel est-il précis ?" : " 1.Le suivi en temps réel est-il précis ?",
+    "2.La traçabilité des trajets vous satisfait-elle ?": "2.La traçabilité des trajets vous satisfait-elle ?",
+    "3.Les alertes/notifications sont-elles fiables ?":"3.Les alertes/notifications sont-elles fiables ?",
+    "4.La messagerie est-elle utile ?":"4.La messagerie est-elle utile ?",
+    "5.L’application est-elle facile à utiliser ?":"5.L’application est-elle facile à utiliser ?",
+    "Feedback":"Feedback",
+    "6.Avez-vous rencontré des problèmes ?":"6.Avez-vous rencontré des problèmes ?",
+    "Entrez votre réponse":"Entrez votre réponse",
+    "7.Quels services voudriez-vous ajouter ?":"7.Quels services voudriez-vous ajouter ?",
+    "Entrez votre suggestion":"Entrez votre suggestion",
+    "Envoyer":"Envoyer",
+
+    "//comment6":"es traduction de fichier feeduser.dart",
+
+   "1. Le suivi en temps réel est-il précis ?":"1. Le suivi en temps réel est-il précis ?",
+   "2. La traçabilité des trajets vous satisfait-elle ?":"2. La traçabilité des trajets vous satisfait-elle ?",
+   "3. Les alertes/notifications sont-elles fiables ?":"3. Les alertes/notifications sont-elles fiables ?",
+   "4. La messagerie est-elle utile ?":"4. La messagerie est-elle utile ?",
+   "5. L’application est-elle facile à utiliser ?":"5. L’application est-elle facile à utiliser ?",
+    "Retours des utilisateurs":"Retours des utilisateurs",
+    "Erreur de chargement.":"Erreur de chargement.",
+    "Aucun retour trouvé.":"Aucun retour trouvé.",
+    "Chargement...":"Chargement...",
+    "Supprimer ce retour ?":"Supprimer ce retour ?",
+    "Voulez-vous vraiment supprimer ce feedback?":"Voulez-vous vraiment supprimer ce feedback?",
+    
+
+
 
 
 

@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:easy_localization/easy_localization.dart'; // ajouté
+import 'package:easy_localization/easy_localization.dart';
 
 class EditProfileScreen extends StatefulWidget {
-  const EditProfileScreen({super.key});
-
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();
 }
@@ -49,9 +47,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final job = _jobController.text.trim();
     final sex = _sexController.text.trim();
     if (name.isEmpty || age.isEmpty || job.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('fill_all_fields'.tr())));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Veuillez remplir tous les champs.".tr())),
+      );
       return;
     }
 
@@ -61,21 +59,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       'job': job,
       'sex': sex,
     }, SetOptions(merge: true));
-    if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('profile_updated'.tr())));
-    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Profil mis à jour avec succès".tr())),
+    );
   }
 
   void _changePassword() async {
     if (user != null) {
       await FirebaseAuth.instance.sendPasswordResetEmail(email: user!.email!);
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('reset_link_sent'.tr())));
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Un lien de réinitialisation a été envoyé à votre email.".tr(),
+          ),
+        ),
+      );
     }
   }
 
@@ -84,8 +83,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'edit_profile'.tr(),
-          style: const TextStyle(color: Colors.black),
+          "Modifier le Profil".tr(),
+          style: TextStyle(color: Colors.black),
         ),
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
@@ -97,30 +96,30 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              _buildReadOnlyField('email'.tr(), email),
+              _buildReadOnlyField("Email", email),
               const SizedBox(height: 20),
-              _buildEditableField('name'.tr(), _nameController),
+              _buildEditableField("Nom", _nameController),
               const SizedBox(height: 20),
               _buildEditableField(
-                'age'.tr(),
+                "Âge",
                 _ageController,
                 type: TextInputType.number,
               ),
               const SizedBox(height: 20),
-              _buildEditableField('job'.tr(), _jobController),
+              _buildEditableField("Métier", _jobController),
               const SizedBox(height: 20),
-              _buildEditableField('gender'.tr(), _sexController),
+              _buildEditableField("genre", _sexController),
               const SizedBox(height: 30),
 
               ElevatedButton(
                 onPressed: _saveChanges,
+                child: Text(
+                  "Enregistrer".tr(),
+                  style: TextStyle(color: Colors.white),
+                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                   minimumSize: const Size(double.infinity, 50),
-                ),
-                child: Text(
-                  'save'.tr(),
-                  style: const TextStyle(color: Colors.white),
                 ),
               ),
               const SizedBox(height: 20),
@@ -128,8 +127,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 onPressed: _changePassword,
                 icon: const Icon(Icons.lock_reset, color: Colors.blue),
                 label: Text(
-                  'change_password'.tr(),
-                  style: const TextStyle(color: Colors.blue),
+                  "Changer le mot de passe".tr(),
+                  style: TextStyle(color: Colors.blue),
                 ),
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: Colors.blue),

@@ -1,17 +1,14 @@
-import 'dart:developer' as developer;
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class SatisfactionSurveyPage extends StatefulWidget {
-  const SatisfactionSurveyPage({super.key});
-
   @override
-  SatisfactionSurveyPageState createState() => SatisfactionSurveyPageState();
+  _SatisfactionSurveyPageState createState() => _SatisfactionSurveyPageState();
 }
 
-class SatisfactionSurveyPageState extends State<SatisfactionSurveyPage> {
+class _SatisfactionSurveyPageState extends State<SatisfactionSurveyPage> {
   final _formKey = GlobalKey<FormState>();
   Map<int, int> ratings = {};
   TextEditingController suggestionController = TextEditingController();
@@ -53,7 +50,7 @@ class SatisfactionSurveyPageState extends State<SatisfactionSurveyPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Feedback'.tr()),
+        title: Text("Feedback".tr()),
         backgroundColor: Colors.white,
       ),
       body: Form(
@@ -91,7 +88,7 @@ class SatisfactionSurveyPageState extends State<SatisfactionSurveyPage> {
             ),
             SizedBox(height: 16),
             Text(
-              "7.Quels services voudriez-vous ajouter ?".tr(),
+              "7.Quels services voudriez-vous ajouter ?",
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
@@ -100,7 +97,7 @@ class SatisfactionSurveyPageState extends State<SatisfactionSurveyPage> {
               controller: suggestionController,
               maxLines: 3,
               decoration: InputDecoration(
-                hintText: "Entrez votre suggestion".tr(),
+                hintText: "Entrez votre suggestion",
                 border: OutlineInputBorder(),
               ),
             ),
@@ -114,7 +111,7 @@ class SatisfactionSurveyPageState extends State<SatisfactionSurveyPage> {
                     if (user != null) {
                       // Enregistre les réponses dans Firestore
                       await FirebaseFirestore.instance
-                          .collection('feedback'.tr())
+                          .collection('feedbacks')
                           .add({
                             'userId': user.uid, // Identifiant de l'utilisateur
                             'timestamp':
@@ -125,37 +122,28 @@ class SatisfactionSurveyPageState extends State<SatisfactionSurveyPage> {
                             'q3': ratings[2], // Note question 3
                             'q4': ratings[3], // Note question 4
                             'q5': ratings[4], // Note question 5
-                            'problemes'.tr():
+                            'problemes':
                                 serviceAjouteController
                                     .text, // Text de la question "problèmes"
-                            'suggestions'.tr():
+                            'suggestions':
                                 suggestionController
                                     .text, // Text de la question "suggestions"
                           });
 
                       // Message de confirmation
-
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Réponses envoyées !'.tr())),
-                        );
-                      }
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Réponses envoyées !')),
+                      );
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Veuillez vous connecter.'.tr()),
-                        ),
+                        SnackBar(content: Text('Veuillez vous connecter.')),
                       );
                     }
                   } catch (e) {
-                    developer.log("Erreur: $e");
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Erreur d’envoi des réponses.'.tr()),
-                        ),
-                      );
-                    }
+                    print("Erreur : $e");
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Erreur d’envoi des réponses.')),
+                    );
                   }
                 }
               },

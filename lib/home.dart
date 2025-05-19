@@ -12,7 +12,7 @@ import 'package:location/location.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'statistique.dart';
+import 'statistiques.dart';
 import 'notification.dart';
 import 'messageri.dart';
 import 'profile.dart';
@@ -22,67 +22,69 @@ import 'package:geolocator/geolocator.dart';
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
-  static Future<void> virifierlist(List<Map<String, dynamic>> position) async {
-    int cpt = 1;
-    while (position.length >= 2) {
-      final String trainNam = position[0]['nom'];
-      final double distance = HomeScreen.calculateDistance(
-        position[0]['position'],
-        position[1]['position'],
-      );
+  static Map<String, int> cptMap = {}; // compteur par train
 
-      print("Distance entre deux points : $distance");
+  static Future<void> virifierlist(
+    Map<String, List<Map<String, dynamic>>> positionMap,
+  ) async {
+    for (var entry in positionMap.entries) {
+      final String trainNam = entry.key;
+      final List<Map<String, dynamic>> positionList = entry.value;
 
-      if (distance < 2) {
-        cpt++;
-        position.removeAt(0);
-      } else {
-        position.removeAt(0);
-      }
-      if (cpt == 30) {
-        await NotificationService.savenotificationdatabase(
-          'retard',
-          'le $trainNam  doit faire  un peut de retard',
+      // Initialiser compteur si inexistant
+      cptMap.putIfAbsent(trainNam, () => 1);
+
+      while (positionList.length >= 2) {
+        final double distance = HomeScreen.calculateDistance(
+          positionList[0]['position'],
+          positionList[1]['position'],
         );
-        if (Appobservation.isAppInForeground) {
-          NotificationService.showNotification(
-            "retard!",
-            'le train doit faire  un peut de retard',
-          );
+
+        print("Train: $trainNam | Distance: $distance");
+
+        if (distance < 5) {
+          cptMap[trainNam] = (cptMap[trainNam]! + 1);
         } else {
-          NotificationService.sendNotification(
-            "all",
-            ' retard!',
-            'le  $trainNam doit faire  un peut de retard',
-          );
+          cptMap[trainNam] = 1;
         }
-      } else {
-        if (cpt == 60) {
+
+        print("Train: $trainNam | cpt = ${cptMap[trainNam]}");
+
+        // Supprimer la première position après traitement
+        positionList.removeAt(0);
+
+        // Vérification des seuils
+        if (cptMap[trainNam] == 30) {
+          await NotificationService.savenotificationdatabase(
+            'retard',
+            'Le train $trainNam a probablement un peu de retard.',
+          );
+
+          NotificationService.showNotification(
+            "Retard détecté",
+            'Le train $trainNam semble en retard.',
+          );
+          print("la notification est bien envoyer");
+        } else if (cptMap[trainNam] == 60) {
           await NotificationService.savenotificationdatabase(
             'panne',
-            'le $trainNam est on panne!',
+            'Le train $trainNam semble en panne.',
           );
-          if (Appobservation.isAppInForeground) {
-            NotificationService.showNotification(
-              "panne!",
-              'le $trainNam est on panne!',
-            );
-          } else {
-            NotificationService.sendNotification(
-              "all",
-              ' panne!',
-              'le $trainNam est on panne!',
-            );
-          }
-        }
-      }
+          NotificationService.showNotification(
+            "Panne détectée",
+            'Le train $trainNam semble en panne.',
+          );
 
-      cpt = 1;
-      await Future.delayed(Duration(milliseconds: 100));
+          // Reset le compteur après notification de panne
+          cptMap[trainNam] = 1;
+        }
+
+        await Future.delayed(Duration(milliseconds: 100));
+      }
     }
   }
 
-  static List<Map<String, dynamic>> notification = [];
+  static Map<String, List<Map<String, dynamic>>> notification = {};
 
   static double calculateDistance(LatLng p1, LatLng p2) {
     const R = 6371000;
@@ -188,7 +190,6 @@ class _HomeScreenState extends State<HomeScreen> {
     requestLocation();
     listenToAllTrains();
     buildFullPolylines();
-    HomeScreen.virifierlist(HomeScreen.notification);
     ChatScreen.checknewmsg((newmsg) {
       setState(() {
         ChatScreen.hasnewmsg = newmsg;
@@ -419,12 +420,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   isGoing: isGoing,
                 );
                 //if u want to get any all trains location u need to loop throught _trains map and for each train get their location that would be _trains.forEach((key,value){ 'le train est $key et sa position est ${value.snappedLocation.snappedpoint} }
-
-                HomeScreen.notification.add({
+                if (!HomeScreen.notification.containsKey(trainNom)) {
+                  HomeScreen.notification[trainNom] = [];
+                }
+                HomeScreen.notification[trainNom]?.add({
                   'nom': trainNom,
                   'position': snappedLocation.snappedPoint,
                 });
-                print("$HomeScreen.notification");
+                print(
+                  "🗂️📊 Notification Map complète : ${HomeScreen.notification}",
+                );
+                HomeScreen.virifierlist(HomeScreen.notification);
 
                 // 🗺 Update marker position
                 updateTrainMarker(trainNom, snappedLocation.snappedPoint);
@@ -1050,7 +1056,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const StatistiqueGareScreen(),
+                  builder: (context) => StatistiqueGareScreen(),
                 ),
               );
             }),

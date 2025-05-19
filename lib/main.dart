@@ -28,12 +28,6 @@ void main() async {
   await NotificationService.initialize();
   Appobservation.startObserver();
   subscibetotopic();
-  Future.delayed(Duration(minutes: 5), () async {
-    await NotificationService.showNotification(
-      "welcome!",
-      "bienvenus dans notre app",
-    );
-  });
 
   runApp(
     EasyLocalization(
