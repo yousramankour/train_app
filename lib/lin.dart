@@ -26,17 +26,12 @@ class RailLinesScreen extends StatelessWidget {
                       .collection('rail')
                       .doc(docId)
                       .delete();
-                  if (context.mounted) {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Ligne supprimée".tr())),
-                    );
-                  }
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Ligne supprimée".tr())),
+                  );
                 },
-                child: Text(
-                  "Supprimer".tr(),
-                  style: TextStyle(color: Colors.red),
-                ),
+                child: Text("Supprimer", style: TextStyle(color: Colors.red)),
               ),
             ],
           ),
@@ -75,7 +70,7 @@ class RailLinesScreen extends StatelessWidget {
         stream: FirebaseFirestore.instance.collection('rail').snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return Center(child: Text("Erreur de chargement".tr()));
+            return const Center(child: Text("Erreur de chargement"));
           }
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());

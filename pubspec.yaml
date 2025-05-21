@@ -39,6 +39,8 @@ dependencies:
   firebase_analytics: ^11.4.5
   vector_math: ^2.1.4
   flutter_polyline_points: ^2.1.0
+  dio: ^5.8.0+1
+  latlong2: ^0.9.1
   
   
 

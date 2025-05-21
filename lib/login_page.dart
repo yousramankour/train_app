@@ -39,7 +39,7 @@ class _LoginPageState extends State<LoginPage> {
     // Vérifier si les champs sont vides
     if (email.isEmpty || password.isEmpty) {
       setState(() {
-        errorMessage = 'Veuillez remplir tous les champs.'.tr();
+        errorMessage = "Veuillez remplir tous les champs.".tr();
       });
       return;
     }

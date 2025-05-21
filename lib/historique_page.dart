@@ -1,11 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart'; // Pour formater la date et l'heure
 import 'package:easy_localization/easy_localization.dart';
 
 class TripHistoryPage extends StatefulWidget {
-  const TripHistoryPage({super.key});
-
   @override
   State<TripHistoryPage> createState() => _TripHistoryPageState();
 }
@@ -27,7 +26,9 @@ class _TripHistoryPageState extends State<TripHistoryPage> {
         await FirebaseFirestore.instance
             .collection('users')
             .doc(user.uid)
-            .collection('historique')
+            .collection(
+              'historique',
+            ) // 👈 Fais bien attention au nom de la sous-collection
             .get();
 
     final trips =
@@ -38,8 +39,8 @@ class _TripHistoryPageState extends State<TripHistoryPage> {
             'line': data['ligne'] ?? '',
             'startLocation': data['startLocation'] ?? '',
             'endLocation': data['endLocation'] ?? '',
-            'startTime': data['temp'],
-            'endTime': data['arrivee'],
+            'startTime': data['temp'], // on garde brut, on formate après
+            'endTime': data['arrivee'], // idem
           };
         }).toList();
 
@@ -49,7 +50,7 @@ class _TripHistoryPageState extends State<TripHistoryPage> {
   }
 
   String formatDateTime(dynamic timeData) {
-    if (timeData == null) return tr('inconnu');
+    if (timeData == null) return "Inconnu".tr();
     try {
       DateTime dateTime;
       if (timeData is Timestamp) {
@@ -57,11 +58,13 @@ class _TripHistoryPageState extends State<TripHistoryPage> {
       } else if (timeData is String) {
         dateTime = DateTime.parse(timeData);
       } else {
-        return tr('format_invalide');
+        return "Format invalide".tr();
       }
-      return DateFormat('dd/MM/yyyy HH:mm').format(dateTime);
+      return DateFormat(
+        "dd/MM/yyyy HH:mm".tr(),
+      ).format(dateTime); // 👈 Format complet
     } catch (e) {
-      return tr('erreur');
+      return "Erreur".tr();
     }
   }
 
@@ -70,14 +73,14 @@ class _TripHistoryPageState extends State<TripHistoryPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('historique_des_trajets'.tr()),
+        title: Text("Historique des trajets".tr()),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
       ),
       body:
           tripHistory.isEmpty
-              ? Center(child: Text('aucun_trajet_trouve'.tr()))
+              ? Center(child: Text("Aucun trajet trouvé.".tr()))
               : ListView.builder(
                 itemCount: tripHistory.length,
                 itemBuilder: (context, index) {
@@ -91,10 +94,10 @@ class _TripHistoryPageState extends State<TripHistoryPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '${tr('depart')} : ${trip['startLocation']} ${tr('a')} ${formatDateTime(trip['startTime'])}',
+                            'Départ : ${trip['startLocation']} à ${formatDateTime(trip['startTime'])}',
                           ),
                           Text(
-                            '${tr('arrivee')} : ${trip['endLocation']} ${tr('a')} ${formatDateTime(trip['endTime'])}',
+                            'Arrivée : ${trip['endLocation']} à ${formatDateTime(trip['endTime'])}',
                           ),
                         ],
                       ),

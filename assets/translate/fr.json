@@ -67,7 +67,112 @@
     "Chargement...":"Chargement...",
     "Supprimer ce retour ?":"Supprimer ce retour ?",
     "Voulez-vous vraiment supprimer ce feedback?":"Voulez-vous vraiment supprimer ce feedback?",
+
+    "//comment7":"es traduction de fichier forgot_password.dart",
+
+    "Veuillez entrer votre adresse e-mail.":"Veuillez entrer votre adresse e-mail.",
+    "Aucun compte associé à cet e-mail.":"Aucun compte associé à cet e-mail.",
+    "Un e-mail de réinitialisation a été envoyé.":"Un e-mail de réinitialisation a été envoyé.",
+    "Une erreur est survenue.":"Une erreur est survenue.",
+    "Réinitialiser le mot de passe":"Réinitialiser le mot de passe",
+    "Adresse e-mail":"Adresse e-mail",
+    "Envoyer le lien de réinitialisation":"Envoyer le lien de réinitialisation",
+
+    "//comment8":"es traduction de fichier gars.dart",
+
+    "Cette gare existe déjà dans la base de données.":"Cette gare existe déjà dans la base de données.",
+    "Gare ajoutée avec succès.":"Gare ajoutée avec succès.",
+    "Erreur lors de l'ajout de la gare":"Erreur lors de l'ajout de la gare {0}",
+    "Ajouter une gare":"Ajouter une gare",
+    "Nom de la gare":"Nom de la gare",
+    "Le nom de la gare est requis":"Le nom de la gare est requis",
+    "Latitude":"Latitude",
+    "La latitude est requise":"La latitude est requise",
+    "Longitude":"Longitude",
+    "La longitude est requise":"La longitude est requise",
+    "Ajouter la gare":"Ajouter la gare",
+
+    "//comment9":"es traduction de fichier historique.dart",
+
+    "Inconnu":"Inconnu",
+    "Format invalide":"Format invalide",
+    "dd/MM/yyyy HH:mm": "dd/MM/yyyy HH:mm",
+    "Erreur":"Erreur",
+    "Historique des trajets":"Historique des trajets",
+    "Aucun trajet trouvé.":"Aucun trajet trouvé.",
+
+    "//comment10":"es traduction de fichier home.dart",
+
+    "rechercher sur une gars..":"rechercher sur une gars..",
+    "Voir sur la carte":"Voir sur la carte",
+    "Google Maps":"Google Maps",
+    "Alger":"Alger",
+    "Agha" :"Agha",
+    "Les Ateliers": "Les Ateliers",
+    "Hussein Dey":"Hussein Dey",
+    "Caroubier" :"Caroubier",
+    "El Harrach":"El Harrach",
+    "Oued Smar":" Oued Smar",
+    "Bab Ezzouar":"Bab Ezzouar",
+    "Dar El Beïda":"Dar El Beïda",
+    "Rouiba":"Rouiba",
+    "Rouiba industrielle":"Rouiba industrielle",
+    "Réghaïa industrielle":"Réghaïa industrielle",
+    "Réghaïa":"Réghaïa",
+    "Boudouaou":"Boudouaou",
+    "Corso":"Corso",
+    "Boumerdès":"Boumerdès",
+    "Tidjelabine":"Tidjelabine",
+    "Thénia": "Thénia",
+    "Train Position":"Train Position",
+
+    "//comment11":"es traduction de fichier lin.dart",
+
+    "Supprimer la ligne":"Supprimer la ligne",
+    "Voulez-vous vraiment supprimer cette ligne ?":"Voulez-vous vraiment supprimer cette ligne ?",
+    "Ligne supprimée":"Ligne supprimée",
+    "Supprimer":"Supprimer",
+    "Lignes de Rail":"Lignes de Rail",
+    "Erreur de chargement":"Erreur de chargement",
+    "Aucune ligne disponible.":"Aucune ligne disponible.",
+    "Ajouter ligne":"Ajouter ligne",
+
+    "//comment12":"es traduction de fichier line.dart",
+
+    "Supprimer la ligne":"Supprimer la ligne",
+    "Voulez-vous vraiment supprimer cette ligne ?":"Voulez-vous vraiment supprimer cette ligne ?",
+    "Ligne supprimée":"Ligne supprimée",
+    "Lignes de Rail":"Lignes de Rail",
+    "Erreur de chargement":"Erreur de chargement",
+    "Aucune ligne disponible.":"Aucune ligne disponible.",
+    "Ajouter ligne":"Ajouter ligne",
+
+    "//comment13":"es traduction de fichier login.dart",
+
+    "Veuillez remplir tous les champs.": "Veuillez remplir tous les champs.",
+    "Une erreur est survenue.": "Une erreur est survenue.",
+    "Mot de passe incorrect.": "Mot de passe incorrect.",
+    "Utilisateur non trouvé.": "Utilisateur non trouvé.",
+    "Connexion réussie.": "Connexion réussie.",
+    "Chargement...": "Chargement...",
+    "sign_in":"Se connecter",
+    "email":"email",
+    "password":"password",
+    "forgot_password":"forgot_password",
+    "no_account":"no_account",
+    "sign_up":"S'inscrire",
+
     
+
+
+
+
+
+
+
+
+
+
 
 
 

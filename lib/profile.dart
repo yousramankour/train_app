@@ -1,10 +1,10 @@
 import 'package:appmob/adminepage.dart';
+import 'package:appmob/chat.dart';
 import 'package:appmob/edit_profile.dart';
 import 'package:appmob/enquette_satisfaction.dart';
 import 'package:appmob/historique_page.dart';
 import 'package:appmob/home.dart';
 import 'package:appmob/login_page.dart';
-import 'package:appmob/messageri.dart';
 import 'package:appmob/notification.dart';
 import 'package:appmob/statistiques.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -304,7 +304,7 @@ class ProfileScreen extends StatelessWidget {
                     if (user != null) {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => ChatScreen()),
+                        MaterialPageRoute(builder: (context) => ChatScreend()),
                       );
                     }
                   },

@@ -1,11 +1,15 @@
-import 'dart:developer' as devloper;
+import 'dart:math';
 
 import 'package:appmob/etatdeapp.dart';
+import 'package:appmob/home.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:googleapis/airquality/v1.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:googleapis_auth/auth_io.dart' as auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:latlong2/latlong.dart' as latlong2;
 
 class NotificationService {
   static final FlutterLocalNotificationsPlugin _notificationsPlugin =
@@ -129,6 +133,51 @@ class NotificationService {
       'message': msg,
       'timestamp': FieldValue.serverTimestamp(),
     });
+  }
+
+  static void listenToNewMessages() async {
+    final FirebaseAuth _auth = FirebaseAuth.instance;
+    final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+    final User? _user = _auth.currentUser;
+    bool _isFirstSnapshot = true;
+
+    _firestore
+        .collection('chat')
+        .orderBy('timestamp', descending: true)
+        .limit(1)
+        .snapshots()
+        .listen((snapshot) async {
+          // 👉 Ignorer le tout premier snapshot
+          if (_isFirstSnapshot) {
+            _isFirstSnapshot = false;
+            return;
+          }
+
+          if (snapshot.docs.isNotEmpty) {
+            final msg = snapshot.docs.first.data();
+            final senderId = msg['senderId'] as String? ?? '';
+            final text = msg['text'] as String? ?? '';
+
+            if (_user != null && senderId != _user.uid) {
+              final userDoc =
+                  await _firestore.collection('users').doc(senderId).get();
+              final senderName = userDoc.data()?['name'] ?? 'Quelqu\'un';
+
+              if (Appobservation.isAppInForeground) {
+                NotificationService.showNotification(
+                  "Nouveau message de $senderName",
+                  text,
+                );
+              } else {
+                NotificationService.sendNotification(
+                  'all',
+                  "Nouveau message de $senderName",
+                  text,
+                );
+              }
+            }
+          }
+        });
   }
 
   /*

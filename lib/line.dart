@@ -13,12 +13,12 @@ class RailLinesScreen extends StatelessWidget {
       builder:
           (context) => AlertDialog(
             backgroundColor: Colors.white,
-            title: Text('Supprimer la ligne'.tr()),
-            content: Text('Voulez-vous vraiment supprimer cette ligne ?'.tr()),
+            title: Text("Supprimer la ligne".tr()),
+            content: Text("Voulez-vous vraiment supprimer cette ligne ?".tr()),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text('Annuler'.tr()),
+                child: Text("Annuler"),
               ),
               TextButton(
                 onPressed: () async {
@@ -26,15 +26,13 @@ class RailLinesScreen extends StatelessWidget {
                       .collection('rail')
                       .doc(docId)
                       .delete();
-                  if (context.mounted) {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Ligne supprimée'.tr())),
-                    );
-                  }
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Ligne supprimée".tr())),
+                  );
                 },
                 child: Text(
-                  'Supprimer'.tr(),
+                  "Supprimer".tr(),
                   style: TextStyle(color: Colors.red),
                 ),
               ),
@@ -63,7 +61,7 @@ class RailLinesScreen extends StatelessWidget {
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(
-          'Lignes de Rail'.tr(),
+          "Lignes de Rail".tr(),
           style: TextStyle(color: Colors.black),
         ),
         centerTitle: true,
@@ -75,7 +73,7 @@ class RailLinesScreen extends StatelessWidget {
         stream: FirebaseFirestore.instance.collection('rail').snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return Center(child: Text('Erreur de chargement'.tr()));
+            return Center(child: Text("Erreur de chargement".tr()));
           }
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -84,7 +82,7 @@ class RailLinesScreen extends StatelessWidget {
           var rails = snapshot.data!.docs;
 
           if (rails.isEmpty) {
-            return Center(child: Text('Aucune ligne disponible.'.tr()));
+            return Center(child: Text("Aucune ligne disponible.".tr()));
           }
 
           return ListView.builder(
@@ -186,7 +184,7 @@ class RailLinesScreen extends StatelessWidget {
         backgroundColor: Colors.blue,
         icon: const Icon(Icons.add, color: Colors.white),
         label: Text(
-          'Ajouter ligne'.tr(),
+          "Ajouter ligne".tr(),
           style: TextStyle(color: Colors.white),
         ),
       ),
