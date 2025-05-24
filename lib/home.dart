@@ -21,86 +21,9 @@ import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+  static Map<String, LatLng> garesMap = {};
 
-  static List<LatLng> notificationList = [];
-  static int cpt = 1;
-  static bool estEnRetard = false;
-  static bool estEnPanne = false;
-
-  static Future<void> verifierTrain(
-    List<LatLng> positions,
-    String trainName,
-  ) async {
-    while (positions.length >= 2) {
-      final double distance = HomeScreen.calculateDistance(
-        positions[0],
-        positions[1],
-      );
-
-      print("🚆 Train: $trainName | 📏 Distance: $distance m");
-
-      if (distance < 10) {
-        // Le train ne bouge pas
-        if (!estEnPanne) {
-          cpt++;
-          print("⏳ Train: $trainName | Compteur = $cpt");
-          print("⏳ estenpanne: $estEnPanne | Compteur = $cpt");
-
-          if (cpt == 3 && !estEnRetard) {
-            // ➡️ Notifier du retard UNE SEULE FOIS
-            await NotificationService.savenotificationdatabase(
-              'retard',
-              'Le train $trainName a probablement un peu de retard.',
-            );
-            NotificationService.showNotification(
-              " Retard détecté",
-              'Le train $trainName semble en retard.',
-            );
-            estEnRetard = true;
-          } else if (cpt == 4 && !estEnPanne) {
-            // ➡️ Notifier de la panne UNE SEULE FOIS
-            await NotificationService.savenotificationdatabase(
-              'panne',
-              'Le train $trainName semble en panne.',
-            );
-            NotificationService.showNotification(
-              " Panne détectée",
-              'Le train $trainName semble en panne.',
-            );
-            estEnPanne = true;
-          }
-        }
-      } else {
-        // 🚀 Le train s’est remis à bouger
-        if (estEnPanne || estEnRetard) {
-          print("✅ Le train $trainName a bougé, reprise de la surveillance.");
-        }
-
-        // Reset les états pour recommencer la détection proprement
-        estEnPanne = false;
-        estEnRetard = false;
-        cpt = 1;
-      }
-
-      positions.removeAt(0);
-      await Future.delayed(Duration(milliseconds: 100));
-    }
-  }
-
-  static double calculateDistance(LatLng p1, LatLng p2) {
-    const R = 6371000;
-    final lat1 = p1.latitude * pi / 180;
-    final lat2 = p2.latitude * pi / 180;
-    final dLat = (p2.latitude - p1.latitude) * pi / 180;
-    final dLon = (p2.longitude - p1.longitude) * pi / 180;
-
-    final a =
-        sin(dLat / 2) * sin(dLat / 2) +
-        cos(lat1) * cos(lat2) * sin(dLon / 2) * sin(dLon / 2);
-    final c = 2 * atan2(sqrt(a), sqrt(1 - a));
-
-    return R * c;
-  }
+  static Map<String, NotificationService> notificationInstances = {};
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -132,7 +55,6 @@ class _HomeScreenState extends State<HomeScreen> {
   double? lastLng;
   Map<String, Marker> trainMarkers = {};
   List<LatLng> _trainRoute = [];
-  Map<String, LatLng> _garesMap = {};
   final DirectionsRipository _directionsRepository = DirectionsRipository();
   Direction? _info;
 
@@ -199,8 +121,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
         // Save the bestIndex where this station snaps
         int index = snap.segmentIndex;
-        if (!_garesMap.containsKey(doc.id)) {
-          _garesMap[stationName] = LatLng(
+        if (!HomeScreen.garesMap.containsKey(doc.id)) {
+          HomeScreen.garesMap[stationName] = LatLng(
             doc['coordinates'].latitude,
             doc['coordinates'].longitude,
           );
@@ -324,6 +246,9 @@ class _HomeScreenState extends State<HomeScreen> {
         isGoing: true,
         lastTwoSnaps: [],
         onUpdateMarker: updateTrainMarker,
+      );
+      HomeScreen.notificationInstances[trainId] = NotificationService(
+        trainId: trainId,
       );
 
       // Save to map
@@ -490,7 +415,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   infoWindow: InfoWindow(title: "Train Position"),
                 ),
 
-              ..._garesMap.entries.map(
+              ...HomeScreen.garesMap.entries.map(
                 (entry) => Marker(
                   markerId: MarkerId("gare_${entry.key}"),
                   position: entry.value,
@@ -696,7 +621,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       hint: Text("Start Station or Current Location"),
                       value: _startStation, // should be of type LatLng?
                       items: [
-                        ..._garesMap.entries.map(
+                        ...HomeScreen.garesMap.entries.map(
                           (entry) => DropdownMenuItem(
                             value: entry.value, // LatLng
                             child: Text(entry.key), // Station name
@@ -718,7 +643,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       hint: Text("Destination Station"),
                       value: _destinationStation,
                       items:
-                          _garesMap.entries
+                          HomeScreen.garesMap.entries
                               .map(
                                 (entry) => DropdownMenuItem(
                                   value: entry.value, // LatLng
@@ -944,10 +869,9 @@ class TrainInfo {
         print("🚉🚉🚉🚉🚉trainId:$trainId");
         print("LIGNE:${currentLigne.ligneId}");
 
-        HomeScreen.notificationList.add(snappedLocation.snappedPoint);
-        print("📌 Liste mise à jour : ${HomeScreen.notificationList}");
-        await HomeScreen.verifierTrain(HomeScreen.notificationList, trainId);
-        print("le boolene et :$HomeScreen.estEnPanne");
+        final notificationService = HomeScreen.notificationInstances[trainId]!;
+        notificationService.positions.add(snappedLocation.snappedPoint);
+
         final List<Map<String, dynamic>> garesListAsMap =
             currentLigne.stations.map((station) => station.toMap()).toList();
 
@@ -964,7 +888,12 @@ class TrainInfo {
             },
           );
         }
-
+        print("📌 Liste mise à jour : ${HomeScreen.notificationInstances}");
+        notificationService.verifierTrain(
+          notificationService.positions,
+          trainId,
+          etaList,
+        );
         // Update marker
         onUpdateMarker(trainId, snappedLocation.snappedPoint);
 

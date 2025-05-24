@@ -1,17 +1,22 @@
-import 'dart:math';
-
-import 'package:appmob/etatdeapp.dart';
 import 'package:appmob/home.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:googleapis/airquality/v1.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:googleapis_auth/auth_io.dart' as auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:latlong2/latlong.dart' as latlong2;
 
 class NotificationService {
+  final String trainId;
+  final List<LatLng> positions = [];
+  int cpt = 0;
+  bool estEnRetard = false;
+  bool estEnPanne = false;
+  bool isingare = false;
+
+  NotificationService({required this.trainId});
+
   static final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
@@ -127,57 +132,161 @@ class NotificationService {
     }
   }
 
-  static Future<void> savenotificationdatabase(String etat, msg) async {
+  static Future<void> savenotificationdatabase(
+    String etat,
+    msg,
+    nomgare,
+    nomtrain,
+  ) async {
     await FirebaseFirestore.instance.collection('notification').add({
       'etat': etat,
       'message': msg,
       'timestamp': FieldValue.serverTimestamp(),
+      'nomgars': nomgare,
+      'nomtrain': nomtrain,
     });
   }
 
-  static void listenToNewMessages() async {
-    final FirebaseAuth _auth = FirebaseAuth.instance;
-    final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-    final User? _user = _auth.currentUser;
-    bool _isFirstSnapshot = true;
+  static Future<DocumentReference> saveretardnotificationdatabase(
+    String msg,
+    String nomgare,
+    String nomtrain,
+  ) async {
+    return await FirebaseFirestore.instance.collection('notification').add({
+      'message': msg,
+      'nomgars': nomgare,
+      'nomtrain': nomtrain,
+      'tempsderetard': FieldValue.serverTimestamp(),
+      'tempsderedemarage': null,
+    });
+  }
 
-    _firestore
-        .collection('chat')
-        .orderBy('timestamp', descending: true)
-        .limit(1)
-        .snapshots()
-        .listen((snapshot) async {
-          // 👉 Ignorer le tout premier snapshot
-          if (_isFirstSnapshot) {
-            _isFirstSnapshot = false;
-            return;
-          }
+  static Future<DocumentReference> savepannenotificationdatabase(
+    String msg,
+    String nomgare,
+    String nomtrain,
+  ) async {
+    return await FirebaseFirestore.instance.collection('notification').add({
+      'message': msg,
+      'nomgars': nomgare,
+      'nomtrain': nomtrain,
+      'tempsderetard': FieldValue.serverTimestamp(),
+      'tempsderedemarage': null,
+    });
+  }
 
-          if (snapshot.docs.isNotEmpty) {
-            final msg = snapshot.docs.first.data();
-            final senderId = msg['senderId'] as String? ?? '';
-            final text = msg['text'] as String? ?? '';
+  DocumentReference? docRetardRef; // Référence du doc retard en cours
+  DocumentReference? docPanneRef; // Référence du doc panne en cours
 
-            if (_user != null && senderId != _user.uid) {
-              final userDoc =
-                  await _firestore.collection('users').doc(senderId).get();
-              final senderName = userDoc.data()?['name'] ?? 'Quelqu\'un';
+  Future<void> verifierTrain(
+    List<LatLng> positions,
+    String trainName,
+    List<Map<String, dynamic>> etaList,
+  ) async {
+    while (positions.length >= 2) {
+      final double distance = Geolocator.distanceBetween(
+        positions[0].latitude,
+        positions[0].longitude,
+        positions[1].latitude,
+        positions[1].longitude,
+      );
 
-              if (Appobservation.isAppInForeground) {
-                NotificationService.showNotification(
-                  "Nouveau message de $senderName",
-                  text,
-                );
-              } else {
-                NotificationService.sendNotification(
-                  'all',
-                  "Nouveau message de $senderName",
-                  text,
-                );
-              }
-            }
-          }
-        });
+      print("🚆 Train: $trainName | 📏 Distance: $distance m");
+      final result = ifIsInGars(HomeScreen.garesMap, positions[1], etaList);
+
+      bool isInGare = result['isNear'];
+      String? gareName = result['gareName'];
+
+      if (isInGare) {
+        print("✅ Train est proche de la gare : $gareName");
+      } else {
+        print("❌ Train n'est proche d'aucune gare.");
+      }
+
+      if (distance < 10) {
+        // Le train ne bouge pas
+        cpt++;
+        print("⏳ Train: $trainName | Compteur = $cpt");
+
+        if (cpt == 3 && !estEnRetard) {
+          // Notification retard UNE SEULE FOIS
+          docRetardRef = await saveretardnotificationdatabase(
+            'Le train $trainName a probablement un peu de retard.',
+            gareName ?? 'Inconnue',
+            trainName,
+          );
+          NotificationService.showNotification(
+            "Retard détecté",
+            'Le train $trainName semble en retard dans $gareName.',
+          );
+          estEnRetard = true;
+        } else if (cpt == 4 && !estEnPanne && !isInGare) {
+          // Notification panne UNE SEULE FOIS
+          docPanneRef = await savepannenotificationdatabase(
+            'Le train $trainName semble en panne.',
+            gareName ?? 'Inconnue',
+            trainName,
+          );
+          NotificationService.showNotification(
+            "Panne détectée",
+            'Le train $trainName semble en panne.',
+          );
+          estEnPanne = true;
+        }
+      } else {
+        // Le train s’est remis à bouger
+        if (estEnRetard && docRetardRef != null) {
+          print("✅ Le train $trainName a bougé, mise à jour retard.");
+          await docRetardRef!.update({
+            'dateRedemarrage': Timestamp.fromDate(DateTime.now()),
+          });
+          estEnRetard = false;
+          docRetardRef = null;
+        }
+
+        if (estEnPanne && docPanneRef != null) {
+          print("✅ Le train $trainName a bougé, mise à jour panne.");
+          await docPanneRef!.update({
+            'dateRedemarrage': Timestamp.fromDate(DateTime.now()),
+          });
+          estEnPanne = false;
+          docPanneRef = null;
+        }
+
+        // Reset compteur pour la prochaine détection
+        cpt = 0;
+      }
+
+      positions.removeAt(0);
+      await Future.delayed(Duration(milliseconds: 100));
+    }
+  }
+
+  Map<String, dynamic> ifIsInGars(
+    Map<String, LatLng> positionGars,
+    LatLng position,
+    List<Map<String, dynamic>> tempEtaList,
+  ) {
+    for (var entry in positionGars.entries) {
+      final double distance = Geolocator.distanceBetween(
+        position.latitude,
+        position.longitude,
+        entry.value.latitude,
+        entry.value.longitude,
+      );
+      if (distance < 200) {
+        return {'isNear': true, 'gareName': entry.key};
+      }
+    }
+    final nextgars = tempEtaList.firstWhere(
+      (gare) => gare['passed'] == false,
+      orElse: () => {},
+    );
+    if (nextgars.isEmpty) {
+      return {'isNear': false, 'gareName': nextgars['station']};
+    } else {
+      return {'isNear': false, 'gareName': 'terminus'};
+    }
   }
 
   /*

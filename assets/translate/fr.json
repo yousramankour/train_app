@@ -162,6 +162,53 @@
     "no_account":"no_account",
     "sign_up":"S'inscrire",
 
+    "//comment14":"es traduction de fichier moderail.dart",
+
+    "Ligne mise à jour avec succès":"Ligne mise à jour avec succès",
+    "Modifier la Ligne":"Modifier la Ligne",
+    "Ajouter une gare":"Ajouter une gare",
+    "Enregistrer":"Enregistrer",
+
+    "//comment14":"es traduction de fichier notificaation.dart",
+
+    "Notifications":"Notifications",
+    "panne":"panne",
+    "retard":"retard",
+    "Retard signalé":"Retard signalé",
+    "Panne détectée":"Panne détectée",
+    "Il y a quelques secondes":"Il y a quelques secondes",
+    "Aucune notification":"Aucune notification",
+
+    "//comment15":"es traduction de fichier profil.dart",
+
+    "Veuillez vous connecter.":"Veuillez vous connecter.",
+    "Profil introuvable.":"Profil introuvable.",
+    "modifier profile":"modifier profile",
+    "historique":"historique",
+    "languages":"languages",
+    "Choisir la langue":"Choisir la langue",
+   "feedback":"feedback",
+   "Ajouts & Création":"Ajouts & Création",
+   "Se déconnecter":"Se déconnecter",
+   "Carte":"Carte",
+   "Statistique":"Statistique",
+   "Notifications":"Notifications",
+   "Messagerie":"Messagerie",
+   "Profil":"Profil",
+
+   "//comment15":"es traduction de fichier profil.dart",
+
+   "Veuillez remplir tous les champs":"Veuillez remplir tous les champs",
+   "Cette ligne existe déjà":"Cette ligne existe déjà",
+   "Ligne ajoutée avec succès":"Ligne ajoutée avec succès",
+   "Erreur":"Erreur,{0}",
+
+
+
+
+
+
+
     
 
 

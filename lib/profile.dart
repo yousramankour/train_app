@@ -90,7 +90,7 @@ class ProfileScreen extends StatelessWidget {
     if (user == null) {
       // Si non connecté, redirige ou affiche message
       return Scaffold(
-        body: Center(child: Text('Veuillez vous connecter.'.tr())),
+        body: Center(child: Text("Veuillez vous connecter.".tr())),
       );
     }
     return StreamBuilder<DocumentSnapshot>(
@@ -105,7 +105,7 @@ class ProfileScreen extends StatelessWidget {
         }
         if (!snapshot.hasData || !snapshot.data!.exists) {
           return Scaffold(
-            body: Center(child: Text('Profil introuvable.'.tr())),
+            body: Center(child: Text("Profil introuvable.".tr())),
           );
         }
         final data = snapshot.data!.data() as Map<String, dynamic>;
@@ -186,14 +186,14 @@ class ProfileScreen extends StatelessWidget {
                                           context.setLocale(const Locale('en'));
                                           Navigator.pop(context);
                                         },
-                                        child: const Text("English"),
+                                        child: Text("English".tr()),
                                       ),
                                       TextButton(
                                         onPressed: () {
                                           context.setLocale(const Locale('fr'));
                                           Navigator.pop(context);
                                         },
-                                        child: const Text("Français"),
+                                        child: Text("Français"),
                                       ),
                                       TextButton(
                                         onPressed: () {

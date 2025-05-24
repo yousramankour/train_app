@@ -69,7 +69,7 @@ class _EditLineScreenState extends State<EditLineScreen> {
     if (mounted) {
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ligne mise à jour avec succès'.tr())),
+        SnackBar(content: Text("Ligne mise à jour avec succès".tr())),
       );
     }
   }
@@ -91,7 +91,7 @@ class _EditLineScreenState extends State<EditLineScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Modifier la Ligne'.tr(),
+          "Modifier la Ligne".tr(),
           style: TextStyle(color: Colors.black),
         ),
         backgroundColor: Colors.white,
@@ -144,7 +144,7 @@ class _EditLineScreenState extends State<EditLineScreen> {
                 onPressed: _addGare,
                 icon: const Icon(Icons.add, color: Colors.white),
                 label: Text(
-                  'Ajouter une gare'.tr(),
+                  "Ajouter une gare".tr(),
                   style: TextStyle(color: Colors.white),
                 ),
                 style: ElevatedButton.styleFrom(
@@ -159,7 +159,7 @@ class _EditLineScreenState extends State<EditLineScreen> {
                   minimumSize: const Size(double.infinity, 50),
                 ),
                 child: Text(
-                  'Enregistrer'.tr(),
+                  "Enregistrer".tr(),
                   style: TextStyle(color: Colors.white),
                 ),
               ),

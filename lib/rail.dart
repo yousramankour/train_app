@@ -20,7 +20,7 @@ class AddRailLinePageState extends State<AddRailLinePage> {
 
     if (lineName.isEmpty || _gares.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Veuillez remplir tous les champs'.tr())),
+        SnackBar(content: Text("Veuillez remplir tous les champs".tr())),
       );
       return;
     }
@@ -35,7 +35,7 @@ class AddRailLinePageState extends State<AddRailLinePage> {
       if (doc.exists) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Cette ligne existe déjà 🔴'.tr())),
+            SnackBar(content: Text("Cette ligne existe déjà".tr())),
           );
           return;
         }
@@ -46,7 +46,7 @@ class AddRailLinePageState extends State<AddRailLinePage> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ligne ajoutée avec succès 🎉'.tr())),
+          SnackBar(content: Text("Ligne ajoutée avec succès".tr())),
         );
       }
       _lineNameController.clear();
@@ -58,7 +58,7 @@ class AddRailLinePageState extends State<AddRailLinePage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
+        ).showSnackBar(SnackBar(content: Text(tr("Erreur", args: ["e"]))));
       }
     }
   }

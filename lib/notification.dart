@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class NotificationScreen extends StatelessWidget {
   final DateFormat formatter = DateFormat('dd MMM yyyy - HH:mm');
@@ -12,22 +13,22 @@ class NotificationScreen extends StatelessWidget {
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
-          title: const Text('Notifications'),
+          title: Text("Notifications".tr()),
           centerTitle: true,
           backgroundColor: Colors.white,
           elevation: 0.5,
           foregroundColor: Colors.black,
-          bottom: const TabBar(
+          bottom: TabBar(
             labelColor: Colors.blue,
             unselectedLabelColor: Colors.grey,
             indicatorColor: Colors.blue,
-            tabs: [Tab(text: 'retard'), Tab(text: 'panne')],
+            tabs: [Tab(text: "retard".tr()), Tab(text: "panne".tr())],
           ),
         ),
-        body: const TabBarView(
+        body: TabBarView(
           children: [
-            NotificationList(filter: 'retard'),
-            NotificationList(filter: 'panne'),
+            NotificationList(filter: "retard".tr()),
+            NotificationList(filter: "panne".tr()),
           ],
         ),
       ),
@@ -66,9 +67,9 @@ class NotificationList extends StatelessWidget {
   String getTitle(String etat) {
     switch (etat) {
       case 'retard':
-        return 'Retard signalé';
+        return "Retard signalé".tr();
       case 'panne':
-        return 'Panne détectée';
+        return "Panne détectée".tr();
       default:
         return 'Notification';
     }
@@ -76,7 +77,7 @@ class NotificationList extends StatelessWidget {
 
   String timeAgo(DateTime dateTime) {
     final Duration diff = DateTime.now().difference(dateTime);
-    if (diff.inSeconds < 60) return 'Il y a quelques secondes';
+    if (diff.inSeconds < 60) return "Il y a quelques secondes".tr();
     if (diff.inMinutes < 60) return 'Il y a ${diff.inMinutes} min';
     if (diff.inHours < 24) return 'Il y a ${diff.inHours} h';
     return DateFormat('dd MMM yyyy').format(dateTime);
@@ -91,7 +92,7 @@ class NotificationList extends StatelessWidget {
               .orderBy('timestamp', descending: true)
               .snapshots(),
       builder: (context, snapshot) {
-        if (snapshot.hasError) return const Center(child: Text("Erreur"));
+        if (snapshot.hasError) return Center(child: Text("Erreur".tr()));
         if (!snapshot.hasData)
           return const Center(child: CircularProgressIndicator());
 
@@ -104,7 +105,7 @@ class NotificationList extends StatelessWidget {
             }).toList();
 
         if (filteredDocs.isEmpty) {
-          return const Center(child: Text("Aucune notification"));
+          return Center(child: Text("Aucune notification".tr()));
         }
 
         return ListView.builder(

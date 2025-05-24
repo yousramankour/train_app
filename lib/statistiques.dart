@@ -70,7 +70,7 @@ class _StatistiqueGareScreenState extends State<StatistiqueGareScreen> {
           priority: Priority.high,
         );
 
-    const NotificationDetails notificationDetails = NotificationDetails(
+    final NotificationDetails notificationDetails = NotificationDetails(
       android: androidDetails,
     );
 
@@ -111,23 +111,11 @@ class _StatistiqueGareScreenState extends State<StatistiqueGareScreen> {
   }
 
   Future<void> _initAll() async {
-    await _obtenirPosition();
     await chargerStatistiquesUtilisateurs();
     await chargerstatstiquepanneetretard();
     await chargerFrequencePassages();
-    await verifierPassage();
-  }
 
-  Future<void> verifierPassage() async {
-    final result = await TrainService.verifierPassageTrain("train1");
-    if (result.containsKey('error')) {
-      setState(() => passageStatus = "Erreur: ${result['error']}");
-    } else {
-      setState(() {
-        passageStatus = result['status'];
-        frequencePassage = result['frequence'];
-      });
-    }
+    await _obtenirPosition();
   }
 
   Future<void> chargerstatstiquepanneetretard() async {
@@ -174,10 +162,17 @@ class _StatistiqueGareScreenState extends State<StatistiqueGareScreen> {
         age = null;
       }
 
-      tempAge['moins de 18'] = tempAge['moins de 18']! + 1;
-      tempAge['18-30'] = tempAge['18-30']! + 1;
-      tempAge['31-45'] = tempAge['31-45']! + 1;
-      tempAge['46+'] = tempAge['46+']! + 1;
+      if (age != null) {
+        if (age < 18) {
+          tempAge['moins de 18'] = tempAge['moins de 18']! + 1;
+        } else if (age >= 18 && age <= 30) {
+          tempAge['18-30'] = tempAge['18-30']! + 1;
+        } else if (age >= 31 && age <= 45) {
+          tempAge['31-45'] = tempAge['31-45']! + 1;
+        } else {
+          tempAge['46+'] = tempAge['46+']! + 1;
+        }
+      }
     }
 
     setState(() {
@@ -218,12 +213,12 @@ class _StatistiqueGareScreenState extends State<StatistiqueGareScreen> {
   Future<void> _verifierGareProche() async {
     final gares = await FirebaseFirestore.instance.collection('gares').get();
 
-    // Réinitialiser la notification si on change de gare
     _proximityTimer?.cancel();
     _notificationSent = false;
 
-    String? closestGareId;
     double minDistance = double.infinity;
+    String? closestGareId;
+    bool estDansLeRayonDe500m = false;
 
     for (var doc in gares.docs) {
       final geoPoint = doc.data()['coordinates'] as GeoPoint?;
@@ -236,22 +231,32 @@ class _StatistiqueGareScreenState extends State<StatistiqueGareScreen> {
         geoPoint.longitude,
       );
 
-      if (distance < minDistance && distance <= 50000) {
-        // 500 mètres
+      if (distance < minDistance) {
         minDistance = distance;
         closestGareId = doc.id;
       }
+
+      // Vérifie s'il y a une gare dans un rayon de 500 mètres
+      if (distance <= 1500000) {
+        estDansLeRayonDe500m = true;
+      }
     }
 
+    // Met à jour l'interface avec la gare la plus proche, peu importe la distance
     setState(() => _gareProche = closestGareId);
 
-    if (_gareProche != null) {
-      await _chargerVotes();
+    // Charge les données de la gare
+    await chargerStatistiquesUtilisateurs();
+    await chargerstatstiquepanneetretard();
+    await chargerFrequencePassages();
 
-      // Démarrer le timer de 5 minutes
+    //  Notification seulement si une gare est à moins de 500 m
+    if (_gareProche != null && estDansLeRayonDe500m) {
+      await _chargerVotes(); // si nécessaire
       _proximityTimer = Timer(Duration(minutes: 1), () async {
         if (!_notificationSent && _gareProche != null) {
           await _sendProximityNotification(_gareProche!);
+          _notificationSent = true;
         }
       });
     }
@@ -297,37 +302,37 @@ class _StatistiqueGareScreenState extends State<StatistiqueGareScreen> {
 
   Future<void> chargerFrequencePassages() async {
     try {
-      DatabaseReference ref = FirebaseDatabase.instance.ref('trains');
-      DatabaseEvent event = await ref.once();
-
-      if (!event.snapshot.exists) return;
-
-      final dynamic value = event.snapshot.value;
-      if (value == null || value is! Map) return;
-
-      Map<dynamic, dynamic> trainsData = value;
+      final firestore = FirebaseFirestore.instance;
       final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+      final snapshot =
+          await firestore
+              .collection('frequence_passage')
+              .where('date', isEqualTo: today)
+              .get();
+
       Map<String, int> frequenceTemp = {};
 
-      trainsData.forEach((key, value) {
-        if (value is Map) {
-          final train = Map<String, dynamic>.from(value);
-          final String? ligne = train['ligne']?.toString();
-          final String? temps = train['temps']?.toString();
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final String ligne = doc.id.split('_').first;
+        final int frequence = data['frequence'] ?? 0;
+        frequenceTemp[ligne] = frequence;
+      }
 
-          if (ligne != null && temps != null) {
-            final datePassage = DateTime.tryParse(temps);
-            if (datePassage != null &&
-                DateFormat('yyyy-MM-dd').format(datePassage) == today) {
-              frequenceTemp[ligne] = (frequenceTemp[ligne] ?? 0) + 1;
-            }
-          }
-        }
+      setState(() {
+        frequenceParLigne = frequenceTemp;
       });
 
-      setState(() => frequenceParLigne = frequenceTemp);
+      print("Fréquences Firestore par ligne aujourd'hui:");
+      frequenceTemp.forEach((ligne, frequence) {
+        print("Ligne $ligne : $frequence passages");
+      });
+
+      final total = frequenceTemp.values.fold(0, (a, b) => a + b);
+      print("Total des passages aujourd'hui (Firestore) : $total");
     } catch (e) {
-      print('Erreur fréquences: $e');
+      print('Erreur de lecture des fréquences Firestore : $e');
     }
   }
 
@@ -424,76 +429,6 @@ class _StatistiqueGareScreenState extends State<StatistiqueGareScreen> {
     );
   }
 
-  Widget _buildSexeStatsTable() {
-    return Card(
-      elevation: 4,
-      margin: EdgeInsets.all(12),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '🧑‍🤝‍🧑 Votes par sexe',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.blue,
-              ),
-            ),
-            Divider(),
-            ..._votesParSexe.entries.map(
-              (entry) => Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [Text(entry.key), Text('${entry.value}')],
-                  ),
-                  Divider(),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAgeStatsTable() {
-    return Card(
-      elevation: 4,
-      margin: EdgeInsets.all(12),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '🎂 Votes par âge',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.blue,
-              ),
-            ),
-            Divider(),
-            ..._votesParAge.entries.map(
-              (entry) => Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [Text(entry.key), Text('${entry.value}')],
-                  ),
-                  Divider(),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildPanneStatsTable() {
     return Card(
       elevation: 4,
@@ -547,15 +482,7 @@ class _StatistiqueGareScreenState extends State<StatistiqueGareScreen> {
               ),
             ),
             Divider(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [Text('Statut:'), Text(passageStatus)],
-            ),
-            Divider(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [Text('Fréquence:'), Text('$frequencePassage')],
-            ),
+
             if (frequenceParLigne.isNotEmpty) ...[
               Divider(),
               Text(
@@ -594,8 +521,6 @@ class _StatistiqueGareScreenState extends State<StatistiqueGareScreen> {
         ),
         SizedBox(height: 20),
         _buildVotesTable(),
-        _buildSexeStatsTable(),
-        _buildAgeStatsTable(),
         _buildPanneStatsTable(),
         _buildPassageInfo(),
       ],

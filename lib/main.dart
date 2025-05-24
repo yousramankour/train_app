@@ -1,5 +1,4 @@
-import 'package:appmob/chat.dart';
-
+import 'service_message.dart';
 import 'splash_screen.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +8,6 @@ import 'theme_provider.dart'; // Importer le fichier ThemeProvider
 import 'package:firebase_core/firebase_core.dart';
 import 'notification_service.dart';
 import 'etatdeapp.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 void subscibetotopic() {
   FirebaseMessaging.instance.subscribeToTopic("all");
@@ -31,7 +29,7 @@ void main() async {
   await NotificationService.initialize();
   Appobservation.startObserver();
   subscibetotopic();
-  NotificationService.listenToNewMessages();
+  MessageListenerService.listenToNewMessages();
 
   runApp(
     EasyLocalization(

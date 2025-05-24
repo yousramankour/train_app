@@ -68,6 +68,7 @@ class _ChatScreendState extends State<ChatScreend> {
         'text': _msgText!.trim(),
         'senderId': _signedInUser!.uid,
         'timestamp': FieldValue.serverTimestamp(),
+        'isRead': false,
       });
       _messageController.clear();
       setState(() {
