@@ -152,7 +152,7 @@ class NotificationService {
     String nomgare,
     String nomtrain,
   ) async {
-    return await FirebaseFirestore.instance.collection('notification').add({
+    return await FirebaseFirestore.instance.collection('retard').add({
       'message': msg,
       'nomgars': nomgare,
       'nomtrain': nomtrain,
@@ -166,11 +166,11 @@ class NotificationService {
     String nomgare,
     String nomtrain,
   ) async {
-    return await FirebaseFirestore.instance.collection('notification').add({
+    return await FirebaseFirestore.instance.collection('panne').add({
       'message': msg,
       'nomgars': nomgare,
       'nomtrain': nomtrain,
-      'tempsderetard': FieldValue.serverTimestamp(),
+      'tempsdepanne': FieldValue.serverTimestamp(),
       'tempsderedemarage': null,
     });
   }
@@ -238,7 +238,7 @@ class NotificationService {
         if (estEnRetard && docRetardRef != null) {
           print("✅ Le train $trainName a bougé, mise à jour retard.");
           await docRetardRef!.update({
-            'dateRedemarrage': Timestamp.fromDate(DateTime.now()),
+            'tempsderedemarage': Timestamp.fromDate(DateTime.now()),
           });
           estEnRetard = false;
           docRetardRef = null;
@@ -247,7 +247,7 @@ class NotificationService {
         if (estEnPanne && docPanneRef != null) {
           print("✅ Le train $trainName a bougé, mise à jour panne.");
           await docPanneRef!.update({
-            'dateRedemarrage': Timestamp.fromDate(DateTime.now()),
+            'tempsderedemarage': Timestamp.fromDate(DateTime.now()),
           });
           estEnPanne = false;
           docPanneRef = null;
