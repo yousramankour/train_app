@@ -32,12 +32,13 @@ class _HomeScreenState extends State<HomeScreen> {
   LatLng? _destination;
   List<LatLng> _itineraire = [];
   String? _selectedTrain;
-  Map<String, TrainInfo> _trains = {}; // map that contains all the the trains info
+  Map<String, TrainInfo> _trains =
+      {}; // map that contains all the the trains info
   LatLng? _trainLocationSnapped;
   List<Ligne> allLignes = [];
   Map<PolylineId, Polyline> allPolylines = {};
   bool _isSheetOpen = false;
-  late BitmapDescriptor trainIcon;
+  late BitmapDescriptor trainIcon = BitmapDescriptor.defaultMarker;
   double _currentZoom = 11.0;
   final CameraPosition _initialPosition = CameraPosition(
     target: LatLng(36.7333, 3.2800),
@@ -51,12 +52,13 @@ class _HomeScreenState extends State<HomeScreen> {
   Map<String, LatLng> _garesMap = {};
   final DirectionsRipository _directionsRepository = DirectionsRipository();
   Direction? _info;
+  bool going_direction = true;
 
   Set<Marker> get allMarkers => trainMarkers.values.toSet();
-
+  bool trajet_plannified = false;
   bool _isSearchExpanded = false;
-  LatLng? _startStation;
-  LatLng? _destinationStation;
+  String? _startStation;
+  String? _destinationStation;
 
   @override
   void initState() {
@@ -64,6 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
     requestLocation();
     listenToAllTrains();
     buildFullPolylines();
+    CustomMarker();
   }
 
   @override
@@ -199,20 +202,34 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   String? findLigneIdForStations(
-    String startStation,
-    String destinationStation,
-  )
-  {
+    String? startStation,
+    String? destinationStation,
+  ) {
     for (var ligne in allLignes) {
       final String ligneId = ligne.ligneId;
-      final List<dynamic> stations = ligne.stations;
+      final List<Station> stations = ligne.stations;
 
+      print("ENTERED 22222");
       // Extract only the station names
-      final List<String> stationNames =
-          stations.map((s) => s['name'] as String).toList();
+      final List<String> stationNames = stations.map((s) => s.nom).toList();
 
       if (stationNames.contains(startStation) &&
           stationNames.contains(destinationStation)) {
+        final int station1 = stationNames.indexOf(startStation!);
+        final int  station2 = stationNames.indexOf(destinationStation!);
+        if (station1 < station2) {
+          print("index of st1   $station1 start station $startStation");
+          print("index of st2   $station2 send station $destinationStation");
+          print("direction = $going_direction");
+          setState(() {
+            going_direction = true;
+          });
+        } else {
+          print("direction$going_direction");
+          setState(() {
+            going_direction = false;
+          });
+        }
         return ligneId; // Found the line
       }
     }
@@ -252,21 +269,34 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void CustomMarker() {
+    BitmapDescriptor.asset(
+      const ImageConfiguration(size: Size(40, 40)),
+      "assets/train_icon.png",
+    ).then((icon) {
+      setState(() {
+        trainIcon = icon;
+      });
+    });
+  }
+
   void updateTrainMarker(String trainNom, LatLng snappedLocation) {
-    trainMarkers[trainNom] = Marker(
-      markerId: MarkerId(trainNom),
-      position: snappedLocation,
-      onTap: () {
-        setState(() {
-          _selectedTrain = trainNom;// Trigger the correct sheet
-          _isSheetOpen = true;
-        });
-      },
-      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-      infoWindow: InfoWindow(title: trainNom),
-    );
-    print("marker train name:$trainNom");
-    setState(() {}); // Refresh the map
+    if (!trajet_plannified) {
+      trainMarkers[trainNom] = Marker(
+        markerId: MarkerId(trainNom),
+        position: snappedLocation,
+        onTap: () {
+          setState(() {
+            _selectedTrain = trainNom; // Trigger the correct sheet
+            _isSheetOpen = true;
+          });
+        },
+        icon: trainIcon,
+        infoWindow: InfoWindow(title: trainNom),
+      );
+      print("marker train name:$trainNom");
+      setState(() {}); // Refresh the map}
+    }
   }
 
   void _selectGare(LatLng garePosition) async {
@@ -279,8 +309,8 @@ class _HomeScreenState extends State<HomeScreen> {
         print('Origin: $_currentP');
         print('Destination: $garePosition');
         final direction = await _directionsRepository.getDirection(
-          origin: LatLng(36.752778, 3.042222), //_currentP!,
-          destination: LatLng(36.716667, 3.086944), //garePosition,
+          origin: _currentP!,
+          destination: garePosition,
         );
 
         // Vérification : direction non null et contient des points
@@ -312,6 +342,45 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       print("Position actuelle inconnue.");
     }
+  }
+
+  void filterTrainMarkersByStartStation(String? startStation) {
+    final filteredMarkers = <String, Marker>{};
+    print("JUST ENTERED");
+    _trains.forEach((trainId, trainInfo) {
+      print("🚇 Processing $trainId | Direction: ${trainInfo.isGoing} / required: $going_direction");
+
+      if (trainInfo.isGoing == going_direction) {
+        print("✅ Direction matches");
+
+        final stillHasStartStation = trainInfo.etaList.any((station) {
+          final match = station['station'] == startStation && station['passed'] != true;
+          print("🧪 ETA Check → Station: ${station['station']} | Passed: ${station['passed']} | Match: $match");
+          return match;
+        });
+
+        if (stillHasStartStation) {
+          print("🎯 Still has start station");
+
+          if (trainMarkers.containsKey(trainId)) {
+            print("👌👌👌👌👌👌👌train selected :$trainId");
+            filteredMarkers[trainId] = trainMarkers[trainId]!;
+          } else {
+            print("⚠️ trainId $trainId not found in trainMarkers");
+          }
+        } else {
+          print("🚫 No matching station left (maybe passed)");
+        }
+      } else {
+        print("⛔ Direction does not match");
+      }
+      });
+
+    setState(() {
+      // Show only filtered markers
+      trajet_plannified = true;
+      trainMarkers = filteredMarkers;
+    });
   }
 
   LatLngBounds _boundsFromLatLngList(List<LatLng> list) {
@@ -358,7 +427,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -392,7 +460,7 @@ class _HomeScreenState extends State<HomeScreen> {
             markers: {
               ...allMarkers,
 
-               if (_currentP != null)
+              if (_currentP != null)
                 Marker(
                   markerId: MarkerId("current_position"),
                   position: _currentP!,
@@ -423,16 +491,18 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             },
 
-            polylines: Set<Polyline>.of(allPolylines.values),
+            polylines:{
+              ...allPolylines.values,
 
-            /*
+
               if (_itineraire.isNotEmpty)
                 Polyline(
                   polylineId: PolylineId("itineraire"),
-                  color: Colors.blue,
+                  color: Colors.red,
                   width: 3,
                   points: _itineraire,
-                ),*/
+                ),
+            }
           ),
           if (_selectedTrain != null && _trains.containsKey(_selectedTrain))
             DraggableScrollableSheet(
@@ -591,13 +661,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     onTap: () {
                       setState(() {
                         _isSearchExpanded = !_isSearchExpanded;
+                        trajet_plannified = false;
                       });
                     },
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          "Search Route",
+                          "Planifier Trajet",
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                         Icon(
@@ -610,13 +681,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   if (_isSearchExpanded) ...[
                     SizedBox(height: 10),
-                    DropdownButtonFormField<LatLng>(
-                      hint: Text("Start Station or Current Location"),
+                    DropdownButtonFormField<String>(
+                      hint: Text("Start Station "),
                       value: _startStation, // should be of type LatLng?
                       items: [
                         ..._garesMap.entries.map(
-                          (entry) => DropdownMenuItem(
-                            value: entry.value, // LatLng
+                          (entry) => DropdownMenuItem<String>(
+                            value: entry.key, // LatLng
                             child: Text(entry.key), // Station name
                           ),
                         ),
@@ -632,14 +703,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       },
                     ),
                     SizedBox(height: 10),
-                    DropdownButtonFormField<LatLng>(
+                    DropdownButtonFormField<String>(
                       hint: Text("Destination Station"),
                       value: _destinationStation,
                       items:
                           _garesMap.entries
                               .map(
-                                (entry) => DropdownMenuItem(
-                                  value: entry.value, // LatLng
+                                (entry) => DropdownMenuItem<String>(
+                                  value: entry.key, // LatLng
                                   child: Text(entry.key),
                                 ),
                               )
@@ -651,12 +722,19 @@ class _HomeScreenState extends State<HomeScreen> {
                     SizedBox(height: 10),
                     ElevatedButton(
                       onPressed: () {
-                        // Call directions API here
+                        findLigneIdForStations(
+                          _startStation,
+                          _destinationStation,
+                        ); // Call directions API here
+                        filterTrainMarkersByStartStation(_startStation);
                         print(
-                          'From: $_startStation - To: $_destinationStation',
+                          '🏇🏇🏇🏇🏇🏇From: $_startStation - 🏇🏇🏇🏇🏇🏇To: $_destinationStation',
                         );
+                        setState(() {
+                          _isSearchExpanded = !_isSearchExpanded;
+                        });
                       },
-                      child: Text("Show Route"),
+                      child: Text("Show Trains"),
                     ),
                   ],
                 ],
@@ -665,22 +743,22 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
 
           if (!_isSheetOpen)
-          Positioned(
-            bottom: 80,
-            left: 10,
-            child: FloatingActionButton(
-              onPressed: () {
-                requestLocation();
-                if (_currentP != null && mapController != null) {
-                  mapController!.animateCamera(
-                    CameraUpdate.newLatLngZoom(_currentP!, 15.0),
-                  );
-                }
-              },
-              backgroundColor: Colors.white,
-              child: Icon(Icons.my_location, color: Color(0xFF008ECC)),
+            Positioned(
+              bottom: 80,
+              left: 10,
+              child: FloatingActionButton(
+                onPressed: () {
+                  requestLocation();
+                  if (_currentP != null && mapController != null) {
+                    mapController!.animateCamera(
+                      CameraUpdate.newLatLngZoom(_currentP!, 15.0),
+                    );
+                  }
+                },
+                backgroundColor: Colors.white,
+                child: Icon(Icons.my_location, color: Color(0xFF008ECC)),
+              ),
             ),
-          ),
         ],
       ),
       bottomNavigationBar: Container(
@@ -855,7 +933,7 @@ class TrainInfo {
         final Ligne currentLigne = allLignes.firstWhere(
           (ligne) => (ligne.ligneId == rail),
         );
-        final trainId = trainRef.key!;//le nom du train utiliser var train id
+        final trainId = trainRef.key!; //le nom du train utiliser var train id
 
         print("🚉🚉🚉🚉🚉trainId:$trainId");
         print("LIGNE:${currentLigne.ligneId}");
@@ -1103,7 +1181,6 @@ class ETA {
       "📌 Next Station Index: ${orderedGares.indexWhere((s) => s['name'] == nextStation['name'])}",
     );
     return tempEtaList;
-
   }
 
   static double calculateDistanceBetweenPoints(List<LatLng> points) {
