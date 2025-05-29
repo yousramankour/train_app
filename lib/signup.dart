@@ -1,31 +1,40 @@
+// Import des pages nécessaires et des packages utilisés
 import 'package:appmob/login_page.dart';
 import 'package:flutter/material.dart';
-import 'package:easy_localization/easy_localization.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart'; // Pour la traduction
+import 'package:firebase_auth/firebase_auth.dart'; // Pour l'authentification
+import 'package:cloud_firestore/cloud_firestore.dart'; // Pour la base de données Firestore
+import 'home.dart';
 
+// Définition du widget d'inscription
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _SignUpPageState createState() => _SignUpPageState();
 }
 
 class _SignUpPageState extends State<SignUpPage> {
+  // Variables pour stocker les données saisies par l'utilisateur
   String? selectedGender;
-  final TextEditingController name1 = TextEditingController();
-  final TextEditingController age1 = TextEditingController();
-  final TextEditingController job1 = TextEditingController();
-  final TextEditingController email1 = TextEditingController();
-  final TextEditingController password1 = TextEditingController();
-  final TextEditingController confirmPassword1 = TextEditingController();
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController ageController = TextEditingController();
+  final TextEditingController jobController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
+
+  // Instance Firebase
   final _auth = FirebaseAuth.instance;
+
+  // Variables pour gérer les erreurs et l'état de chargement
   String errorMessage = '';
   bool isLoading = false;
 
   @override
   Widget build(BuildContext context) {
+    // Détection du thème (sombre ou clair)
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
@@ -37,9 +46,10 @@ class _SignUpPageState extends State<SignUpPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Titre principal
                 Center(
                   child: Text(
-                    "create_account".tr(),
+                    "Créer un compte".tr(),
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
@@ -48,34 +58,40 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                buildTextField("name_surname".tr(), name1, isDark: isDark),
+                // Champs du formulaire d'inscription
+                buildTextField(
+                  "Nom et prénom".tr(),
+                  nameController,
+                  isDark: isDark,
+                ),
                 buildTextField(
                   "age".tr(),
-                  age1,
+                  ageController,
                   keyboardType: TextInputType.number,
                   isDark: isDark,
                 ),
-                buildDropdownField("sex".tr(), isDark),
-                buildTextField("job".tr(), job1, isDark: isDark),
+                buildDropdownField("Sexe".tr(), isDark),
+                buildTextField("emploi".tr(), jobController, isDark: isDark),
                 buildTextField(
                   "email".tr(),
-                  email1,
+                  emailController,
                   keyboardType: TextInputType.emailAddress,
                   isDark: isDark,
                 ),
                 buildTextField(
-                  "password".tr(),
-                  password1,
+                  "mot de passe".tr(),
+                  passwordController,
                   obscureText: true,
                   isDark: isDark,
                 ),
                 buildTextField(
-                  "confirm_password".tr(),
-                  confirmPassword1,
+                  "confirmer le mot de passe".tr(),
+                  confirmPasswordController,
                   obscureText: true,
                   isDark: isDark,
                 ),
 
+                // Message d'erreur si présent
                 if (errorMessage.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8),
@@ -88,6 +104,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
 
                 const SizedBox(height: 20),
+                // Bouton d'inscription
                 Center(
                   child:
                       isLoading
@@ -110,9 +127,10 @@ class _SignUpPageState extends State<SignUpPage> {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                              onPressed: signUp,
+                              onPressed:
+                                  signUp, // Appelle la fonction d'inscription
                               child: Text(
-                                "sign_up".tr(),
+                                "s'inscrire".tr(),
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -123,19 +141,21 @@ class _SignUpPageState extends State<SignUpPage> {
                           ),
                 ),
                 const SizedBox(height: 20),
+                // Ligne de séparation et lien vers la page de connexion
                 Divider(color: isDark ? Colors.grey : Colors.black),
                 Center(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        "already_have_account".tr(),
+                        "vous avez déjà un compte ?".tr(),
                         style: TextStyle(
                           color: isDark ? Colors.white : Colors.black,
                         ),
                       ),
                       TextButton(
                         onPressed: () {
+                          // Redirection vers la page de connexion
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -144,7 +164,7 @@ class _SignUpPageState extends State<SignUpPage> {
                           );
                         },
                         child: Text(
-                          "sign_in".tr(),
+                          "se connecter".tr(),
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.blue,
@@ -162,19 +182,20 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
+  // Fonction d'inscription
   Future<void> signUp() async {
-    final name = name1.text.trim();
-    final age = age1.text.trim();
-    final job = job1.text.trim();
-    final email = email1.text.trim();
-    final password = password1.text;
-    final confirmPassword = confirmPassword1.text;
+    final name = nameController.text.trim();
+    final age = ageController.text.trim();
+    final job = jobController.text.trim();
+    final email = emailController.text.trim();
+    final password = passwordController.text;
+    final confirmPassword = confirmPasswordController.text;
 
     setState(() {
-      errorMessage = ''; // Réinitialise le message d'erreur
+      errorMessage = '';
     });
 
-    // Vérification si les champs sont remplis
+    // Vérifie que tous les champs sont remplis
     if (name.isEmpty ||
         age.isEmpty ||
         selectedGender == null ||
@@ -183,12 +204,12 @@ class _SignUpPageState extends State<SignUpPage> {
         password.isEmpty ||
         confirmPassword.isEmpty) {
       setState(() {
-        errorMessage = "Veuillez remplir tous les champs.";
+        errorMessage = "Veuillez remplir tous les champs.".tr();
       });
       return;
     }
 
-    // Vérification que les mots de passe correspondent
+    // Vérifie que les mots de passe sont identiques
     if (password != confirmPassword) {
       setState(() {
         errorMessage = "Les mots de passe ne correspondent pas.".tr();
@@ -197,18 +218,15 @@ class _SignUpPageState extends State<SignUpPage> {
     }
 
     try {
-      setState(() => isLoading = true); // Démarre l'état de chargement
+      setState(() => isLoading = true);
 
-      // Création de l'utilisateur avec l'email et le mot de passe
+      // Création de l'utilisateur Firebase
       final userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      // Envoi de l'email de vérification
-      await userCredential.user!.sendEmailVerification();
-
-      // Sauvegarde des informations de l'utilisateur dans Firestore
+      // Enregistrement des données supplémentaires dans Firestore
       await FirebaseFirestore.instance
           .collection('users')
           .doc(userCredential.user!.uid)
@@ -219,36 +237,24 @@ class _SignUpPageState extends State<SignUpPage> {
             'job': job,
             'email': email,
             'createdAt': DateTime.now(),
-            'isAdmin': false,
           });
 
-      // Affichage du message de confirmation
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Un e-mail de vérification a été envoyé.".tr())),
-      );
-
-      // Redirection vers la page de connexion après l'inscription
+      // Redirection vers la page d'accueil après inscription
       Navigator.pushReplacement(
-        // ignore: use_build_context_synchronously
         context,
-        MaterialPageRoute(builder: (context) => const LoginPage()),
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
     } on FirebaseAuthException catch (e) {
       // Gestion des erreurs Firebase
       setState(() {
-        errorMessage = e.message ?? "Une erreur est survenue.";
-      });
-    } catch (e) {
-      // Gestion des erreurs non liées à Firebase
-      setState(() {
-        errorMessage = "Une erreur inattendue est survenue.";
+        errorMessage = e.message ?? "Une erreur est survenue.".tr();
       });
     } finally {
-      setState(() => isLoading = false); // Fin de l'état de chargement
+      setState(() => isLoading = false);
     }
   }
 
+  // Widget personnalisé pour les champs de texte
   Widget buildTextField(
     String label,
     TextEditingController controller, {
@@ -286,6 +292,7 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
+  // Widget personnalisé pour la sélection du sexe (dropdown)
   Widget buildDropdownField(String label, bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -301,8 +308,8 @@ class _SignUpPageState extends State<SignUpPage> {
           value: selectedGender,
           dropdownColor: isDark ? Colors.grey[900] : Colors.white,
           items: [
-            DropdownMenuItem(value: "man".tr(), child: Text("man".tr())),
-            DropdownMenuItem(value: "woman".tr(), child: Text("woman".tr())),
+            DropdownMenuItem(value: "Homme", child: Text("Homme".tr())),
+            DropdownMenuItem(value: "Femme", child: Text("Femme".tr())),
           ],
           onChanged: (value) {
             setState(() {

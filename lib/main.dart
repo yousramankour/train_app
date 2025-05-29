@@ -3,15 +3,14 @@ import 'splash_screen.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:provider/provider.dart'; // Importer Provider
-import 'theme_provider.dart'; // Importer le fichier ThemeProvider
 import 'package:firebase_core/firebase_core.dart';
 import 'notification_service.dart';
 import 'etatdeapp.dart';
 
-void subscibetotopic() {
+void subscribeToTopic() {
   FirebaseMessaging.instance.subscribeToTopic("all");
 }
+
 /*
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
@@ -20,7 +19,8 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     message.notification?.title ?? 'Titre par défaut',
     message.notification?.body ?? 'Message par défaut',
   );
-}*/
+}
+*/
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,7 +28,7 @@ void main() async {
   await Firebase.initializeApp();
   await NotificationService.initialize();
   Appobservation.startObserver();
-  subscibetotopic();
+  subscribeToTopic();
   MessageListenerService.listenToNewMessages();
 
   runApp(
@@ -36,27 +36,20 @@ void main() async {
       supportedLocales: [Locale('en'), Locale('fr'), Locale('ar')],
       path: 'assets/translate', // Assurez-vous que le chemin est correct
       fallbackLocale: Locale('en'),
-      child: ChangeNotifierProvider(
-        create: (_) => ThemeProvider(),
-        child: const MyApp(),
-      ),
+      child: const MyApp(),
     ),
   );
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: "Train App",
-      themeMode: themeProvider.currentTheme,
-      theme: ThemeData.light(),
-      darkTheme:
-          ThemeData.dark(), // Appliquer le thème sombre que tu as défini dans theme.dart
+      theme: ThemeData.light(), // Thème clair uniquement
       home: const WelcomeScreen(),
       localizationsDelegates: context.localizationDelegates,
       supportedLocales: context.supportedLocales,

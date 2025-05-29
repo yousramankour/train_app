@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class VoirReponsesPage extends StatelessWidget {
   const VoirReponsesPage({super.key});
@@ -7,7 +8,7 @@ class VoirReponsesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Réponses des utilisateurs")),
+      appBar: AppBar(title: Text("Réponses des utilisateurs".tr())),
       body: StreamBuilder<QuerySnapshot>(
         stream:
             FirebaseFirestore.instance

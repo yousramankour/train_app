@@ -111,7 +111,7 @@ class _StatistiqueGareScreenState extends State<StatistiqueGareScreen> {
   }
 
   Future<void> _initAll() async {
-    await chargerStatistiquesUtilisateurs();
+    // await chargerStatistiquesUtilisateurs();
     await chargerstatstiquepanneetretard();
     await chargerFrequencePassages();
 
@@ -119,8 +119,21 @@ class _StatistiqueGareScreenState extends State<StatistiqueGareScreen> {
   }
 
   Future<void> chargerstatstiquepanneetretard() async {
+    // Obtenir la date d'aujourd'hui au format YYYY-MM-DD
+    final aujourdhui = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
     final allNotifications =
-        await FirebaseFirestore.instance.collection('notification').get();
+        await FirebaseFirestore.instance
+            .collection('notification')
+            .where(
+              'timestamp',
+              isGreaterThanOrEqualTo: DateTime.parse("$aujourdhui 00:00:00"),
+            )
+            .where(
+              'timestamp',
+              isLessThan: DateTime.parse("$aujourdhui 23:59:59"),
+            )
+            .get();
 
     final Map<String, int> stats = {'panne': 0, 'retard': 0};
 
@@ -135,7 +148,7 @@ class _StatistiqueGareScreenState extends State<StatistiqueGareScreen> {
     setState(() => panne = stats);
   }
 
-  Future<void> chargerStatistiquesUtilisateurs() async {
+  /*Future<void> chargerStatistiquesUtilisateurs() async {
     final allUsers = await FirebaseFirestore.instance.collection('users').get();
     final Map<String, int> tempSexe = {'Homme': 0, 'Femme': 0};
     final Map<String, int> tempAge = {
@@ -179,7 +192,7 @@ class _StatistiqueGareScreenState extends State<StatistiqueGareScreen> {
       _votesParSexe = tempSexe;
       _votesParAge = tempAge;
     });
-  }
+  }*/
 
   Future<void> _obtenirPosition() async {
     try {
@@ -246,7 +259,7 @@ class _StatistiqueGareScreenState extends State<StatistiqueGareScreen> {
     setState(() => _gareProche = closestGareId);
 
     // Charge les données de la gare
-    await chargerStatistiquesUtilisateurs();
+    // await chargerStatistiquesUtilisateurs();
     await chargerstatstiquepanneetretard();
     await chargerFrequencePassages();
 
@@ -464,7 +477,7 @@ class _StatistiqueGareScreenState extends State<StatistiqueGareScreen> {
     );
   }
 
-  Widget _buildPassageInfo() {
+  /*  Widget _buildPassageInfo() {
     return Card(
       elevation: 4,
       margin: EdgeInsets.all(12),
@@ -506,7 +519,7 @@ class _StatistiqueGareScreenState extends State<StatistiqueGareScreen> {
         ),
       ),
     );
-  }
+  }*/
 
   Widget _buildVoteOptions() {
     return Column(
@@ -522,7 +535,7 @@ class _StatistiqueGareScreenState extends State<StatistiqueGareScreen> {
         SizedBox(height: 20),
         _buildVotesTable(),
         _buildPanneStatsTable(),
-        _buildPassageInfo(),
+        // _buildPassageInfo(),
       ],
     );
   }

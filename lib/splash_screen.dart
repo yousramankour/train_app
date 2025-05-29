@@ -69,7 +69,7 @@ class _WelcomeScreen extends State<WelcomeScreen> {
           ),
           const SizedBox(height: 30),
           Text(
-            'search_train'.tr(),
+            "Recherchez votre train".tr(),
             style: const TextStyle(
               fontSize: 30,
               fontWeight: FontWeight.bold,
@@ -80,7 +80,8 @@ class _WelcomeScreen extends State<WelcomeScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40.0),
             child: Text(
-              'train_info'.tr(),
+              "Pas besoin de se rendre à la gare pour vérifier votre train"
+                  .tr(),
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 20, color: Colors.black),
             ),
@@ -117,7 +118,7 @@ class _WelcomeScreen extends State<WelcomeScreen> {
           ),
           const SizedBox(height: 30),
           Text(
-            'save_time'.tr(),
+            "Gagnez du temps".tr(),
             style: const TextStyle(
               fontSize: 30,
               fontWeight: FontWeight.bold,
@@ -128,7 +129,8 @@ class _WelcomeScreen extends State<WelcomeScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40.0),
             child: Text(
-              'description_text'.tr(),
+              "Avec 9itari, vous n'aurez plus à vous battre pour attraper votre train"
+                  .tr(),
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 20, color: Colors.black54),
             ),
@@ -154,7 +156,7 @@ class _WelcomeScreen extends State<WelcomeScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 70, vertical: 15),
             ),
             child: Text(
-              'get_started'.tr(),
+              "COMMENCER".tr(),
               style: const TextStyle(
                 fontSize: 16,
                 color: Colors.white,

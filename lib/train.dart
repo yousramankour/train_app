@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class TrainPage extends StatefulWidget {
   const TrainPage({super.key});
@@ -12,12 +13,12 @@ class _TrainPageState extends State<TrainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Liste des Trains")),
+      appBar: AppBar(title: Text("Liste des Trains".tr())),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance.collection('trains').snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return const Center(child: Text('Erreur de chargement'));
+            return Center(child: Text("Erreur de chargement".tr()));
           }
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -26,7 +27,7 @@ class _TrainPageState extends State<TrainPage> {
           final trains = snapshot.data!.docs;
 
           if (trains.isEmpty) {
-            return const Center(child: Text("Aucun train trouvé."));
+            return Center(child: Text("Aucun train trouvé.".tr()));
           }
 
           return ListView.builder(
@@ -69,29 +70,29 @@ class _TrainPageState extends State<TrainPage> {
       context: context,
       builder:
           (_) => AlertDialog(
-            title: const Text("Ajouter un train"),
+            title: Text("Ajouter un train".tr()),
             content: SingleChildScrollView(
               child: Column(
                 children: [
                   TextField(
                     controller: nomController,
-                    decoration: const InputDecoration(labelText: 'Nom'),
+                    decoration: InputDecoration(labelText: "Nom".tr()),
                   ),
                   TextField(
                     controller: ligneController,
-                    decoration: const InputDecoration(labelText: 'Ligne'),
+                    decoration: InputDecoration(labelText: "Ligne".tr()),
                   ),
                   TextField(
                     controller: departController,
-                    decoration: const InputDecoration(labelText: 'Départ'),
+                    decoration: InputDecoration(labelText: "Départ".tr()),
                   ),
                   TextField(
                     controller: arriveeController,
-                    decoration: const InputDecoration(labelText: 'Arrivée'),
+                    decoration: InputDecoration(labelText: "Arrivée".tr()),
                   ),
                   TextField(
                     controller: heureController,
-                    decoration: const InputDecoration(labelText: 'Heure'),
+                    decoration: InputDecoration(labelText: "Heure".tr()),
                   ),
                 ],
               ),
@@ -99,7 +100,7 @@ class _TrainPageState extends State<TrainPage> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text("Annuler"),
+                child: Text("Annuler".tr()),
               ),
               ElevatedButton(
                 onPressed: () async {
@@ -113,7 +114,7 @@ class _TrainPageState extends State<TrainPage> {
                   // ignore: use_build_context_synchronously
                   Navigator.pop(context);
                 },
-                child: const Text("Ajouter"),
+                child: Text("Ajouter".tr()),
               ),
             ],
           ),

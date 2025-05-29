@@ -1,5 +1,4 @@
-import 'dart:math';
-
+import 'package:easy_localization/easy_localization.dart';
 import 'package:appmob/back_end.dart';
 import 'package:appmob/directions_model.dart';
 import 'package:appmob/directions_repository.dart';
@@ -699,8 +698,8 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _buildBottomButton(LucideIcons.map, "Carte", () {}),
-            _buildBottomButton(LucideIcons.barChart, "Statistique", () {
+            _buildBottomButton(LucideIcons.map, "Carte".tr(), () {}),
+            _buildBottomButton(LucideIcons.barChart, "Statistique".tr(), () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -708,19 +707,23 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               );
             }),
-            _buildBottomButton(LucideIcons.bell, "Notifications", () {
+            _buildBottomButton(LucideIcons.bell, "Notifications".tr(), () {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => NotificationScreen()),
               );
             }),
-            _buildBottomButton(LucideIcons.messageCircle, "Messagerie", () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ChatScreend()),
-              );
-            }),
-            _buildBottomButton(LucideIcons.user, "Profil", () {
+            _buildBottomButton(
+              LucideIcons.messageCircle,
+              "Messagerie".tr(),
+              () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ChatScreend()),
+                );
+              },
+            ),
+            _buildBottomButton(LucideIcons.user, "Profil".tr(), () {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => ProfileScreen()),

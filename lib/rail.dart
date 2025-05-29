@@ -58,7 +58,7 @@ class AddRailLinePageState extends State<AddRailLinePage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(tr("Erreur", args: ["e"]))));
+        ).showSnackBar(SnackBar(content: Text(tr("Erreur1", args: ["e"]))));
       }
     }
   }
@@ -79,11 +79,7 @@ class AddRailLinePageState extends State<AddRailLinePage> {
       if (!gareDoc.exists) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'La gare "$gareName" n\'existe pas dans les gars 🔴',
-              ),
-            ),
+            SnackBar(content: Text(tr('station_not_found', args: [gareName]))),
           );
         }
         return;
@@ -92,7 +88,9 @@ class AddRailLinePageState extends State<AddRailLinePage> {
       if (_gares.contains(gareName)) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('La gare "$gareName" est déjà ajoutée ⚠️')),
+            SnackBar(
+              content: Text(tr('station_already_added', args: [gareName])),
+            ),
           );
         }
         return;
@@ -106,7 +104,7 @@ class AddRailLinePageState extends State<AddRailLinePage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
+        ).showSnackBar(SnackBar(content: Text(tr("Erreur", args: ["e"]))));
       }
     }
   }
@@ -119,7 +117,7 @@ class AddRailLinePageState extends State<AddRailLinePage> {
         elevation: 0,
         centerTitle: true,
         title: Text(
-          'Ajouter une Ligne'.tr(),
+          "Ajouter une Ligne".tr(),
           style: TextStyle(color: Colors.black),
         ),
         iconTheme: IconThemeData(color: Colors.black),
@@ -132,7 +130,7 @@ class AddRailLinePageState extends State<AddRailLinePage> {
             TextField(
               controller: _lineNameController,
               decoration: InputDecoration(
-                labelText: 'Nom de la ligne'.tr(),
+                labelText: "Nom de la ligne".tr(),
                 prefixIcon: Icon(Icons.train, color: Colors.blue),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -148,7 +146,7 @@ class AddRailLinePageState extends State<AddRailLinePage> {
                   child: TextField(
                     controller: _gareController,
                     decoration: InputDecoration(
-                      labelText: 'Ajouter une gare'.tr(),
+                      labelText: "Ajouter une gare".tr(),
                       prefixIcon: Icon(Icons.location_on, color: Colors.blue),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -174,7 +172,7 @@ class AddRailLinePageState extends State<AddRailLinePage> {
             Expanded(
               child:
                   _gares.isEmpty
-                      ? Center(child: Text('Aucune gare ajoutée'.tr()))
+                      ? Center(child: Text("Aucune gare ajoutée".tr()))
                       : ListView.builder(
                         itemCount: _gares.length,
                         itemBuilder: (context, index) {
@@ -208,7 +206,7 @@ class AddRailLinePageState extends State<AddRailLinePage> {
                 onPressed: _saveLineToFirestore,
                 icon: Icon(Icons.save, color: Colors.black),
                 label: Text(
-                  'Enregistrer la ligne'.tr(),
+                  "Enregistrer la ligne".tr(),
                   style: TextStyle(
                     color: Colors.black,
                     fontWeight: FontWeight.bold,

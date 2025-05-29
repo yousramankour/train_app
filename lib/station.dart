@@ -32,7 +32,7 @@ class AddCoordinatesPageState extends State<AddCoordinatesPage> {
 
     if (newCoords.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Aucune coordonnée valide trouvée ❌".tr())),
+        SnackBar(content: Text("Aucune coordonnée valide trouvée".tr())),
       );
     } else {
       setState(() {
@@ -46,9 +46,9 @@ class AddCoordinatesPageState extends State<AddCoordinatesPage> {
     final to = _toController.text.trim();
 
     if (from.isEmpty || to.isEmpty || _coordinates.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Remplir tous les champs 📌".tr())),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Remplir tous les champs".tr())));
       return;
     }
 
@@ -61,9 +61,7 @@ class AddCoordinatesPageState extends State<AddCoordinatesPage> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Coordonnées enregistrées avec succès ✅".tr()),
-          ),
+          SnackBar(content: Text("Coordonnées enregistrées avec succès".tr())),
         );
       }
 
@@ -148,7 +146,7 @@ class AddCoordinatesPageState extends State<AddCoordinatesPage> {
             Container(
               child:
                   _coordinates.isEmpty
-                      ? Center(child: Text("Aucune coordonnée chargée"))
+                      ? Center(child: Text("Aucune coordonnée chargée".tr()))
                       : ListView.builder(
                         itemCount: _coordinates.length,
                         itemBuilder: (context, index) {
@@ -169,7 +167,7 @@ class AddCoordinatesPageState extends State<AddCoordinatesPage> {
               child: ElevatedButton.icon(
                 onPressed: _saveToFirestore,
                 icon: Icon(Icons.save),
-                label: Text("Enregistrer"),
+                label: Text("Enregistrer".tr()),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                   foregroundColor: Colors.white,

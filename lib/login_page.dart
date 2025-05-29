@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'signup.dart';
-import 'theme_provider.dart';
-import 'package:provider/provider.dart';
 import 'home.dart';
 import 'forgot_password.dart';
 
@@ -15,28 +13,21 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  // Contrôleurs pour les champs de texte
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-
-  // Instance de FirebaseAuth pour l'authentification
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // Variables pour gérer l'état de l'erreur et du chargement
   String errorMessage = '';
   bool isLoading = false;
 
-  // Fonction pour gérer la connexion de l'utilisateur
   Future<void> signIn() async {
     final email = emailController.text.trim();
     final password = passwordController.text;
 
-    // Réinitialiser le message d'erreur
     setState(() {
       errorMessage = '';
     });
 
-    // Vérifier si les champs sont vides
     if (email.isEmpty || password.isEmpty) {
       setState(() {
         errorMessage = "Veuillez remplir tous les champs.".tr();
@@ -46,14 +37,8 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       setState(() => isLoading = true);
+      await _auth.signInWithEmailAndPassword(email: email, password: password);
 
-      // Tentative de connexion avec Firebase
-      final _ = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-
-      // Naviguer vers la page d'accueil en cas de succès
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -61,9 +46,8 @@ class _LoginPageState extends State<LoginPage> {
         );
       }
     } on FirebaseAuthException catch (e) {
-      // Gérer les erreurs d'authentification
       setState(() {
-        errorMessage = e.message ?? 'Une erreur est survenue.'.tr();
+        errorMessage = e.message ?? "Une erreur est survenue.".tr();
       });
     } finally {
       setState(() => isLoading = false);
@@ -72,14 +56,10 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Déterminer le mode sombre ou clair
-    final bool isDark = Provider.of<ThemeProvider>(context).isDarkMode;
-
-    // Définir les couleurs en fonction du thème
-    final backgroundColor = isDark ? Colors.black : Colors.white;
-    final primaryColor =
-        isDark ? const Color.fromARGB(255, 0, 2, 116) : const Color(0xFF008ECC);
-    final textColor = isDark ? Colors.white : Colors.black;
+    // Couleurs fixes (mode clair)
+    const backgroundColor = Colors.white;
+    const primaryColor = Color(0xFF008ECC);
+    const textColor = Colors.black;
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -88,23 +68,20 @@ class _LoginPageState extends State<LoginPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Barre supérieure
             Container(height: 50, color: primaryColor),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 30.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Logo de l'application
                   Center(
                     child: Image.asset('assets/logo9itari.png', height: 80),
                   ),
                   const SizedBox(height: 20),
-                  // Titre de la page
                   Center(
                     child: Text(
-                      'sign_in'.tr(),
-                      style: TextStyle(
+                      "Se connecter".tr(),
+                      style: const TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
                         color: textColor,
@@ -112,30 +89,27 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  // Champ pour l'email
                   TextField(
                     controller: emailController,
                     decoration: InputDecoration(
-                      labelText: 'email'.tr(),
+                      labelText: "Email".tr(),
                       labelStyle: TextStyle(color: textColor, fontSize: 16),
-                      border: const UnderlineInputBorder(),
-                      contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                      border: UnderlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(vertical: 10),
                     ),
                   ),
                   const SizedBox(height: 20),
-                  // Champ pour le mot de passe
                   TextField(
                     controller: passwordController,
                     obscureText: true,
                     decoration: InputDecoration(
-                      labelText: 'password'.tr(),
+                      labelText: "mot de passe".tr(),
                       labelStyle: TextStyle(color: textColor, fontSize: 16),
-                      border: const UnderlineInputBorder(),
-                      contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                      border: UnderlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(vertical: 10),
                     ),
                   ),
                   const SizedBox(height: 10),
-                  // Lien pour le mot de passe oublié
                   Align(
                     alignment: Alignment.centerLeft,
                     child: TextButton(
@@ -148,7 +122,7 @@ class _LoginPageState extends State<LoginPage> {
                         );
                       },
                       child: Text(
-                        'forgot_password'.tr(),
+                        "Mot de passe oublié ?".tr(),
                         style: TextStyle(
                           color: textColor,
                           fontSize: 14,
@@ -157,7 +131,6 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   ),
-                  // Affichage du message d'erreur
                   if (errorMessage.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -169,7 +142,6 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   const SizedBox(height: 30),
-                  // Bouton de connexion
                   Center(
                     child:
                         isLoading
@@ -186,11 +158,11 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                                 onPressed: signIn,
                                 child: Text(
-                                  'sign_in'.tr(),
+                                  "Se connecter".tr(),
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.bold,
-                                    color: isDark ? Colors.black : Colors.white,
+                                    color: Colors.white,
                                   ),
                                 ),
                               ),
@@ -199,7 +171,6 @@ class _LoginPageState extends State<LoginPage> {
                 ],
               ),
             ),
-            // Barre inférieure avec lien vers l'inscription
             Container(
               height: 50,
               color: primaryColor,
@@ -207,7 +178,10 @@ class _LoginPageState extends State<LoginPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('no_account'.tr(), style: TextStyle(color: textColor)),
+                    Text(
+                      "Pas de compte ?".tr(),
+                      style: TextStyle(color: textColor),
+                    ),
                     TextButton(
                       onPressed: () {
                         Navigator.push(
@@ -218,7 +192,7 @@ class _LoginPageState extends State<LoginPage> {
                         );
                       },
                       child: Text(
-                        'sign_up'.tr(),
+                        "s'inscrire".tr(),
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: textColor,

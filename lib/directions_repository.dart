@@ -2,10 +2,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'directions_model.dart';
+import 'package:appmob/.env.dart';
 
 class DirectionsRipository {
-  static const String GOOGLE_API_KEY =
-      'AIzaSyCJD-KL4nwbyKjgFStc9HgksEOQnh7Dhvk';
   static const String _baseUrl =
       'https://maps.googleapis.com/maps/api/directions/json?';
   final Dio _dio;

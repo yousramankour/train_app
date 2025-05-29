@@ -235,7 +235,12 @@ class NotificationService {
         }
       } else {
         // Le train s’est remis à bouger
+
         if (estEnRetard && docRetardRef != null) {
+          NotificationService.showNotification(
+            "Redémarrage",
+            'Le train $trainName a redémarré.',
+          );
           print("✅ Le train $trainName a bougé, mise à jour retard.");
           await docRetardRef!.update({
             'tempsderedemarage': Timestamp.fromDate(DateTime.now()),
@@ -254,9 +259,8 @@ class NotificationService {
         }
 
         // Reset compteur pour la prochaine détection
-        cpt = 0;
+        cpt = 1;
       }
-
       positions.removeAt(0);
       await Future.delayed(Duration(milliseconds: 100));
     }
@@ -279,7 +283,7 @@ class NotificationService {
       }
     }
     final nextgars = tempEtaList.firstWhere(
-      (gare) => gare['passed'] == false,
+      (gare) => gare['passed'] != null,
       orElse: () => {},
     );
     if (nextgars.isEmpty) {
