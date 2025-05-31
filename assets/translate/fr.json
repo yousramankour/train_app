@@ -145,13 +145,16 @@
 
     "//comment14":"es traduction de fichier notificaation.dart",
 
-    "Notifications":"Notifications",
-    "panne":"panne",
-    "retard":"retard",
-    "Retard signalé":"Retard signalé",
-    "Panne détectée":"Panne détectée",
-    "Il y a quelques secondes":"Il y a quelques secondes",
-    "Aucune notification":"Aucune notification",
+    "Notifications": "Notifications",
+    "retard": "Retard",
+     "panne": "Panne",
+    "retard_title": "Retard signalé",
+     "panne_title": "Panne détectée",
+     "no_notifications": "Aucune notification",
+     "error": "Erreur",
+    "time_few_seconds": "Il y a quelques secondes",
+    "time_minutes": "Il y a {0} min",
+     "time_hours": "Il y a {0} h",
 
     "//comment15":"es traduction de fichier profil.dart",
 
@@ -167,6 +170,7 @@
    "Statistique":"Statistique",
    "Messagerie":"Messagerie",
    "Profil":"Profil",
+   
 
    "//comment16":"es traduction de fichier rail.dart",
 

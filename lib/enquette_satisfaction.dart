@@ -88,7 +88,7 @@ class _SatisfactionSurveyPageState extends State<SatisfactionSurveyPage> {
             ),
             SizedBox(height: 16),
             Text(
-              "7.Quels services voudriez-vous ajouter ?",
+              "7.Quels services voudriez-vous ajouter ?".tr(),
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
@@ -97,7 +97,7 @@ class _SatisfactionSurveyPageState extends State<SatisfactionSurveyPage> {
               controller: suggestionController,
               maxLines: 3,
               decoration: InputDecoration(
-                hintText: "Entrez votre suggestion",
+                hintText: "Entrez votre suggestion".tr(),
                 border: OutlineInputBorder(),
               ),
             ),

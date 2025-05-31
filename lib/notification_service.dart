@@ -210,6 +210,12 @@ class NotificationService {
 
         if (cpt == 3 && !estEnRetard) {
           // Notification retard UNE SEULE FOIS
+          savenotificationdatabase(
+            'retard',
+            'Le train $trainName a probablement un peu de retard.',
+            gareName ?? 'Inconnue',
+            trainName,
+          );
           docRetardRef = await saveretardnotificationdatabase(
             'Le train $trainName a probablement un peu de retard.',
             gareName ?? 'Inconnue',
@@ -222,6 +228,12 @@ class NotificationService {
           estEnRetard = true;
         } else if (cpt == 4 && !estEnPanne && !isInGare) {
           // Notification panne UNE SEULE FOIS
+          savenotificationdatabase(
+            'panne',
+            'Le train $trainName a probablement un peu de retard.',
+            gareName ?? 'Inconnue',
+            trainName,
+          );
           docPanneRef = await savepannenotificationdatabase(
             'Le train $trainName semble en panne.',
             gareName ?? 'Inconnue',

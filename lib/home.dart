@@ -16,7 +16,6 @@ import 'chat.dart';
 import 'profile.dart';
 import 'package:vector_math/vector_math.dart' hide Colors;
 import 'package:geolocator/geolocator.dart';
-import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
