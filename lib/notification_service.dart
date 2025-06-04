@@ -223,14 +223,14 @@ class NotificationService {
           );
           NotificationService.showNotification(
             "Retard détecté",
-            'Le train $trainName semble en retard dans $gareName.',
+            'Le train $trainName semble en retard',
           );
           estEnRetard = true;
         } else if (cpt == 4 && !estEnPanne && !isInGare) {
           // Notification panne UNE SEULE FOIS
           savenotificationdatabase(
             'panne',
-            'Le train $trainName a probablement un peu de retard.',
+            'Le train $trainName semble en panne.',
             gareName ?? 'Inconnue',
             trainName,
           );
@@ -295,7 +295,7 @@ class NotificationService {
       }
     }
     final nextgars = tempEtaList.firstWhere(
-      (gare) => gare['passed'] != null,
+      (gare) => gare['Passed'] == null,
       orElse: () => {},
     );
     if (nextgars.isEmpty) {

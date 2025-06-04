@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'train_passage_service.dart';
 import 'dart:async';
+import 'package:easy_localization/easy_localization.dart';
 
 class StatistiqueGareScreen extends StatefulWidget {
   @override
@@ -18,13 +19,13 @@ class _StatistiqueGareScreenState extends State<StatistiqueGareScreen> {
   String? _gareProche;
   Map<String, int> _votes = {'faible': 0, 'moyenne': 0, 'forte': 0};
   String _niveauDominant = '';
-  Map<String, int> _votesParSexe = {'Homme': 0, 'Femme': 0};
+  /* Map<String, int> _votesParSexe = {'Homme': 0, 'Femme': 0};
   Map<String, int> _votesParAge = {
     'moins de 18': 0,
     '18-30': 0,
     '31-45': 0,
     '46+': 0,
-  };
+  };*/
 
   // Variables pour les fonctionnalités avancées
   String passageStatus = '';
@@ -231,7 +232,7 @@ class _StatistiqueGareScreenState extends State<StatistiqueGareScreen> {
 
     double minDistance = double.infinity;
     String? closestGareId;
-    bool estDansLeRayonDe500m = false;
+    double? distanceDeLaPlusProche;
 
     for (var doc in gares.docs) {
       final geoPoint = doc.data()['coordinates'] as GeoPoint?;
@@ -247,31 +248,25 @@ class _StatistiqueGareScreenState extends State<StatistiqueGareScreen> {
       if (distance < minDistance) {
         minDistance = distance;
         closestGareId = doc.id;
-      }
-
-      // Vérifie s'il y a une gare dans un rayon de 500 mètres
-      if (distance <= 1500000) {
-        estDansLeRayonDe500m = true;
+        distanceDeLaPlusProche = distance;
       }
     }
 
-    // Met à jour l'interface avec la gare la plus proche, peu importe la distance
+    // Toujours mettre à jour l'interface avec la gare la plus proche
     setState(() => _gareProche = closestGareId);
 
-    // Charge les données de la gare
-    // await chargerStatistiquesUtilisateurs();
+    // Charger les données liées à la gare, même si elle est loin
     await chargerstatstiquepanneetretard();
     await chargerFrequencePassages();
 
-    //  Notification seulement si une gare est à moins de 500 m
-    if (_gareProche != null && estDansLeRayonDe500m) {
-      await _chargerVotes(); // si nécessaire
-      _proximityTimer = Timer(Duration(minutes: 1), () async {
-        if (!_notificationSent && _gareProche != null) {
-          await _sendProximityNotification(_gareProche!);
-          _notificationSent = true;
-        }
-      });
+    // Notification uniquement si la gare la plus proche est à moins de 500 m
+    if (_gareProche != null &&
+        distanceDeLaPlusProche != null &&
+        distanceDeLaPlusProche <= 500.0 &&
+        !_notificationSent) {
+      await _chargerVotes();
+      await _sendProximityNotification(_gareProche!);
+      _notificationSent = true;
     }
   }
 
@@ -417,7 +412,7 @@ class _StatistiqueGareScreenState extends State<StatistiqueGareScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '🗳️ Détail des votes',
+              "🗳️ Détail des votes".tr(),
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -452,7 +447,7 @@ class _StatistiqueGareScreenState extends State<StatistiqueGareScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '⚠️ Pannes et retards',
+              "⚠️ Pannes et retards".tr(),
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -527,9 +522,13 @@ class _StatistiqueGareScreenState extends State<StatistiqueGareScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _buildVoteButton('faible', Colors.green, Icons.thumb_up),
-            _buildVoteButton('moyenne', Colors.orange, Icons.thumbs_up_down),
-            _buildVoteButton('forte', Colors.red, Icons.thumb_down),
+            _buildVoteButton("faible".tr(), Colors.green, Icons.thumb_up),
+            _buildVoteButton(
+              "moyenne".tr(),
+              Colors.orange,
+              Icons.thumbs_up_down,
+            ),
+            _buildVoteButton("forte".tr(), Colors.red, Icons.thumb_down),
           ],
         ),
         SizedBox(height: 20),
@@ -543,25 +542,28 @@ class _StatistiqueGareScreenState extends State<StatistiqueGareScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Statistiques des gares'),
-        backgroundColor: Colors.blue,
+          appBar: AppBar(
+        title: Text('📊 Statistiques', style: TextStyle(color: Colors.black)),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: IconThemeData(color: Colors.black),
       ),
       body:
           _gareProche == null
-              ? Center(child: Text('Aucune gare proche trouvée.'))
+              ? Center(child: Text("Aucune gare proche trouvée.".tr()))
               : SingleChildScrollView(
                 padding: EdgeInsets.all(16),
                 child: Column(
                   children: [
                     _buildStatCard(
-                      '📍 Gare la plus proche',
+                      "📍 Gare la plus proche".tr(),
                       Icons.train,
-                      _gareProche ?? 'Aucune',
+                      _gareProche ?? "Aucune".tr(),
                       Colors.blue,
                     ),
                     _buildStatCard(
-                      '💡 Niveau dominant',
+                      "💡 Niveau dominant".tr(),
                       Icons.bar_chart,
                       _niveauDominant,
                       Colors.purple,

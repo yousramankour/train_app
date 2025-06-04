@@ -170,5 +170,22 @@
   "Email": "Email",
   "Mot de passe oublié ?": "Forgot password?",
   "Se connecter": "Log in",
-  "Pas de compte ?": "No account?"
+  "Pas de compte ?": "No account?",
+
+
+
+  "Planifier un trajet": "Plan a trip",
+  "Gare de départ": "Start station",
+  "Gare d’arrivée": "Destination station",
+  "Afficher les trains": "Show trains",
+  "🗳️ Détail des votes": "🗳️ Vote details",
+  "⚠️ Pannes et retards": "⚠️ Breakdowns and delays",
+  "faible": "low",
+  "moyenne": "medium",
+  "forte": "high",
+  "Statistiques des gares": "Station statistics",
+  "Aucune gare proche trouvée.": "No nearby station found.",
+  "📍 Gare la plus proche": "📍 Nearest station",
+  "Aucune": "None",
+  "💡 Niveau dominant": "💡 Dominant level"
 }

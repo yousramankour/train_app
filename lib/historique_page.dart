@@ -27,7 +27,7 @@ class _TripHistoryPageState extends State<TripHistoryPage> {
             .collection('users')
             .doc(user.uid)
             .collection(
-              'historique',
+              'trajet',
             ) // 👈 Fais bien attention au nom de la sous-collection
             .get();
 
@@ -73,7 +73,7 @@ class _TripHistoryPageState extends State<TripHistoryPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text("Historique des trajets".tr()),
+        title: Text("Historique ".tr()),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,

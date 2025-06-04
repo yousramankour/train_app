@@ -242,12 +242,27 @@
   "Email":"Email",
   "Mot de passe oublié ?":"Mot de passe oublié ?",
   "Se connecter":"Se connecter",
-  "Pas de compte ?":"Pas de compte ?"
+  "Pas de compte ?":"Pas de compte ?",
+
+
+
+
+  "Planifier un trajet":"Planifier un trajet",
+  "Gare de départ":"Gare de départ",
+  "Gare d’arrivée":"Gare d’arrivée",
+  "Afficher les trains":"Afficher les trains",
+  "🗳️ Détail des votes":"🗳️ Détail des votes",
+  "⚠️ Pannes et retards":"⚠️ Pannes et retards",
+  "faible":"faible",
+  "moyenne":"moyenne",
+  "forte":"forte",
+  "Statistiques des gares":"Statistiques des gares",
+  "Aucune gare proche trouvée.":"Aucune gare proche trouvée.",
+  "📍 Gare la plus proche":"📍 Gare la plus proche",
+  "Aucune":"Aucune",
+  "💡 Niveau dominant":"💡 Niveau dominant"
+
 }
-
-
-
-
 
 
 

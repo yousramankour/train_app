@@ -1,5 +1,5 @@
 import 'package:appmob/adminepage.dart';
-import 'package:appmob/chat.dart';
+
 import 'package:appmob/edit_profile.dart';
 import 'package:appmob/enquette_satisfaction.dart';
 import 'package:appmob/historique_page.dart';
@@ -7,6 +7,7 @@ import 'package:appmob/home.dart';
 import 'package:appmob/login_page.dart';
 import 'package:appmob/notification.dart';
 import 'package:appmob/statistiques.dart';
+import 'package:appmob/verschat.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -276,18 +277,7 @@ class ProfileScreen extends StatelessWidget {
                     MaterialPageRoute(builder: (context) => HomeScreen()),
                   );
                 }),
-                _buildBottomButton(
-                  LucideIcons.barChart,
-                  "Statistique".tr(),
-                  () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => StatistiqueGareScreen(),
-                      ),
-                    );
-                  },
-                ),
+
                 _buildBottomButton(LucideIcons.bell, "Notifications".tr(), () {
                   Navigator.push(
                     context,
@@ -300,13 +290,24 @@ class ProfileScreen extends StatelessWidget {
                   LucideIcons.messageCircle,
                   "Messagerie".tr(),
                   () {
-                    final user = FirebaseAuth.instance.currentUser;
-                    if (user != null) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => ChatScreend()),
-                      );
-                    }
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => LinesListScreen(),
+                      ),
+                    );
+                  },
+                ),
+                _buildBottomButton(
+                  LucideIcons.barChart,
+                  "Statistique".tr(),
+                  () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => StatistiqueGareScreen(),
+                      ),
+                    );
                   },
                 ),
                 _buildBottomButton(LucideIcons.user, "Profil".tr(), () {

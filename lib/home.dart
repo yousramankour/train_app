@@ -13,7 +13,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'notification.dart';
-import 'messageri.dart';
+import 'verschat.dart';
 import 'profile.dart';
 import 'package:vector_math/vector_math.dart' hide Colors;
 import 'package:geolocator/geolocator.dart';
@@ -781,15 +781,13 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _buildBottomButton(LucideIcons.map, "Carte".tr(), () {}),
-            _buildBottomButton(LucideIcons.barChart, "Statistique".tr(), () {
+            _buildBottomButton(LucideIcons.map, "Carte".tr(), () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => StatistiqueGareScreen(),
-                ),
+                MaterialPageRoute(builder: (context) => HomeScreen()),
               );
-            }),
+            }, isActive: true),
+
             _buildBottomButton(LucideIcons.bell, "Notifications".tr(), () {
               Navigator.push(
                 context,
@@ -798,15 +796,23 @@ class _HomeScreenState extends State<HomeScreen> {
             }),
             _buildBottomButton(
               LucideIcons.messageCircle,
-              "Messagerie".tr(),
+              "messagerie".tr(),
               () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => ChatScreend()),
+                  MaterialPageRoute(builder: (context) => LinesListScreen()),
                 );
               },
             ),
-            _buildBottomButton(LucideIcons.user, "Profil".tr(), () {
+            _buildBottomButton(LucideIcons.barChart, "Statistique".tr(), () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => StatistiqueGareScreen(),
+                ),
+              );
+            }),
+            _buildBottomButton(LucideIcons.user, "Profile".tr(), () {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => ProfileScreen()),
@@ -818,16 +824,23 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildBottomButton(IconData icon, String label, Function() onPressed) {
+  Widget _buildBottomButton(
+    IconData icon,
+    String label,
+    Function() onPressed, {
+    bool isActive = false,
+  }) {
+    final color = isActive ? Colors.black : Colors.white;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
-          icon: Icon(icon, color: Colors.white, size: 24),
+          icon: Icon(icon, color: color, size: 24),
           onPressed: onPressed,
         ),
-        SizedBox(height: 2),
-        Text(label, style: TextStyle(color: Colors.white, fontSize: 9)),
+        const SizedBox(height: 2),
+        Text(label, style: TextStyle(color: color, fontSize: 9)),
       ],
     );
   }
